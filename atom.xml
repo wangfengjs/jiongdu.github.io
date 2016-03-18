@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>一期一会</title>
+  
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="http://blog.dujiong.net/"/>
+  <updated>2016-03-15T13:26:02.860Z</updated>
+  <id>http://blog.dujiong.net/</id>
+  
+  <author>
+    <name>dujiong</name>
+    <email>dujiong.uestc@gmail.com</email>
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>���û���openwrt��·����Ϊdumb ap</title>
+    <link href="http://blog.dujiong.net/2016/03/15/next/"/>
+    <id>http://blog.dujiong.net/2016/03/15/next/</id>
+    <published>2016-03-15T13:21:29.466Z</published>
+    <updated>2016-03-15T13:26:02.860Z</updated>
+    
+    <content type="html">&lt;p&gt;##ʲô��dumb ap �򵥵�˵���൱��һ̨������ &lt;/p&gt;
+&lt;h2 id=&quot;��������dumb-ap&quot;&gt;&lt;a href=&quot;#��������dumb-ap&quot; class=&quot;headerlink&quot; title=&quot;��������dumb ap&quot;&gt;&lt;/a&gt;��������dumb ap&lt;/h2&gt;&lt;p&gt;First step, Second step&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;##ʲô��dumb ap �򵥵�˵���൱��һ̨������ &lt;/p&gt;
+&lt;h2 id=&quot;��������dumb-ap&quot;&gt;&lt;a href=&quot;#��������dumb-ap&quot; class=&quot;headerlink&quot; title=&quot;��������dumb ap&quot;&gt;&lt;/a
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>Welcome to my blog</title>
+    <link href="http://blog.dujiong.net/2016/03/11/hello-world/"/>
+    <id>http://blog.dujiong.net/2016/03/11/hello-world/</id>
+    <published>2016-03-11T03:05:15.275Z</published>
+    <updated>2016-03-14T09:49:39.981Z</updated>
+    
+    <content type="html">&lt;p&gt;Welcome to &lt;a href=&quot;https://blog.dujiong.net/&quot;&gt;My Blog&lt;/a&gt;! This is where i am writing and leaning. Let’s go!&lt;/p&gt;
+&lt;h2 id=&quot;About-Me&quot;&gt;&lt;a href=&quot;#About-Me&quot; class=&quot;headerlink&quot; title=&quot;About Me&quot;&gt;&lt;/a&gt;About Me&lt;/h2&gt;&lt;p&gt;Student And Coder From &lt;a href=&quot;http://uestc.edu.cn&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;UESTC&lt;/a&gt;,Chengdu,China&lt;/p&gt;
+&lt;h2 id=&quot;About-My-Girlfriend&quot;&gt;&lt;a href=&quot;#About-My-Girlfriend&quot; class=&quot;headerlink&quot; title=&quot;About My Girlfriend&quot;&gt;&lt;/a&gt;About My Girlfriend&lt;/h2&gt;&lt;p&gt;A Lovely Girl To Me And I Love Her&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;Welcome to &lt;a href=&quot;https://blog.dujiong.net/&quot;&gt;My Blog&lt;/a&gt;! This is where i am writing and leaning. Let’s go!&lt;/p&gt;
+&lt;h2 id=&quot;About-Me&quot;&gt;&lt;a hr
+    
+    </summary>
+    
+    
+  </entry>
+  
+</feed>
