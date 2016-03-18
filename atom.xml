@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-03-18T08:47:34.751Z</updated>
+  <updated>2016-03-18T09:06:35.646Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -16,14 +16,31 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>startAP</title>
+    <link href="http://blog.dujiong.net/2016/03/18/startAP/"/>
+    <id>http://blog.dujiong.net/2016/03/18/startAP/</id>
+    <published>2016-03-18T09:05:23.000Z</published>
+    <updated>2016-03-18T09:06:35.646Z</updated>
+    
+    <content type="html"></content>
+    
+    <summary type="html">
+    
+    </summary>
+    
+    
+      <category term="openwrt" scheme="http://blog.dujiong.net/tags/openwrt/"/>
+    
+  </entry>
+  
+  <entry>
     <title>配置OpenWrt路由器为Dumb AP</title>
     <link href="http://blog.dujiong.net/2016/03/15/dumb%20ap/"/>
     <id>http://blog.dujiong.net/2016/03/15/dumb ap/</id>
     <published>2016-03-15T13:21:29.466Z</published>
-    <updated>2016-03-18T08:47:34.751Z</updated>
+    <updated>2016-03-18T08:54:24.452Z</updated>
     
-    <content type="html">&lt;p&gt;categories: openwrt&lt;br&gt;tags: [openwrt,dumb AP]&lt;/p&gt;
-&lt;h2 id=&quot;Dumb-AP&quot;&gt;&lt;a href=&quot;#Dumb-AP&quot; class=&quot;headerlink&quot; title=&quot;Dumb AP&quot;&gt;&lt;/a&gt;Dumb AP&lt;/h2&gt;&lt;p&gt;Dumb AP，简单说，就是将路由器作为一个纯接入点，没有路由转发，没有DHCP。这时的路由器相当于一台二层交换机，没有三层功能。所以，实验环境中，将Dumb AP连接咋上级路由器下，子网段为192.168.1.1/24。&lt;/p&gt;
+    <content type="html">&lt;h2 id=&quot;Dumb-AP&quot;&gt;&lt;a href=&quot;#Dumb-AP&quot; class=&quot;headerlink&quot; title=&quot;Dumb AP&quot;&gt;&lt;/a&gt;Dumb AP&lt;/h2&gt;&lt;p&gt;Dumb AP，简单说，就是将路由器作为一个纯接入点，没有路由转发，没有DHCP。这时的路由器相当于一台二层交换机，没有三层功能。所以，实验环境中，将Dumb AP连接咋上级路由器下，子网段为192.168.1.1/24。&lt;/p&gt;
 &lt;h2 id=&quot;配置Dumb-AP&quot;&gt;&lt;a href=&quot;#配置Dumb-AP&quot; class=&quot;headerlink&quot; title=&quot;配置Dumb AP&quot;&gt;&lt;/a&gt;配置Dumb AP&lt;/h2&gt;&lt;h3 id=&quot;修改网络配置文件-etc-config-network&quot;&gt;&lt;a href=&quot;#修改网络配置文件-etc-config-network&quot; class=&quot;headerlink&quot; title=&quot;修改网络配置文件(/etc/config/network)&quot;&gt;&lt;/a&gt;修改网络配置文件(/etc/config/network)&lt;/h3&gt;&lt;p&gt;修改OpenWrt的网络配置文件，将wan口和lan口桥接起来:&lt;br&gt;&lt;code&gt;config interface lan&lt;/code&gt;&lt;br&gt;    &lt;code&gt;option type &amp;#39;bridge&amp;#39;&lt;/code&gt;&lt;br&gt;    &lt;code&gt;option ifname &amp;#39;eth0.1 eth0.2&amp;#39;&lt;/code&gt;  ##将二者桥接&lt;br&gt;    &lt;code&gt;option proto static&lt;/code&gt;&lt;br&gt;    &lt;code&gt;option ipaddr &amp;#39;192.168.1.196&amp;#39;&lt;/code&gt;  ##采用静态ip&lt;br&gt;    &lt;code&gt;option netmask 255.255.255.0&lt;/code&gt;&lt;br&gt;然后注释掉路由器关于wan口的设置，包括ipv4和ipv6。&lt;br&gt;需要说明的是，上述的配置文件中桥接的而是eth0.1和eth0.2，但事实上路由器的接口不尽相同，比如有的wan口事实上是eth1。所以，需要因地制宜。&lt;/p&gt;
 &lt;h3 id=&quot;关掉DHCP&quot;&gt;&lt;a href=&quot;#关掉DHCP&quot; class=&quot;headerlink&quot; title=&quot;关掉DHCP&quot;&gt;&lt;/a&gt;关掉DHCP&lt;/h3&gt;&lt;p&gt;可以通过uci或者是修改配置文件(/etc/config/dhcp)设置DHCP。这里采用的是后者，即注释掉文件中lan口dhcp配置相关的设置&lt;br&gt;&lt;code&gt;config dhcp &amp;#39;lan&amp;#39;&lt;/code&gt;&lt;br&gt;    &lt;code&gt;option interface &amp;#39;lan&amp;#39;&lt;/code&gt;&lt;br&gt;    &lt;code&gt;option dhcpv6 &amp;#39;server&amp;#39;&lt;/code&gt;&lt;br&gt;    &lt;code&gt;option ra &amp;#39;server&amp;#39;&lt;/code&gt;&lt;br&gt;    &lt;code&gt;option ignore &amp;#39;1&amp;#39;&lt;/code&gt;&lt;br&gt;    &lt;code&gt;option ra_management &amp;#39;1&amp;#39;&lt;/code&gt; &lt;/p&gt;
 &lt;h3 id=&quot;关掉防火墙&quot;&gt;&lt;a href=&quot;#关掉防火墙&quot; class=&quot;headerlink&quot; title=&quot;关掉防火墙&quot;&gt;&lt;/a&gt;关掉防火墙&lt;/h3&gt;&lt;p&gt;某些情况下，需要关闭防火墙，同样的，修改配置文件/etc/config/firewall，将相应的REJECT改成ACCEPT即可，具体不再详述。&lt;br&gt;最后，载入新的配置即可。&lt;/p&gt;
@@ -37,11 +54,16 @@
     
     <summary type="html">
     
-      &lt;p&gt;categories: openwrt&lt;br&gt;tags: [openwrt,dumb AP]&lt;/p&gt;
-&lt;h2 id=&quot;Dumb-AP&quot;&gt;&lt;a href=&quot;#Dumb-AP&quot; class=&quot;headerlink&quot; title=&quot;Dumb AP&quot;&gt;&lt;/a&gt;Dumb AP&lt;/h2
+      &lt;h2 id=&quot;Dumb-AP&quot;&gt;&lt;a href=&quot;#Dumb-AP&quot; class=&quot;headerlink&quot; title=&quot;Dumb AP&quot;&gt;&lt;/a&gt;Dumb AP&lt;/h2&gt;&lt;p&gt;Dumb AP，简单说，就是将路由器作为一个纯接入点，没有路由转发，没有DHCP。这时的路由器相当于
     
     </summary>
     
+      <category term="openwrt" scheme="http://blog.dujiong.net/categories/openwrt/"/>
+    
+    
+      <category term="openwrt" scheme="http://blog.dujiong.net/tags/openwrt/"/>
+    
+      <category term="dumb AP" scheme="http://blog.dujiong.net/tags/dumb-AP/"/>
     
   </entry>
   
