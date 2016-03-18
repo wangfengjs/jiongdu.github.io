@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-03-15T13:26:02.860Z</updated>
+  <updated>2016-03-18T08:12:29.835Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -16,20 +16,29 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>���û���openwrt��·����Ϊdumb ap</title>
-    <link href="http://blog.dujiong.net/2016/03/15/next/"/>
-    <id>http://blog.dujiong.net/2016/03/15/next/</id>
+    <title>配置OpenWrt路由器为Dumb AP</title>
+    <link href="http://blog.dujiong.net/2016/03/15/dumb%20ap/"/>
+    <id>http://blog.dujiong.net/2016/03/15/dumb ap/</id>
     <published>2016-03-15T13:21:29.466Z</published>
-    <updated>2016-03-15T13:26:02.860Z</updated>
+    <updated>2016-03-18T08:12:29.835Z</updated>
     
-    <content type="html">&lt;p&gt;##ʲô��dumb ap �򵥵�˵���൱��һ̨������ &lt;/p&gt;
-&lt;h2 id=&quot;��������dumb-ap&quot;&gt;&lt;a href=&quot;#��������dumb-ap&quot; class=&quot;headerlink&quot; title=&quot;��������dumb ap&quot;&gt;&lt;/a&gt;��������dumb ap&lt;/h2&gt;&lt;p&gt;First step, Second step&lt;/p&gt;
+    <content type="html">&lt;p&gt;##Dumb AP&lt;br&gt;Dumb AP，简单说，就是将路由器作为一个纯接入点，没有路由转发，没有DHCP。这时的路由器相当于一台二层交换机，没有三层功能。所以，实验环境中，将Dumb AP连接咋上级路由器下，子网段为192.168.1.1/24。&lt;/p&gt;
+&lt;p&gt;##配置Dumb AP &lt;/p&gt;
+&lt;p&gt;###修改网络配置文件(/etc/config/network)&lt;br&gt;修改OpenWrt的网络配置文件，将wan口和lan口桥接起来:&lt;br&gt;&lt;code&gt;config interface lan&lt;/code&gt;&lt;br&gt;    &lt;code&gt;option type &amp;#39;bridge&amp;#39;&lt;/code&gt;&lt;br&gt;    &lt;code&gt;option ifname &amp;#39;eth0.1 eth0.2&amp;#39;&lt;/code&gt;  ##将二者桥接&lt;br&gt;    &lt;code&gt;option proto static&lt;/code&gt;&lt;br&gt;    &lt;code&gt;option ipaddr &amp;#39;192.168.1.196&amp;#39;&lt;/code&gt;  ##采用静态ip&lt;br&gt;    &lt;code&gt;option netmask 255.255.255.0&lt;/code&gt;&lt;br&gt;然后注释掉路由器关于wan口的设置，包括ipv4和ipv6。&lt;br&gt;需要说明的是，上述的配置文件中桥接的而是eth0.1和eth0.2，但事实上路由器的接口不尽相同，比如有的wan口事实上是eth1。所以，需要因地制宜。&lt;/p&gt;
+&lt;p&gt;###关掉DHCP&lt;br&gt;可以通过uci或者是修改配置文件(/etc/config/dhcp)设置DHCP。这里采用的是后者，即注释掉文件中lan口dhcp配置相关的设置&lt;br&gt;&lt;code&gt;config dhcp &amp;#39;lan&amp;#39;&lt;/code&gt;&lt;br&gt;    &lt;code&gt;option interface &amp;#39;lan&amp;#39;&lt;/code&gt;&lt;br&gt;    &lt;code&gt;option dhcpv6 &amp;#39;server&amp;#39;&lt;/code&gt;&lt;br&gt;    &lt;code&gt;option ra &amp;#39;server&amp;#39;&lt;/code&gt;&lt;br&gt;    &lt;code&gt;option ignore &amp;#39;1&amp;#39;&lt;/code&gt;&lt;br&gt;    &lt;code&gt;option ra_management &amp;#39;1&amp;#39;&lt;/code&gt; &lt;/p&gt;
+&lt;p&gt;###关掉防火墙&lt;br&gt;某些情况下，需要关闭防火墙，同样的，修改配置文件/etc/config/firewall，将相应的REJECT改成ACCEPT即可，具体不再详述。&lt;br&gt;最后，载入新的配置即可。&lt;/p&gt;
+&lt;p&gt;##附：完整的/etc/config/network文件&lt;br&gt;&lt;code&gt;config interface &amp;#39;loopback&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option ifname &amp;#39;lo&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option proto &amp;#39;static&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option ipaddr &amp;#39;127.0.0.1&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option netmask &amp;#39;255.0.0.0&amp;#39;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;config globals &amp;#39;globals&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option ula_prefix &amp;#39;fd9f:91f8:3d14::/48&amp;#39;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;config interface &amp;#39;lan&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option ifname &amp;#39;eth0.1 eth0.2&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option force_link &amp;#39;1&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option macaddr &amp;#39;b0:68:b6:ff:d6:b8&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option type &amp;#39;bridge&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option proto &amp;#39;static&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option ipaddr &amp;#39;192.168.1.196&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option netmask &amp;#39;255.255.255.0&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option ip6assign &amp;#39;60&amp;#39;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#config interface &amp;#39;wan&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;#option ifname &amp;#39;eth0.2&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;#option force_link &amp;#39;1&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;#option macaddr &amp;#39;b0:68:b6:ff:d6:b9&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;#option proto &amp;#39;dhcp&amp;#39;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#config interface &amp;#39;wan6&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;#option ifname &amp;#39;eth0.2&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;#option proto &amp;#39;dhcpv6&amp;#39;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;以下均保持原状&lt;/code&gt;&lt;br&gt;&lt;code&gt;config switch&lt;/code&gt;&lt;br&gt;&lt;code&gt;option name &amp;#39;switch0&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option reset &amp;#39;1&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option enable_vlan &amp;#39;1&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;config switch_vlan&lt;/code&gt;&lt;br&gt;&lt;code&gt;option device &amp;#39;switch0&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option vlan &amp;#39;1&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option ports &amp;#39;0 1 2 3 6t&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;config switch_vlan&lt;/code&gt;&lt;br&gt;&lt;code&gt;option device &amp;#39;switch0&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option vlan &amp;#39;2&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option ports &amp;#39;4 6t&lt;/code&gt;&lt;/p&gt;
 </content>
     
     <summary type="html">
     
-      &lt;p&gt;##ʲô��dumb ap �򵥵�˵���൱��һ̨������ &lt;/p&gt;
-&lt;h2 id=&quot;��������dumb-ap&quot;&gt;&lt;a href=&quot;#��������dumb-ap&quot; class=&quot;headerlink&quot; title=&quot;��������dumb ap&quot;&gt;&lt;/a
+      &lt;p&gt;##Dumb AP&lt;br&gt;Dumb AP，简单说，就是将路由器作为一个纯接入点，没有路由转发，没有DHCP。这时的路由器相当于一台二层交换机，没有三层功能。所以，实验环境中，将Dumb AP连接咋上级路由器下，子网段为192.168.1.1/24。&lt;/p&gt;
+&lt;p&gt;##配置D
     
     </summary>
     
@@ -37,21 +46,21 @@
   </entry>
   
   <entry>
-    <title>Welcome to my blog</title>
-    <link href="http://blog.dujiong.net/2016/03/11/hello-world/"/>
-    <id>http://blog.dujiong.net/2016/03/11/hello-world/</id>
+    <title>Welcome to My Blog</title>
+    <link href="http://blog.dujiong.net/2016/03/11/welcome/"/>
+    <id>http://blog.dujiong.net/2016/03/11/welcome/</id>
     <published>2016-03-11T03:05:15.275Z</published>
-    <updated>2016-03-14T09:49:39.981Z</updated>
+    <updated>2016-03-18T06:47:50.478Z</updated>
     
     <content type="html">&lt;p&gt;Welcome to &lt;a href=&quot;https://blog.dujiong.net/&quot;&gt;My Blog&lt;/a&gt;! This is where i am writing and leaning. Let’s go!&lt;/p&gt;
-&lt;h2 id=&quot;About-Me&quot;&gt;&lt;a href=&quot;#About-Me&quot; class=&quot;headerlink&quot; title=&quot;About Me&quot;&gt;&lt;/a&gt;About Me&lt;/h2&gt;&lt;p&gt;Student And Coder From &lt;a href=&quot;http://uestc.edu.cn&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;UESTC&lt;/a&gt;,Chengdu,China&lt;/p&gt;
-&lt;h2 id=&quot;About-My-Girlfriend&quot;&gt;&lt;a href=&quot;#About-My-Girlfriend&quot; class=&quot;headerlink&quot; title=&quot;About My Girlfriend&quot;&gt;&lt;/a&gt;About My Girlfriend&lt;/h2&gt;&lt;p&gt;A Lovely Girl To Me And I Love Her&lt;/p&gt;
+&lt;p&gt;Happy everyday!&lt;/p&gt;
 </content>
     
     <summary type="html">
     
       &lt;p&gt;Welcome to &lt;a href=&quot;https://blog.dujiong.net/&quot;&gt;My Blog&lt;/a&gt;! This is where i am writing and leaning. Let’s go!&lt;/p&gt;
-&lt;h2 id=&quot;About-Me&quot;&gt;&lt;a hr
+&lt;p&gt;Happy everyday!&lt;/p&gt;
+
     
     </summary>
     
