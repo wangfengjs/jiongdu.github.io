@@ -2,6 +2,20 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://blog.dujiong.net/about/index.html</loc>
+    
+    <lastmod>2016-03-18T09:13:22.607Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://blog.dujiong.net/tags/index.html</loc>
+    
+    <lastmod>2016-03-18T09:12:41.780Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://blog.dujiong.net/2016/03/18/startAP/</loc>
     
     <lastmod>2016-03-18T09:06:35.646Z</lastmod>
