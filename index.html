@@ -308,12 +308,11 @@
       
         
           
-            <p>##Dumb AP<br>Dumb AP，简单说，就是将路由器作为一个纯接入点，没有路由转发，没有DHCP。这时的路由器相当于一台二层交换机，没有三层功能。所以，实验环境中，将Dumb AP连接咋上级路由器下，子网段为192.168.1.1/24。</p>
-<p>##配置Dumb AP </p>
-<p>###修改网络配置文件(/etc/config/network)<br>修改OpenWrt的网络配置文件，将wan口和lan口桥接起来:<br><code>config interface lan</code><br>    <code>option type &#39;bridge&#39;</code><br>    <code>option ifname &#39;eth0.1 eth0.2&#39;</code>  ##将二者桥接<br>    <code>option proto static</code><br>    <code>option ipaddr &#39;192.168.1.196&#39;</code>  ##采用静态ip<br>    <code>option netmask 255.255.255.0</code><br>然后注释掉路由器关于wan口的设置，包括ipv4和ipv6。<br>需要说明的是，上述的配置文件中桥接的而是eth0.1和eth0.2，但事实上路由器的接口不尽相同，比如有的wan口事实上是eth1。所以，需要因地制宜。</p>
-<p>###关掉DHCP<br>可以通过uci或者是修改配置文件(/etc/config/dhcp)设置DHCP。这里采用的是后者，即注释掉文件中lan口dhcp配置相关的设置<br><code>config dhcp &#39;lan&#39;</code><br>    <code>option interface &#39;lan&#39;</code><br>    <code>option dhcpv6 &#39;server&#39;</code><br>    <code>option ra &#39;server&#39;</code><br>    <code>option ignore &#39;1&#39;</code><br>    <code>option ra_management &#39;1&#39;</code> </p>
-<p>###关掉防火墙<br>某些情况下，需要关闭防火墙，同样的，修改配置文件/etc/config/firewall，将相应的REJECT改成ACCEPT即可，具体不再详述。<br>最后，载入新的配置即可。</p>
-<p>##附：完整的/etc/config/network文件<br><code>config interface &#39;loopback&#39;</code><br><code>option ifname &#39;lo&#39;</code><br><code>option proto &#39;static&#39;</code><br><code>option ipaddr &#39;127.0.0.1&#39;</code><br><code>option netmask &#39;255.0.0.0&#39;</code></p>
+            <h2 id="Dumb-AP"><a href="#Dumb-AP" class="headerlink" title="Dumb AP"></a>Dumb AP</h2><p>Dumb AP，简单说，就是将路由器作为一个纯接入点，没有路由转发，没有DHCP。这时的路由器相当于一台二层交换机，没有三层功能。所以，实验环境中，将Dumb AP连接咋上级路由器下，子网段为192.168.1.1/24。</p>
+<h2 id="配置Dumb-AP"><a href="#配置Dumb-AP" class="headerlink" title="配置Dumb AP"></a>配置Dumb AP</h2><h3 id="修改网络配置文件-etc-config-network"><a href="#修改网络配置文件-etc-config-network" class="headerlink" title="修改网络配置文件(/etc/config/network)"></a>修改网络配置文件(/etc/config/network)</h3><p>修改OpenWrt的网络配置文件，将wan口和lan口桥接起来:<br><code>config interface lan</code><br>    <code>option type &#39;bridge&#39;</code><br>    <code>option ifname &#39;eth0.1 eth0.2&#39;</code>  ##将二者桥接<br>    <code>option proto static</code><br>    <code>option ipaddr &#39;192.168.1.196&#39;</code>  ##采用静态ip<br>    <code>option netmask 255.255.255.0</code><br>然后注释掉路由器关于wan口的设置，包括ipv4和ipv6。<br>需要说明的是，上述的配置文件中桥接的而是eth0.1和eth0.2，但事实上路由器的接口不尽相同，比如有的wan口事实上是eth1。所以，需要因地制宜。</p>
+<h3 id="关掉DHCP"><a href="#关掉DHCP" class="headerlink" title="关掉DHCP"></a>关掉DHCP</h3><p>可以通过uci或者是修改配置文件(/etc/config/dhcp)设置DHCP。这里采用的是后者，即注释掉文件中lan口dhcp配置相关的设置<br><code>config dhcp &#39;lan&#39;</code><br>    <code>option interface &#39;lan&#39;</code><br>    <code>option dhcpv6 &#39;server&#39;</code><br>    <code>option ra &#39;server&#39;</code><br>    <code>option ignore &#39;1&#39;</code><br>    <code>option ra_management &#39;1&#39;</code> </p>
+<h3 id="关掉防火墙"><a href="#关掉防火墙" class="headerlink" title="关掉防火墙"></a>关掉防火墙</h3><p>某些情况下，需要关闭防火墙，同样的，修改配置文件/etc/config/firewall，将相应的REJECT改成ACCEPT即可，具体不再详述。<br>最后，载入新的配置即可。</p>
+<h2 id="附：完整的-etc-config-network文件"><a href="#附：完整的-etc-config-network文件" class="headerlink" title="附：完整的/etc/config/network文件"></a>附：完整的/etc/config/network文件</h2><p><code>config interface &#39;loopback&#39;</code><br><code>option ifname &#39;lo&#39;</code><br><code>option proto &#39;static&#39;</code><br><code>option ipaddr &#39;127.0.0.1&#39;</code><br><code>option netmask &#39;255.0.0.0&#39;</code></p>
 <p><code>config globals &#39;globals&#39;</code><br><code>option ula_prefix &#39;fd9f:91f8:3d14::/48&#39;</code></p>
 <p><code>config interface &#39;lan&#39;</code><br><code>option ifname &#39;eth0.1 eth0.2&#39;</code><br><code>option force_link &#39;1&#39;</code><br><code>option macaddr &#39;b0:68:b6:ff:d6:b8&#39;</code><br><code>option type &#39;bridge&#39;</code><br><code>option proto &#39;static&#39;</code><br><code>option ipaddr &#39;192.168.1.196&#39;</code><br><code>option netmask &#39;255.255.255.0&#39;</code><br><code>option ip6assign &#39;60&#39;</code></p>
 <p><code>#config interface &#39;wan&#39;</code><br><code>#option ifname &#39;eth0.2&#39;</code><br><code>#option force_link &#39;1&#39;</code><br><code>#option macaddr &#39;b0:68:b6:ff:d6:b9&#39;</code><br><code>#option proto &#39;dhcp&#39;</code></p>
@@ -414,8 +413,8 @@
       
         
           
-            <p>Welcome to <a href="https://blog.dujiong.net/">My Blog</a>! This is where i am writing and leaning. Let’s go!</p>
-<p>Happy everyday!</p>
+            <p>Welcome to <a href="https://blog.dujiong.net/">My Blog</a>! Happy Everyday！</p>
+<p>This is where i am writing and leaning. Let’s go!</p>
 
           
         
