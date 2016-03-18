@@ -501,9 +501,9 @@ pre,
 .highlight {
   background: #f7f7f7;
   margin: 20px 0;
-  padding: 15px;
+  padding: 16px;
   overflow: auto;
-  font-size: 14px;
+  font-size: 15px;
   color: #4d4d4c;
   line-height: 1.6;
 }
@@ -1389,7 +1389,7 @@ pre .javascript .function {
 }
 .sidebar-inner {
   position: relative;
-  padding: 20px 10px;
+  padding: 20px 15px;
   color: #999;
   text-align: center;
 }
@@ -1439,11 +1439,12 @@ pre .javascript .function {
 }
 .site-author-name {
   margin: 5px 0 0;
+  font-size: 17px;
   color: #f5f5f5;
 }
 .site-description {
   margin-top: 5px;
-  font-size: 14px;
+  font-size: 15px;
   color: #555;
 }
 .site-state {
@@ -1513,7 +1514,7 @@ pre .javascript .function {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #ff1c36;
+  background: #5874cd;
 }
 .links-of-blogroll {
   font-size: 13px;
