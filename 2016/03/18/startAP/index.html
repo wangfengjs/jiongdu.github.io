@@ -59,16 +59,16 @@
 
 
 
-<meta name="description" content="dujiong.uestc@gmail.com">
+<meta name="description" content="OpenWrt启动脚本需要在OpenWrt中-将自己的程序设置为开机自启动。虽然OpenWrt是基于Linux的嵌入式发行版，但是和其设置方法还是略有差异，在此做一份记录。参考：http://wiki.openwrt.org/doc/techref/initscriptsOpenWrt的启动脚本在/etc/init.d/目录下，而系统开机时自动运行/etc/rc.d/目录下的脚本，所以在rc.d目">
 <meta property="og:type" content="article">
-<meta property="og:title" content="startAP">
+<meta property="og:title" content="OpenWrt设置程序开机自启动">
 <meta property="og:url" content="http://blog.dujiong.net/2016/03/18/startAP/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="dujiong.uestc@gmail.com">
-<meta property="og:updated_time" content="2016-03-18T09:06:35.646Z">
+<meta property="og:description" content="OpenWrt启动脚本需要在OpenWrt中-将自己的程序设置为开机自启动。虽然OpenWrt是基于Linux的嵌入式发行版，但是和其设置方法还是略有差异，在此做一份记录。参考：http://wiki.openwrt.org/doc/techref/initscriptsOpenWrt的启动脚本在/etc/init.d/目录下，而系统开机时自动运行/etc/rc.d/目录下的脚本，所以在rc.d目">
+<meta property="og:updated_time" content="2016-03-25T07:00:56.466Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="startAP">
-<meta name="twitter:description" content="dujiong.uestc@gmail.com">
+<meta name="twitter:title" content="OpenWrt设置程序开机自启动">
+<meta name="twitter:description" content="OpenWrt启动脚本需要在OpenWrt中-将自己的程序设置为开机自启动。虽然OpenWrt是基于Linux的嵌入式发行版，但是和其设置方法还是略有差异，在此做一份记录。参考：http://wiki.openwrt.org/doc/techref/initscriptsOpenWrt的启动脚本在/etc/init.d/目录下，而系统开机时自动运行/etc/rc.d/目录下的脚本，所以在rc.d目">
 
 
 
@@ -86,7 +86,7 @@
   };
 </script>
 
-  <title> startAP | 一期一会 </title>
+  <title> OpenWrt设置程序开机自启动 | 一期一会 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -246,7 +246,7 @@
             
             
               
-                startAP
+                OpenWrt设置程序开机自启动
               
             
           </h1>
@@ -292,7 +292,22 @@
       
 
       
-        
+        <h3 id="OpenWrt启动脚本"><a href="#OpenWrt启动脚本" class="headerlink" title="OpenWrt启动脚本"></a>OpenWrt启动脚本</h3><p>需要在OpenWrt中-将自己的程序设置为开机自启动。虽然OpenWrt是基于Linux的嵌入式发行版，但是和其设置方法还是略有差异，在此做一份记录。参考：<a href="http://wiki.openwrt.org/doc/techref/initscripts" target="_blank" rel="external">http://wiki.openwrt.org/doc/techref/initscripts</a><br>OpenWrt的启动脚本在/etc/init.d/目录下，而系统开机时自动运行/etc/rc.d/目录下的脚本，所以在rc.d目录下，有init.d脚本的连接文件。</p>
+<h3 id="编写自己的启动脚本"><a href="#编写自己的启动脚本" class="headerlink" title="编写自己的启动脚本"></a>编写自己的启动脚本</h3><p>按照以下结构编写自己的shell脚本(这里以我的startAP为例说明)。特别注意一下，OpenWrt中的shell解析器与常用的Linux桌面、服务器（bash）不一样，记得当时写的时候就用的是#/bin/bash，后面找了好久才发现。</p>
+<pre><code>#!/bin/sh /etc/rc.common
+#/init.d/startAP
+START=50
+start()
+{
+    ...
+}
+stop()
+{
+    ...
+}
+</code></pre><p>在start()中写入需要开机运行的程序命令，在stop()中写入终止程序的命令。START=50是指优先级，数字越大，优先级越低。一般优先级高的脚本会先运行。<br>编写好自己的程序启动脚本后，熟悉Linux的都知道，要让程序执行，需要给脚本赋予可执行权限。所以，运行命令chmod+x xxx。</p>
+<h3 id="为启动脚本做一个软链接"><a href="#为启动脚本做一个软链接" class="headerlink" title="为启动脚本做一个软链接"></a>为启动脚本做一个软链接</h3><p>如上所述，系统启动时会按顺序自动运行/etc/rc.d/目录下的脚本链接，对应执行/etc/init.d/目录下的启动脚本。所以，需要在/etc/rc.d/下为启动脚本创建一个链接。注意，链接文件要命名要规范，在脚本名前加S+启动顺序数字。顺便提一句，这里的启动顺序数字和前面所说到的优先级可是两码事。<br>所以，执行命令ln -s /etc/init.d/startAP /etc/rc.d/S95startAP创建链接。<br>最后，重启，就可以开机启动程序了。不妨使用ps查看一下吧。</p>
+
       
     </div>
 
@@ -348,7 +363,7 @@
   <div class="comments" id="comments">
     
       <div class="ds-thread" data-thread-key="2016/03/18/startAP/"
-           data-title="startAP" data-url="http://blog.dujiong.net/2016/03/18/startAP/">
+           data-title="OpenWrt设置程序开机自启动" data-url="http://blog.dujiong.net/2016/03/18/startAP/">
       </div>
     
   </div>
@@ -462,7 +477,7 @@
               
             
             
-              <p class="post-toc-empty">此文章未包含目录</p>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#OpenWrt启动脚本"><span class="nav-number">1.</span> <span class="nav-text">OpenWrt启动脚本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#编写自己的启动脚本"><span class="nav-number">2.</span> <span class="nav-text">编写自己的启动脚本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#为启动脚本做一个软链接"><span class="nav-number">3.</span> <span class="nav-text">为启动脚本做一个软链接</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">
