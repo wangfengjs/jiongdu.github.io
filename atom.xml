@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-03-25T07:00:56.466Z</updated>
+  <updated>2016-03-25T07:17:23.402Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -14,6 +14,24 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>算法专题---最长公共子序列，最长公共字串，最长递增子序列，最长子序列和等</title>
+    <link href="http://blog.dujiong.net/2016/03/25/Seq&Substring/"/>
+    <id>http://blog.dujiong.net/2016/03/25/Seq&Substring/</id>
+    <published>2016-03-25T07:05:10.000Z</published>
+    <updated>2016-03-25T07:17:23.402Z</updated>
+    
+    <content type="html"></content>
+    
+    <summary type="html">
+    
+    </summary>
+    
+    
+      <category term="算法" scheme="http://blog.dujiong.net/tags/%E7%AE%97%E6%B3%95/"/>
+    
+  </entry>
   
   <entry>
     <title>OpenWrt设置程序开机自启动</title>
@@ -52,8 +70,8 @@ stop()
   
   <entry>
     <title>配置OpenWrt路由器为Dumb AP</title>
-    <link href="http://blog.dujiong.net/2016/03/15/dumb%20ap/"/>
-    <id>http://blog.dujiong.net/2016/03/15/dumb ap/</id>
+    <link href="http://blog.dujiong.net/2016/03/15/dumbap/"/>
+    <id>http://blog.dujiong.net/2016/03/15/dumbap/</id>
     <published>2016-03-15T13:21:29.466Z</published>
     <updated>2016-03-25T05:32:53.824Z</updated>
     
