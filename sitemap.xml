@@ -2,6 +2,20 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://blog.dujiong.net/2016/03/15/dumbap/</loc>
+    
+    <lastmod>2016-05-13T11:24:51.527Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://blog.dujiong.net/2016/03/18/startAP/</loc>
+    
+    <lastmod>2016-05-13T11:24:06.753Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://blog.dujiong.net/2016/05/13/cplusplusMem/</loc>
     
     <lastmod>2016-05-13T11:13:37.606Z</lastmod>
@@ -16,13 +30,6 @@
   </url>
   
   <url>
-    <loc>http://blog.dujiong.net/2016/03/18/startAP/</loc>
-    
-    <lastmod>2016-03-25T07:00:56.466Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://blog.dujiong.net/about/index.html</loc>
     
     <lastmod>2016-03-25T06:20:44.700Z</lastmod>
@@ -33,13 +40,6 @@
     <loc>http://blog.dujiong.net/tags/index.html</loc>
     
     <lastmod>2016-03-25T06:16:46.986Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://blog.dujiong.net/2016/03/15/dumbap/</loc>
-    
-    <lastmod>2016-03-25T05:32:53.824Z</lastmod>
     
   </url>
   

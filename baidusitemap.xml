@@ -4,6 +4,40 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/03/15/dumbap/</loc>
+    <lastmod>2016-05-13T11:24:51.527Z</lastmod>
+    <data>
+        <display>
+        <title>配置OpenWrt路由器为Dumb AP</title>
+        <pubTime>2016-03-15T13:21:29.466Z</pubTime>
+        
+        <tag>openwrt</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://blog.dujiong.net/2016/03/18/startAP/</loc>
+    <lastmod>2016-05-13T11:24:06.753Z</lastmod>
+    <data>
+        <display>
+        <title>OpenWrt设置程序开机自启动</title>
+        <pubTime>2016-03-18T09:05:23.000Z</pubTime>
+        
+        <tag>openwrt</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/05/13/cplusplusMem/</loc>
     <lastmod>2016-05-13T11:13:37.606Z</lastmod>
     <data>
@@ -37,41 +71,7 @@
     </url>
 
     
-  <url>
-    <loc>http://blog.dujiong.net/2016/03/18/startAP/</loc>
-    <lastmod>2016-03-25T07:00:56.466Z</lastmod>
-    <data>
-        <display>
-        <title>OpenWrt设置程序开机自启动</title>
-        <pubTime>2016-03-18T09:05:23.000Z</pubTime>
-        
-        <tag>openwrt</tag>
-         
-         
-           
-        </display>
-    </data>
-    </url>
-
     
-    
-    
-  <url>
-    <loc>http://blog.dujiong.net/2016/03/15/dumbap/</loc>
-    <lastmod>2016-03-25T05:32:53.824Z</lastmod>
-    <data>
-        <display>
-        <title>配置OpenWrt路由器为Dumb AP</title>
-        <pubTime>2016-03-15T13:21:29.466Z</pubTime>
-        
-        <tag>openwrt</tag>
-         
-         
-           
-        </display>
-    </data>
-    </url>
-
     
   <url>
     <loc>http://blog.dujiong.net/2016/03/11/welcome/</loc>

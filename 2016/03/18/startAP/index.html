@@ -65,7 +65,7 @@
 <meta property="og:url" content="http://blog.dujiong.net/2016/03/18/startAP/index.html">
 <meta property="og:site_name" content="一期一会">
 <meta property="og:description" content="OpenWrt启动脚本需要在OpenWrt中-将自己的程序设置为开机自启动。虽然OpenWrt是基于Linux的嵌入式发行版，但是和其设置方法还是略有差异，在此做一份记录。参考：http://wiki.openwrt.org/doc/techref/initscriptsOpenWrt的启动脚本在/etc/init.d/目录下，而系统开机时自动运行/etc/rc.d/目录下的脚本，所以在rc.d目">
-<meta property="og:updated_time" content="2016-03-25T07:00:56.466Z">
+<meta property="og:updated_time" content="2016-05-13T11:24:06.753Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="OpenWrt设置程序开机自启动">
 <meta name="twitter:description" content="OpenWrt启动脚本需要在OpenWrt中-将自己的程序设置为开机自启动。虽然OpenWrt是基于Linux的嵌入式发行版，但是和其设置方法还是略有差异，在此做一份记录。参考：http://wiki.openwrt.org/doc/techref/initscriptsOpenWrt的启动脚本在/etc/init.d/目录下，而系统开机时自动运行/etc/rc.d/目录下的脚本，所以在rc.d目">
@@ -292,7 +292,7 @@
       
 
       
-        <h3 id="OpenWrt启动脚本"><a href="#OpenWrt启动脚本" class="headerlink" title="OpenWrt启动脚本"></a>OpenWrt启动脚本</h3><p>需要在OpenWrt中-将自己的程序设置为开机自启动。虽然OpenWrt是基于Linux的嵌入式发行版，但是和其设置方法还是略有差异，在此做一份记录。参考：<a href="http://wiki.openwrt.org/doc/techref/initscripts" target="_blank" rel="external">http://wiki.openwrt.org/doc/techref/initscripts</a><br>OpenWrt的启动脚本在/etc/init.d/目录下，而系统开机时自动运行/etc/rc.d/目录下的脚本，所以在rc.d目录下，有init.d脚本的连接文件。</p>
+        <h3 id="OpenWrt启动脚本"><a href="#OpenWrt启动脚本" class="headerlink" title="OpenWrt启动脚本"></a>OpenWrt启动脚本</h3><p>需要在OpenWrt中-将自己的程序设置为开机自启动。虽然OpenWrt是基于Linux的嵌入式发行版，但是和其设置方法还是略有差异，在此做一份记录。参考：<a href="http://wiki.openwrt.org/doc/techref/initscripts" target="_blank" rel="external">http://wiki.openwrt.org/doc/techref/initscripts</a><br>OpenWrt的启动脚本在/etc/init.d/目录下，而系统开机时自动运行/etc/rc.d/目录下的脚本，所以在rc.d目录下，有init.d脚本的连接文件。<br><a id="more"></a></p>
 <h3 id="编写自己的启动脚本"><a href="#编写自己的启动脚本" class="headerlink" title="编写自己的启动脚本"></a>编写自己的启动脚本</h3><p>按照以下结构编写自己的shell脚本(这里以我的startAP为例说明)。特别注意一下，OpenWrt中的shell解析器与常用的Linux桌面、服务器（bash）不一样，记得当时写的时候就用的是#/bin/bash，后面找了好久才发现。</p>
 <pre><code>#!/bin/sh /etc/rc.common
 #/init.d/startAP
