@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-05-13T11:11:47.242Z</updated>
+  <updated>2016-05-13T11:13:37.606Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -16,11 +16,11 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>cplusplusMem</title>
+    <title>C++内存管理--部分总结</title>
     <link href="http://blog.dujiong.net/2016/05/13/cplusplusMem/"/>
     <id>http://blog.dujiong.net/2016/05/13/cplusplusMem/</id>
     <published>2016-05-13T11:11:16.000Z</published>
-    <updated>2016-05-13T11:11:47.242Z</updated>
+    <updated>2016-05-13T11:13:37.606Z</updated>
     
     <content type="html"></content>
     
