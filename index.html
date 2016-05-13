@@ -248,7 +248,7 @@
             
               
                 
-                <a class="post-title-link" href="/2016/05/13/cplusplusMem/" itemprop="url">
+                <a class="post-title-link" href="/2016/04/13/cplusplusMem/" itemprop="url">
                   C++内存管理--部分总结
                 </a>
               
@@ -262,8 +262,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-05-13T19:11:16+08:00" content="2016-05-13">
-              2016-05-13
+            <time itemprop="dateCreated" datetime="2016-04-13T19:11:16+08:00" content="2016-04-13">
+              2016-04-13
             </time>
           </span>
 
@@ -273,8 +273,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/05/13/cplusplusMem/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/05/13/cplusplusMem/" itemprop="commentsCount"></span>
+                <a href="/2016/04/13/cplusplusMem/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/04/13/cplusplusMem/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -297,9 +297,13 @@
 
       
         
-          
-            
-          
+          <p>可以说，内存管理是c/c++程序员面临的最重要的问题之一，同时很多时候也是最麻烦的事情。所以，这里对简单层次的内存管理做下总结和说明，同时，例举了一些常见的内存错误及解决策略。</p>
+<h3 id="野指针"><a href="#野指针" class="headerlink" title="野指针"></a>野指针</h3><p>在c/c++内存问题中经常听到野指针这个词语，那么到底什么事野指针？野指针是怎样形成的？<br>首先，野指针不是NULL指针，而是指向”垃圾”内存的指针。NULL指针用if语句很容易判断，但是野指针很危险，if语句对其不起作用。<br>野指针的成因主要有下列几种：<br>(1) 指针变量没有初始化。 任何指针变量刚被创建时不会自动成为NULL指针，它的缺省值是随机的，它会乱指一气。所以，指针变量在创建的同时应当被初始化，要么将指针设置为NULL，要么让它指向合法的内存。<br>(2) 指针被free()或者delete之后，没有置为NULL，让人误以为其是个合法的指针。  这点是实际运用过程中极易犯错误的。<br>(3) 指针操作超越了变量的作用范围。<br>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2016/04/13/cplusplusMem/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
         
       
     </div>
