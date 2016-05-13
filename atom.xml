@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-05-13T09:41:30.672Z</updated>
+  <updated>2016-05-13T11:00:07.117Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -16,14 +16,19 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>专题---最长公共子序列，最长公共子串，最长递增子序列，最长子序列和等</title>
+    <title>专题---动态规划之最长公共子序列，最长公共子串，最长递增子序列，最长子序列和等</title>
     <link href="http://blog.dujiong.net/2016/03/25/Seq&Substring/"/>
     <id>http://blog.dujiong.net/2016/03/25/Seq&Substring/</id>
     <published>2016-03-25T07:05:10.000Z</published>
-    <updated>2016-05-13T09:41:30.672Z</updated>
+    <updated>2016-05-13T11:00:07.117Z</updated>
     
-    <content type="html">&lt;p&gt;近来，重新研究了动态规划的一些常见问题，特别是针对数组、子序列和串的一系列问题，&lt;/p&gt;
-&lt;p&gt;1.状态转移方程：动态规划的灵魂。  2. 在很多关于串的问题中，特别注意边界问题的处理。&lt;/p&gt;
+    <content type="html">&lt;p&gt;近来，重新研究了动态规划的一些常见问题，特别是针对数组、子序列和串。学习过程又有了些新的看法与感悟，特记录如下。&lt;/p&gt;
+&lt;p&gt;总结：动态规划是算法设计中非常重要的思想，值得我们多领悟、总结。  &lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;在研究动态规划过程中，一定要深刻理解递归解决公共子问题，并且要能将其和分治法区分开。   &lt;/li&gt;
+&lt;li&gt;状态转移方程，就是反应解决动态规划的思路。当理解写出状态转移方程后，离成功就不远了。   &lt;/li&gt;
+&lt;li&gt;针对很多关于串、子串的问题，注意边界问题的处理。&lt;/li&gt;
+&lt;/ol&gt;
 &lt;h3 id=&quot;最大子数组和&quot;&gt;&lt;a href=&quot;#最大子数组和&quot; class=&quot;headerlink&quot; title=&quot;最大子数组和&quot;&gt;&lt;/a&gt;最大子数组和&lt;/h3&gt;&lt;p&gt;&lt;a href=&quot;https://leetcode.com/problems/maximum-subarray/&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;leetcode：maximum-subarray&lt;/a&gt;&lt;br&gt;说明：找出和最大的子数组。当然，子数组是连续的序列。&lt;br&gt;动态规划方案：使用两个变量，分别保存到目前为止的局部最优解和全局最优解。为什么要这样呢？因为，局部最优不一定是全局最优。  &lt;/p&gt;
 &lt;p&gt;核心代码：   &lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;for(int i=1; i&amp;lt;nums.size(); i++)
@@ -140,13 +145,15 @@ for(int i=0;i&amp;lt;xlen;i++)
     }
     return dp[n1][n2];
 }
-&lt;/code&gt;&lt;/pre&gt;</content>
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;待续&quot;&gt;&lt;a href=&quot;#待续&quot; class=&quot;headerlink&quot; title=&quot;待续&quot;&gt;&lt;/a&gt;待续&lt;/h3&gt;&lt;p&gt;这里通过几个典型实例简单说明了动态规划类问题的一些思路和方法。但是对于想很好的掌握动态规划，还是远远不够的。所以，还得多想，多领悟。 加油吧!&lt;/p&gt;
+</content>
     
     <summary type="html">
     
-      &lt;p&gt;近来，重新研究了动态规划的一些常见问题，特别是针对数组、子序列和串的一系列问题，&lt;/p&gt;
-&lt;p&gt;1.状态转移方程：动态规划的灵魂。  2. 在很多关于串的问题中，特别注意边界问题的处理。&lt;/p&gt;
-&lt;h3 id=&quot;最大子数组和&quot;&gt;&lt;a href=&quot;#最大子数组和&quot; class
+      &lt;p&gt;近来，重新研究了动态规划的一些常见问题，特别是针对数组、子序列和串。学习过程又有了些新的看法与感悟，特记录如下。&lt;/p&gt;
+&lt;p&gt;总结：动态规划是算法设计中非常重要的思想，值得我们多领悟、总结。  &lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;在研究动态规划过程中，一定要深刻理解递归解决公共子
     
     </summary>
     
