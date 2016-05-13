@@ -4,6 +4,23 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/03/25/Seq&Substring/</loc>
+    <lastmod>2016-05-13T11:34:32.165Z</lastmod>
+    <data>
+        <display>
+        <title>专题---动态规划之最长公共子序列，最长公共子串，最长递增子序列，最长子序列和等</title>
+        <pubTime>2016-03-25T07:05:10.000Z</pubTime>
+        
+        <tag>algorithm</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/03/15/dumbap/</loc>
     <lastmod>2016-05-13T11:24:51.527Z</lastmod>
     <data>
@@ -46,23 +63,6 @@
         <pubTime>2016-05-13T11:11:16.000Z</pubTime>
         
         <tag>C++</tag>
-         
-         
-           
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
-    <loc>http://blog.dujiong.net/2016/03/25/Seq&Substring/</loc>
-    <lastmod>2016-05-13T11:00:07.117Z</lastmod>
-    <data>
-        <display>
-        <title>专题---动态规划之最长公共子序列，最长公共子串，最长递增子序列，最长子序列和等</title>
-        <pubTime>2016-03-25T07:05:10.000Z</pubTime>
-        
-        <tag>算法</tag>
          
          
            
