@@ -4,14 +4,14 @@
 
     
   <url>
-    <loc>http://blog.dujiong.net/2016/04/13/cplusplusMem/</loc>
-    <lastmod>2016-05-13T13:24:06.775Z</lastmod>
+    <loc>http://blog.dujiong.net/2016/03/25/Seq&Substring/</loc>
+    <lastmod>2016-05-20T01:48:57.927Z</lastmod>
     <data>
         <display>
-        <title>C++内存管理--部分总结</title>
-        <pubTime>2016-04-13T11:11:16.000Z</pubTime>
+        <title>动态规划之最长公共子序列，最长公共子串，最长递增子序列，最长子序列和等</title>
+        <pubTime>2016-03-25T07:05:10.000Z</pubTime>
         
-        <tag>C++</tag>
+        <tag>algorithm</tag>
          
          
            
@@ -21,14 +21,14 @@
 
     
   <url>
-    <loc>http://blog.dujiong.net/2016/03/25/Seq&Substring/</loc>
-    <lastmod>2016-05-13T12:02:54.073Z</lastmod>
+    <loc>http://blog.dujiong.net/2016/04/13/cplusplusMem/</loc>
+    <lastmod>2016-05-13T13:24:06.775Z</lastmod>
     <data>
         <display>
-        <title>专题---动态规划之最长公共子序列，最长公共子串，最长递增子序列，最长子序列和等</title>
-        <pubTime>2016-03-25T07:05:10.000Z</pubTime>
+        <title>C++内存管理--部分总结</title>
+        <pubTime>2016-04-13T11:11:16.000Z</pubTime>
         
-        <tag>algorithm</tag>
+        <tag>C++</tag>
          
          
            

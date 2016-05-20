@@ -71,11 +71,11 @@ void Test(void)
   </entry>
   
   <entry>
-    <title>专题---动态规划之最长公共子序列，最长公共子串，最长递增子序列，最长子序列和等</title>
+    <title>动态规划之最长公共子序列，最长公共子串，最长递增子序列，最长子序列和等</title>
     <link href="http://blog.dujiong.net/2016/03/25/Seq&Substring/"/>
     <id>http://blog.dujiong.net/2016/03/25/Seq&Substring/</id>
     <published>2016-03-25T07:05:10.000Z</published>
-    <updated>2016-05-13T12:02:54.073Z</updated>
+    <updated>2016-05-20T01:48:57.927Z</updated>
     
     <content type="html">&lt;p&gt;近来，重新研究了动态规划的一些常见问题，特别是针对数组、子序列和串。学习过程又有了些新的看法与感悟，特记录如下。&lt;/p&gt;
 &lt;p&gt;总结：动态规划是算法设计中非常重要的思想，值得我们多领悟、总结。  &lt;/p&gt;
