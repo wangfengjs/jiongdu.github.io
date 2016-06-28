@@ -4,8 +4,25 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/04/28/muduo-2/</loc>
+    <lastmod>2016-06-28T13:35:20.552Z</lastmod>
+    <data>
+        <display>
+        <title>muduo源码阅读之muduo的回调函数机制</title>
+        <pubTime>2016-04-28T11:18:24.000Z</pubTime>
+        
+        <tag>muduo</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/04/25/muduo-1/</loc>
-    <lastmod>2016-06-28T12:07:52.801Z</lastmod>
+    <lastmod>2016-06-28T12:17:55.078Z</lastmod>
     <data>
         <display>
         <title>muduo源码阅读之Reactor模式和muduo</title>
