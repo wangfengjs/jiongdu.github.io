@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-05-20T02:20:22.606Z</updated>
+  <updated>2016-06-28T12:07:52.801Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -14,6 +14,40 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>muduo源码阅读之Reactor模式和muduo</title>
+    <link href="http://blog.dujiong.net/2016/04/25/muduo-1/"/>
+    <id>http://blog.dujiong.net/2016/04/25/muduo-1/</id>
+    <published>2016-04-25T10:56:03.000Z</published>
+    <updated>2016-06-28T12:07:52.801Z</updated>
+    
+    <content type="html">&lt;p&gt;muduo是一个基于Reactor模式的非阻塞网络库，常见的使用Reactor模式的网络库（框架）还有libevent,Java Netty等，所以，首先需要弄清楚Reactor模式。&lt;/p&gt;
+&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
+&lt;h3 id=&quot;Reactor的事件处理机制&quot;&gt;&lt;a href=&quot;#Reactor的事件处理机制&quot; class=&quot;headerlink&quot; title=&quot;Reactor的事件处理机制&quot;&gt;&lt;/a&gt;Reactor的事件处理机制&lt;/h3&gt;&lt;p&gt;首先回忆一下普通函数调用的机制：程序调用某函数执行，程序等待，函数将结果和控制权返回给程序，程序继续处理。这是一种顺序的处理方式。&lt;br&gt;Reactor常释义“反应堆”，是一种事件驱动机制，和普通函数调用的不同之处在于：应用程度不是主动的调用某个接口API完成处理，恰恰相反，Reactor逆置了事件处理流程，应用程序需要提供相应的接口并注册到Reactor上，如果关注的事件发生，Reactor将主动调用应用程序注册的接口，这些接口有一个熟悉的名字：“回调函数”。所以，用户使用Reactor模式的网络库向其注册相应的事件和回调函数，当事件发生时，就会调用回调函数处理事件（I/O读写，定时器和信号等）。Reactor模式一般与非阻塞I/O结合，在处理一个事件时不用等待事件的完成，而是转去处理其他的任务，当事件处理完毕后再去通知Reactor。&lt;br&gt;所以，Reactor模式具有很多优点：&lt;br&gt;1）响应快，不必为单个同步时间所阻塞，虽然Reactor本身依然是同步的；&lt;br&gt;2）编程相对简单，可以最大程度的避免复杂的多线程及同步问题，并且避免了多线程/进程的切换开销；&lt;br&gt;3）可扩展性，可以方便的通过增加Reactor实例个数来充分利用CPU资源；&lt;br&gt;4）可复用性，Reactor框架本身与具体事件处理逻辑无关，具有很高的复用性；&lt;/p&gt;
+&lt;h3 id=&quot;Reactor模式的结构&quot;&gt;&lt;a href=&quot;#Reactor模式的结构&quot; class=&quot;headerlink&quot; title=&quot;Reactor模式的结构&quot;&gt;&lt;/a&gt;Reactor模式的结构&lt;/h3&gt;&lt;p&gt;Reactor模式包括四个部分的组件:&lt;br&gt;1）事件源（Handle）&lt;br&gt;用于表示通过操作系统管理的各种资源，包括套接字，打开文件，定时器等，在Unix系统中是文件描述符，在Windows系统中是句柄。当关心的事件在其上面发生时，可以通过多路复用器(select/epoll等)得到。&lt;br&gt;2）Synchronous Event Demultiplexer&lt;br&gt;事件多路分发机制。由操作系统提供的I/O多路复用机制，如select/epoll等。程序首先将关心的事件源注册到event demultiplexer上，当有事件到达时，event demultiplexer会发出通知“在已经注册的句柄集中，一个或多个句柄已经就绪”。&lt;br&gt;3）Initiation Dispatcher&lt;br&gt;事件管理的接口，实现事件的注册，删除，分发的接口，并运行事件循环，是用于驱动的主模块。Synchronous Event Demultiplexer也是它的一个组件，用于等待新事件的发生。当有事件发生时，Demultiplexer通知dispatcher，dispatcher再根据事件的类型使用相应的Event Hander完成事件的处理。&lt;br&gt;3）Event Handler&lt;br&gt;事件处理程序。一般来说会根据事件类型的不同实现各种类型的回调函数。&lt;/p&gt;
+&lt;p&gt;下图可详细表达各个模块和它们之间的关系：&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/052r16x.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h3 id=&quot;muduo中的Reactor模式&quot;&gt;&lt;a href=&quot;#muduo中的Reactor模式&quot; class=&quot;headerlink&quot; title=&quot;muduo中的Reactor模式&quot;&gt;&lt;/a&gt;muduo中的Reactor模式&lt;/h3&gt;&lt;p&gt;Reactor模式的各个组件在muduo中都有对应的部分，虽然在具体的实现和逻辑上有其自身的特点和不同，但其内在的组织结构是高度符合Reactor模式的。&lt;br&gt;muduo的类图如下：                                                                                    &lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/M4uVBf1.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;各个模块与Reactor模式各组件的对应关系（功能上）是    &lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Initialization dispatcher —— EventLoop    &lt;/li&gt;
+&lt;li&gt;Synchronous Event Demultiplexer —— Poller     &lt;/li&gt;
+&lt;li&gt;Handles —— FileDescriptor、Channel    &lt;/li&gt;
+&lt;li&gt;Event Handler —— TcpConnection、Acceptor、Connector&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&quot;muduo中的思想&quot;&gt;&lt;a href=&quot;#muduo中的思想&quot; class=&quot;headerlink&quot; title=&quot;muduo中的思想&quot;&gt;&lt;/a&gt;muduo中的思想&lt;/h3&gt;&lt;p&gt;有一个main Reactor，这个main Reactor只管接收新的连接，一旦创建好连接，就从EventLoopThreadPool（线程池）中选择一个合适的EventLoop来托管这个连接套接字。这个EventLoop就是一个sub Reactor。&lt;br&gt;muduo的线程模型是one loop per thread + thread pool模型。每个线程最多有一个EventLoop，每个TcpConnection必须归某个EventLoop管理，所有的I/O会转移到这个线程。即，一个句柄只能由一个线程读写。&lt;br&gt;TcpServer直接支持支持多线程，有两种模式：&lt;br&gt;1）单线程，accept()与TcpConnection用同一个线程做IO；&lt;br&gt;2）多线程，accept()与EventLoop在同一个线程，另外创建一个EventLoopThreadPool，新的连接会分配到线程池中。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;muduo是一个基于Reactor模式的非阻塞网络库，常见的使用Reactor模式的网络库（框架）还有libevent,Java Netty等，所以，首先需要弄清楚Reactor模式。&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="muduo" scheme="http://blog.dujiong.net/tags/muduo/"/>
+    
+  </entry>
   
   <entry>
     <title>wifi关键指标提取</title>
@@ -101,16 +135,11 @@ void Test(void)
     <link href="http://blog.dujiong.net/2016/03/25/Seq&Substring/"/>
     <id>http://blog.dujiong.net/2016/03/25/Seq&Substring/</id>
     <published>2016-03-25T07:05:10.000Z</published>
-    <updated>2016-05-20T01:48:57.927Z</updated>
+    <updated>2016-06-28T11:03:42.060Z</updated>
     
     <content type="html">&lt;p&gt;近来，重新研究了动态规划的一些常见问题，特别是针对数组、子序列和串。学习过程又有了些新的看法与感悟，特记录如下。&lt;/p&gt;
-&lt;p&gt;总结：动态规划是算法设计中非常重要的思想，值得我们多领悟、总结。  &lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;在研究动态规划过程中，一定要深刻理解递归解决公共子问题，并且要能将其和分治法区分开。   &lt;/li&gt;
-&lt;li&gt;状态转移方程，就是反应解决动态规划的思路。当理解写出状态转移方程后，离成功就不远了。   &lt;/li&gt;
-&lt;li&gt;针对很多关于串、子串的问题，注意边界问题的处理。       &lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
-&lt;h3 id=&quot;最大子数组和&quot;&gt;&lt;a href=&quot;#最大子数组和&quot; class=&quot;headerlink&quot; title=&quot;最大子数组和&quot;&gt;&lt;/a&gt;最大子数组和&lt;/h3&gt;&lt;a href=&quot;https://leetcode.com/problems/maximum-subarray/&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;leetcode：maximum-subarray&lt;/a&gt;&lt;br&gt;说明：找出和最大的子数组。当然，子数组是连续的序列。&lt;br&gt;动态规划方案：使用两个变量，分别保存到目前为止的局部最优解和全局最优解。为什么要这样呢？因为，局部最优不一定是全局最优。  &lt;/li&gt;
-&lt;/ol&gt;
+&lt;p&gt;总结：动态规划是算法设计中非常重要的思想，值得我们多领悟、总结。&lt;br&gt;1.在研究动态规划过程中，一定要深刻理解递归解决公共子问题，并且要能将其和分治法区分开。&lt;br&gt;2.状态转移方程，就是反应解决动态规划的思路。当理解写出状态转移方程后，离成功就不远了。&lt;br&gt;3.针对很多关于串、子串的问题，注意边界问题的处理。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&quot;最大子数组和&quot;&gt;&lt;a href=&quot;#最大子数组和&quot; class=&quot;headerlink&quot; title=&quot;最大子数组和&quot;&gt;&lt;/a&gt;最大子数组和&lt;/h3&gt;&lt;p&gt;&lt;a href=&quot;https://leetcode.com/problems/maximum-subarray/&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;leetcode：maximum-subarray&lt;/a&gt;&lt;br&gt;说明：找出和最大的子数组。当然，子数组是连续的序列。&lt;br&gt;动态规划方案：使用两个变量，分别保存到目前为止的局部最优解和全局最优解。为什么要这样呢？因为，局部最优不一定是全局最优。  &lt;/p&gt;
 &lt;p&gt;核心代码：   &lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;for(int i=1; i&amp;lt;nums.size(); i++)
    {
@@ -232,11 +261,7 @@ for(int i=0;i&amp;lt;xlen;i++)
     <summary type="html">
     
       &lt;p&gt;近来，重新研究了动态规划的一些常见问题，特别是针对数组、子序列和串。学习过程又有了些新的看法与感悟，特记录如下。&lt;/p&gt;
-&lt;p&gt;总结：动态规划是算法设计中非常重要的思想，值得我们多领悟、总结。  &lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;在研究动态规划过程中，一定要深刻理解递归解决公共子问题，并且要能将其和分治法区分开。   &lt;/li&gt;
-&lt;li&gt;状态转移方程，就是反应解决动态规划的思路。当理解写出状态转移方程后，离成功就不远了。   &lt;/li&gt;
-&lt;li&gt;针对很多关于串、子串的问题，注意边界问题的处理。
+&lt;p&gt;总结：动态规划是算法设计中非常重要的思想，值得我们多领悟、总结。&lt;br&gt;1.在研究动态规划过程中，一定要深刻理解递归解决公共子问题，并且要能将其和分治法区分开。&lt;br&gt;2.状态转移方程，就是反应解决动态规划的思路。当理解写出状态转移方程后，离成功就不远了。&lt;br&gt;3.针对很多关于串、子串的问题，注意边界问题的处理。&lt;br&gt;
     
     </summary>
     
