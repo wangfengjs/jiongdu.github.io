@@ -59,22 +59,16 @@
 
 
 
-<meta name="description" content="回调是指将一段可执行的代码作为变量传给另外一部分代码，以供同步或异步调用。在Reactor模式中，在事件到来时调用相应的处理函数就是一种异步回调的过程。回调函数的实现可以由各种各样的方式。
-C语言的函数指针最熟悉的回调机制应该属于C语言的函数指针了。考虑一个简单的例子，实现对两个数的操作，这个操作可以是加减乘除等。首先声明一个函数指针：           
-typedef int (operFu">
+<meta name="description" content="回调是指将一段可执行的代码作为变量传给另外一部分代码，以供同步或异步调用。在Reactor模式中，在事件到来时调用相应的处理函数就是一种异步回调的过程。回调函数的实现可以由各种各样的方式。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="muduo源码阅读之muduo的回调函数机制">
 <meta property="og:url" content="http://blog.dujiong.net/2016/04/28/muduo-2/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="回调是指将一段可执行的代码作为变量传给另外一部分代码，以供同步或异步调用。在Reactor模式中，在事件到来时调用相应的处理函数就是一种异步回调的过程。回调函数的实现可以由各种各样的方式。
-C语言的函数指针最熟悉的回调机制应该属于C语言的函数指针了。考虑一个简单的例子，实现对两个数的操作，这个操作可以是加减乘除等。首先声明一个函数指针：           
-typedef int (operFu">
-<meta property="og:updated_time" content="2016-06-28T13:35:20.552Z">
+<meta property="og:description" content="回调是指将一段可执行的代码作为变量传给另外一部分代码，以供同步或异步调用。在Reactor模式中，在事件到来时调用相应的处理函数就是一种异步回调的过程。回调函数的实现可以由各种各样的方式。">
+<meta property="og:updated_time" content="2016-06-28T13:38:50.189Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="muduo源码阅读之muduo的回调函数机制">
-<meta name="twitter:description" content="回调是指将一段可执行的代码作为变量传给另外一部分代码，以供同步或异步调用。在Reactor模式中，在事件到来时调用相应的处理函数就是一种异步回调的过程。回调函数的实现可以由各种各样的方式。
-C语言的函数指针最熟悉的回调机制应该属于C语言的函数指针了。考虑一个简单的例子，实现对两个数的操作，这个操作可以是加减乘除等。首先声明一个函数指针：           
-typedef int (operFu">
+<meta name="twitter:description" content="回调是指将一段可执行的代码作为变量传给另外一部分代码，以供同步或异步调用。在Reactor模式中，在事件到来时调用相应的处理函数就是一种异步回调的过程。回调函数的实现可以由各种各样的方式。">
 
 
 
@@ -298,7 +292,7 @@ typedef int (operFu">
       
 
       
-        <p>回调是指将一段可执行的代码作为变量传给另外一部分代码，以供同步或异步调用。在Reactor模式中，在事件到来时调用相应的处理函数就是一种异步回调的过程。回调函数的实现可以由各种各样的方式。</p>
+        <p>回调是指将一段可执行的代码作为变量传给另外一部分代码，以供同步或异步调用。在Reactor模式中，在事件到来时调用相应的处理函数就是一种异步回调的过程。回调函数的实现可以由各种各样的方式。<br><a id="more"></a></p>
 <h3 id="C语言的函数指针"><a href="#C语言的函数指针" class="headerlink" title="C语言的函数指针"></a>C语言的函数指针</h3><p>最熟悉的回调机制应该属于C语言的函数指针了。考虑一个简单的例子，实现对两个数的操作，这个操作可以是加减乘除等。<br>首先声明一个函数指针：           </p>
 <pre><code>typedef int (operFunc*)(int a, int b);
 </code></pre><p>这个类型的函数指针可以做为参数传给用于实现两个数操作的函数，这个函数仅仅是简单的调用传入的函数指针：                                                                                  </p>
