@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-06-28T13:38:50.189Z</updated>
+  <updated>2016-06-28T13:44:11.856Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://blog.dujiong.net/2016/04/28/muduo-2/"/>
     <id>http://blog.dujiong.net/2016/04/28/muduo-2/</id>
     <published>2016-04-28T11:18:24.000Z</published>
-    <updated>2016-06-28T13:38:50.189Z</updated>
+    <updated>2016-06-28T13:44:11.856Z</updated>
     
     <content type="html">&lt;p&gt;回调是指将一段可执行的代码作为变量传给另外一部分代码，以供同步或异步调用。在Reactor模式中，在事件到来时调用相应的处理函数就是一种异步回调的过程。回调函数的实现可以由各种各样的方式。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h3 id=&quot;C语言的函数指针&quot;&gt;&lt;a href=&quot;#C语言的函数指针&quot; class=&quot;headerlink&quot; title=&quot;C语言的函数指针&quot;&gt;&lt;/a&gt;C语言的函数指针&lt;/h3&gt;&lt;p&gt;最熟悉的回调机制应该属于C语言的函数指针了。考虑一个简单的例子，实现对两个数的操作，这个操作可以是加减乘除等。&lt;br&gt;首先声明一个函数指针：           &lt;/p&gt;
@@ -36,8 +36,8 @@
     return a + b;
 }
 int minus(int a, int b) 
-{
-          return a - b;
+{   
+    return a - b;
 }
 ...
 &lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这样，在调用operation()时可以根据传入回调函数的不同，实现不同的功能。&lt;/p&gt;
@@ -122,7 +122,7 @@ int main(void)
 {
     operFunc oper = &amp;amp;A::add;
     A ca;
-       int a = 2;
+    int a = 2;
     int b = 3;
     int res = (ca.*oper)(a, b);
     std::cout &amp;lt;&amp;lt; res &amp;lt;&amp;lt; std::endl;

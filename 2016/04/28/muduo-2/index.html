@@ -65,7 +65,7 @@
 <meta property="og:url" content="http://blog.dujiong.net/2016/04/28/muduo-2/index.html">
 <meta property="og:site_name" content="一期一会">
 <meta property="og:description" content="回调是指将一段可执行的代码作为变量传给另外一部分代码，以供同步或异步调用。在Reactor模式中，在事件到来时调用相应的处理函数就是一种异步回调的过程。回调函数的实现可以由各种各样的方式。">
-<meta property="og:updated_time" content="2016-06-28T13:38:50.189Z">
+<meta property="og:updated_time" content="2016-06-28T13:44:11.856Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="muduo源码阅读之muduo的回调函数机制">
 <meta name="twitter:description" content="回调是指将一段可执行的代码作为变量传给另外一部分代码，以供同步或异步调用。在Reactor模式中，在事件到来时调用相应的处理函数就是一种异步回调的过程。回调函数的实现可以由各种各样的方式。">
@@ -306,8 +306,8 @@
     return a + b;
 }
 int minus(int a, int b) 
-{
-          return a - b;
+{   
+    return a - b;
 }
 ...
 </code></pre><p>这样，在调用operation()时可以根据传入回调函数的不同，实现不同的功能。</p>
@@ -392,7 +392,7 @@ int main(void)
 {
     operFunc oper = &amp;A::add;
     A ca;
-       int a = 2;
+    int a = 2;
     int b = 3;
     int res = (ca.*oper)(a, b);
     std::cout &lt;&lt; res &lt;&lt; std::endl;
