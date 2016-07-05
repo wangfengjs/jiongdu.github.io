@@ -4,6 +4,23 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/05/03/muduo-3/</loc>
+    <lastmod>2016-07-05T14:14:01.656Z</lastmod>
+    <data>
+        <display>
+        <title>muduo源码阅读之EventLoop类</title>
+        <pubTime>2016-05-03T13:13:47.000Z</pubTime>
+        
+        <tag>muduo</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/04/13/cplusplusMem/</loc>
     <lastmod>2016-07-05T12:56:02.581Z</lastmod>
     <data>

@@ -41,7 +41,7 @@
 <link href="/css/main.css?v=0.5.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="openwrt,wifi," />
+  <meta name="keywords" content="muduo," />
 
 
 
@@ -59,16 +59,16 @@
 
 
 
-<meta name="description" content="本文介绍并实现无线网卡获取周围wifi关键通信数据，捕捉所需要的MAC层管理数据包，通过解包获取到周围AP和终端设备的MAC地址和RSSI，并存入数据库中，可用于定位，通信链路分析等。">
+<meta name="description" content="EventLoop类类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="wifi关键指标提取">
-<meta property="og:url" content="http://blog.dujiong.net/2016/04/20/wifi-data-get/index.html">
+<meta property="og:title" content="muduo源码阅读之EventLoop类">
+<meta property="og:url" content="http://blog.dujiong.net/2016/05/03/muduo-3/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="本文介绍并实现无线网卡获取周围wifi关键通信数据，捕捉所需要的MAC层管理数据包，通过解包获取到周围AP和终端设备的MAC地址和RSSI，并存入数据库中，可用于定位，通信链路分析等。">
-<meta property="og:updated_time" content="2016-05-20T02:20:22.606Z">
+<meta property="og:description" content="EventLoop类类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。">
+<meta property="og:updated_time" content="2016-07-05T14:14:01.656Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="wifi关键指标提取">
-<meta name="twitter:description" content="本文介绍并实现无线网卡获取周围wifi关键通信数据，捕捉所需要的MAC层管理数据包，通过解包获取到周围AP和终端设备的MAC地址和RSSI，并存入数据库中，可用于定位，通信链路分析等。">
+<meta name="twitter:title" content="muduo源码阅读之EventLoop类">
+<meta name="twitter:description" content="EventLoop类类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。">
 
 
 
@@ -86,7 +86,7 @@
   };
 </script>
 
-  <title> wifi关键指标提取 | 一期一会 </title>
+  <title> muduo源码阅读之EventLoop类 | 一期一会 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -246,7 +246,7 @@
             
             
               
-                wifi关键指标提取
+                muduo源码阅读之EventLoop类
               
             
           </h1>
@@ -258,8 +258,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-04-20T09:56:09+08:00" content="2016-04-20">
-              2016-04-20
+            <time itemprop="dateCreated" datetime="2016-05-03T21:13:47+08:00" content="2016-05-03">
+              2016-05-03
             </time>
           </span>
 
@@ -269,8 +269,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/04/20/wifi-data-get/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/04/20/wifi-data-get/" itemprop="commentsCount"></span>
+                <a href="/2016/05/03/muduo-3/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/05/03/muduo-3/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -292,10 +292,56 @@
       
 
       
-        <p>本文介绍并实现无线网卡获取周围wifi关键通信数据，捕捉所需要的MAC层管理数据包，通过解包获取到周围AP和终端设备的MAC地址和RSSI，并存入数据库中，可用于定位，通信链路分析等。</p>
-<a id="more"></a>
-<p>###基本方法<br>在实现MAC地址和RSSI的提取时，借鉴了OpenWRT现有的iwcap工具包，iwcap是OpenWRT上用来调试wifi功能的一个抓包工具，可以抓取监听到的所有802.11帧，并获取到pcap格式的网卡原始数据。</p>
-<p>###程序分析<br>详细程序见: <a href="https://github.com/jiongdu" target="_blank" rel="external">github</a></p>
+        <p>EventLoop类类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。<br><a id="more"></a>  </p>
+<h3 id="EventLoop继承自boost-noncopyale"><a href="#EventLoop继承自boost-noncopyale" class="headerlink" title="EventLoop继承自boost::noncopyale"></a>EventLoop继承自boost::noncopyale</h3><p>EventLoop是不可拷贝的，所以源码中继承了boost::noncopyable。boost::noncopyable的思想是把构造函数和析构函数设置成protected权限，这样子类可以调用，但是外面的类不能调用，那么当子类需要定义构造函数的时候不至于通不过编译。但是更关键的是noncopyable把复制构造函数和复制赋值函数都做成了private，这就意味着除非子类定义自己的复制构造和赋值函数，否则在子类没有定义的情况下，外面的调用者是不能够通过复制构造和赋值等手段来产生一个新的子类对象的。<br>one loop per thread意味着每个线程智能有一个EventLoop对象，因此EventLoop的构造函数会检查当前线程是否已经创建了其他EventLoop对象。EventLoop的构造函数会记住本对象所属的线程。</p>
+<pre><code>EventLoop::EventLoop()    
+    :looping(false),
+     threadId_(CurrentThread::tid())
+{
+    if(t_loopInthisThread)
+        LOG_FATAL &lt;&lt; ...
+}
+</code></pre><h3 id="Event-Hander的注册与删除"><a href="#Event-Hander的注册与删除" class="headerlink" title="Event Hander的注册与删除"></a>Event Hander的注册与删除</h3><p>在初始状态，一个EventLoop只是一个框架，其中并没有包含具体需要处理的事件及相应的资源。所以，要处理一个事件，必须要将相应的Event Handler信息注册到EventLoop中，这个用于注册的函数就是EventLoop::updateChannel()。</p>
+<pre><code>void EventLoop::updateChannel(Channel* channel)
+{
+    ...
+    poller_-&gt;updateChannel(channel);
+}
+</code></pre><p>函数形参为Channel*类型，如前所述，Channel类似Reactor模式中的Handle。通过Channel类型的变量，Event Handler的相关信息被注册到了EventLoop中。具体的注册过程由poller<em>成员变量完成。这是muduo的Demultiplexer。同样的，Event Handler的删除与注册很相似，具体过程也通过poller</em>完成。</p>
+<pre><code>void EventLoop::removeChannel(Channel* channel)
+{
+    ...
+    poller_-&gt;removeChannel(channel);
+}
+</code></pre><h3 id="事件循环中的事件分发"><a href="#事件循环中的事件分发" class="headerlink" title="事件循环中的事件分发"></a>事件循环中的事件分发</h3><p>loop函数是EventLoop类的核心，用于事件循环的运行。在循环返回时，通过Demultiplexer获得已注册到EventLoop中Event Handler的就绪通知。然后Demultiplexer将所有就绪的事件Channel保存到容器activeChannels<em>中，接着一一处理activeChannels</em>中所有activeChannel的callback。EventLoop只提供框架，对要处理的事件一无所知，Channel中包含感兴趣的事件和对事件的处理方法(注册的回调函数)。<br>EventLoop在它的IO线程里执行某个用户任务回调，即EventLoop::runInLoop(const Functor&amp; cb),如果用户在当前IO线程调用这个函数，回调会同步进行，如果用户在其他线程调用runInLoop()，cb会被加入队列，IO线程会被唤醒来调用Functor。</p>
+<pre><code>void EventLoop::loop()
+{
+    while(!quit)
+    {
+        pollReturnTime=poller_-&gt;poll(kPollTimeMs, &amp;activeChannels_);
+        for(ChannelList::iterator it=activeChannels_.begin();
+                it!=activeChannels_.end();++it)
+        {
+            currentActiveChannel_ = *it;
+            currentActiveChannel_-&gt;handleEvent(pollReturnTime_);
+        }
+        doPendingFunctors();
+    }
+}
+</code></pre><h3 id="几个定时运行函数"><a href="#几个定时运行函数" class="headerlink" title="几个定时运行函数"></a>几个定时运行函数</h3><p>muduo的定时器功能由三个class实现，TimerId、Timer、TimerQueue。</p>
+<h3 id="在事件循环中运行回调函数"><a href="#在事件循环中运行回调函数" class="headerlink" title="在事件循环中运行回调函数"></a>在事件循环中运行回调函数</h3><p>EventLoop::runInLoop()用于在一个事件循环中运行回调函数。如果事件循环在当前线程中，那么可以直接运行回调函数。但如果不在当前线程，那么将回调函数放入待完成事件集合中，在loop()函数中的doPendingFunctors()完成处理。在上文中可以看到loop函数的每次while()循环在最后都会运行doPendingFunctors()。</p>
+<pre><code>void EventLoop::runInLoop(const Functor&amp; cb)    
+{
+    if(isInLoopThread())    
+    {
+        cb();
+    }
+    else
+    {
+        queueInLoop(cb);
+    }
+}
+</code></pre><p>pendingFunctors保存了待完成的事件，doPendingFunctors()函数很简单，就是顺序调用pendingFunctors各个回调函数。</p>
 
       
     </div>
@@ -310,9 +356,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/openwrt/" rel="tag">#openwrt</a>
-          
-            <a href="/tags/wifi/" rel="tag">#wifi</a>
+            <a href="/tags/muduo/" rel="tag">#muduo</a>
           
         </div>
       
@@ -321,17 +365,13 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/04/13/cplusplusMem/" rel="next" title="C++内存管理--部分总结">
-                <i class="fa fa-chevron-left"></i> C++内存管理--部分总结
+              <a href="/2016/04/28/muduo-2/" rel="next" title="muduo源码阅读之muduo的回调函数机制">
+                <i class="fa fa-chevron-left"></i> muduo源码阅读之muduo的回调函数机制
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/04/25/muduo-1/" rel="prev" title="muduo源码阅读之Reactor模式和muduo">
-                muduo源码阅读之Reactor模式和muduo <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -357,8 +397,8 @@
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/04/20/wifi-data-get/"
-           data-title="wifi关键指标提取" data-url="http://blog.dujiong.net/2016/04/20/wifi-data-get/">
+      <div class="ds-thread" data-thread-key="2016/05/03/muduo-3/"
+           data-title="muduo源码阅读之EventLoop类" data-url="http://blog.dujiong.net/2016/05/03/muduo-3/">
       </div>
     
   </div>
@@ -472,7 +512,7 @@
               
             
             
-              <p class="post-toc-empty">此文章未包含目录</p>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#EventLoop继承自boost-noncopyale"><span class="nav-number">1.</span> <span class="nav-text">EventLoop继承自boost::noncopyale</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Event-Hander的注册与删除"><span class="nav-number">2.</span> <span class="nav-text">Event Hander的注册与删除</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#事件循环中的事件分发"><span class="nav-number">3.</span> <span class="nav-text">事件循环中的事件分发</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#几个定时运行函数"><span class="nav-number">4.</span> <span class="nav-text">几个定时运行函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#在事件循环中运行回调函数"><span class="nav-number">5.</span> <span class="nav-text">在事件循环中运行回调函数</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">

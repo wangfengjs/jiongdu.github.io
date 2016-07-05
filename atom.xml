@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-06-28T13:55:56.861Z</updated>
+  <updated>2016-07-05T14:14:01.656Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -14,6 +14,76 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>muduo源码阅读之EventLoop类</title>
+    <link href="http://blog.dujiong.net/2016/05/03/muduo-3/"/>
+    <id>http://blog.dujiong.net/2016/05/03/muduo-3/</id>
+    <published>2016-05-03T13:13:47.000Z</published>
+    <updated>2016-07-05T14:14:01.656Z</updated>
+    
+    <content type="html">&lt;p&gt;EventLoop类类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;  &lt;/p&gt;
+&lt;h3 id=&quot;EventLoop继承自boost-noncopyale&quot;&gt;&lt;a href=&quot;#EventLoop继承自boost-noncopyale&quot; class=&quot;headerlink&quot; title=&quot;EventLoop继承自boost::noncopyale&quot;&gt;&lt;/a&gt;EventLoop继承自boost::noncopyale&lt;/h3&gt;&lt;p&gt;EventLoop是不可拷贝的，所以源码中继承了boost::noncopyable。boost::noncopyable的思想是把构造函数和析构函数设置成protected权限，这样子类可以调用，但是外面的类不能调用，那么当子类需要定义构造函数的时候不至于通不过编译。但是更关键的是noncopyable把复制构造函数和复制赋值函数都做成了private，这就意味着除非子类定义自己的复制构造和赋值函数，否则在子类没有定义的情况下，外面的调用者是不能够通过复制构造和赋值等手段来产生一个新的子类对象的。&lt;br&gt;one loop per thread意味着每个线程智能有一个EventLoop对象，因此EventLoop的构造函数会检查当前线程是否已经创建了其他EventLoop对象。EventLoop的构造函数会记住本对象所属的线程。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;EventLoop::EventLoop()    
+    :looping(false),
+     threadId_(CurrentThread::tid())
+{
+    if(t_loopInthisThread)
+        LOG_FATAL &amp;lt;&amp;lt; ...
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;Event-Hander的注册与删除&quot;&gt;&lt;a href=&quot;#Event-Hander的注册与删除&quot; class=&quot;headerlink&quot; title=&quot;Event Hander的注册与删除&quot;&gt;&lt;/a&gt;Event Hander的注册与删除&lt;/h3&gt;&lt;p&gt;在初始状态，一个EventLoop只是一个框架，其中并没有包含具体需要处理的事件及相应的资源。所以，要处理一个事件，必须要将相应的Event Handler信息注册到EventLoop中，这个用于注册的函数就是EventLoop::updateChannel()。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;void EventLoop::updateChannel(Channel* channel)
+{
+    ...
+    poller_-&amp;gt;updateChannel(channel);
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;函数形参为Channel*类型，如前所述，Channel类似Reactor模式中的Handle。通过Channel类型的变量，Event Handler的相关信息被注册到了EventLoop中。具体的注册过程由poller&lt;em&gt;成员变量完成。这是muduo的Demultiplexer。同样的，Event Handler的删除与注册很相似，具体过程也通过poller&lt;/em&gt;完成。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;void EventLoop::removeChannel(Channel* channel)
+{
+    ...
+    poller_-&amp;gt;removeChannel(channel);
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;事件循环中的事件分发&quot;&gt;&lt;a href=&quot;#事件循环中的事件分发&quot; class=&quot;headerlink&quot; title=&quot;事件循环中的事件分发&quot;&gt;&lt;/a&gt;事件循环中的事件分发&lt;/h3&gt;&lt;p&gt;loop函数是EventLoop类的核心，用于事件循环的运行。在循环返回时，通过Demultiplexer获得已注册到EventLoop中Event Handler的就绪通知。然后Demultiplexer将所有就绪的事件Channel保存到容器activeChannels&lt;em&gt;中，接着一一处理activeChannels&lt;/em&gt;中所有activeChannel的callback。EventLoop只提供框架，对要处理的事件一无所知，Channel中包含感兴趣的事件和对事件的处理方法(注册的回调函数)。&lt;br&gt;EventLoop在它的IO线程里执行某个用户任务回调，即EventLoop::runInLoop(const Functor&amp;amp; cb),如果用户在当前IO线程调用这个函数，回调会同步进行，如果用户在其他线程调用runInLoop()，cb会被加入队列，IO线程会被唤醒来调用Functor。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;void EventLoop::loop()
+{
+    while(!quit)
+    {
+        pollReturnTime=poller_-&amp;gt;poll(kPollTimeMs, &amp;amp;activeChannels_);
+        for(ChannelList::iterator it=activeChannels_.begin();
+                it!=activeChannels_.end();++it)
+        {
+            currentActiveChannel_ = *it;
+            currentActiveChannel_-&amp;gt;handleEvent(pollReturnTime_);
+        }
+        doPendingFunctors();
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;几个定时运行函数&quot;&gt;&lt;a href=&quot;#几个定时运行函数&quot; class=&quot;headerlink&quot; title=&quot;几个定时运行函数&quot;&gt;&lt;/a&gt;几个定时运行函数&lt;/h3&gt;&lt;p&gt;muduo的定时器功能由三个class实现，TimerId、Timer、TimerQueue。&lt;/p&gt;
+&lt;h3 id=&quot;在事件循环中运行回调函数&quot;&gt;&lt;a href=&quot;#在事件循环中运行回调函数&quot; class=&quot;headerlink&quot; title=&quot;在事件循环中运行回调函数&quot;&gt;&lt;/a&gt;在事件循环中运行回调函数&lt;/h3&gt;&lt;p&gt;EventLoop::runInLoop()用于在一个事件循环中运行回调函数。如果事件循环在当前线程中，那么可以直接运行回调函数。但如果不在当前线程，那么将回调函数放入待完成事件集合中，在loop()函数中的doPendingFunctors()完成处理。在上文中可以看到loop函数的每次while()循环在最后都会运行doPendingFunctors()。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;void EventLoop::runInLoop(const Functor&amp;amp; cb)    
+{
+    if(isInLoopThread())    
+    {
+        cb();
+    }
+    else
+    {
+        queueInLoop(cb);
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;pendingFunctors保存了待完成的事件，doPendingFunctors()函数很简单，就是顺序调用pendingFunctors各个回调函数。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;EventLoop类类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="muduo" scheme="http://blog.dujiong.net/tags/muduo/"/>
+    
+  </entry>
   
   <entry>
     <title>muduo源码阅读之muduo的回调函数机制</title>
