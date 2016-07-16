@@ -59,16 +59,16 @@
 
 
 
-<meta name="description" content="EventLoop类类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。">
+<meta name="description" content="EventLoop类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="muduo源码阅读之EventLoop类">
 <meta property="og:url" content="http://blog.dujiong.net/2016/05/03/muduo-3/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="EventLoop类类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。">
-<meta property="og:updated_time" content="2016-07-05T14:14:01.656Z">
+<meta property="og:description" content="EventLoop类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。">
+<meta property="og:updated_time" content="2016-07-16T06:37:48.464Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="muduo源码阅读之EventLoop类">
-<meta name="twitter:description" content="EventLoop类类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。">
+<meta name="twitter:description" content="EventLoop类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。">
 
 
 
@@ -292,11 +292,12 @@
       
 
       
-        <p>EventLoop类类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。<br><a id="more"></a>  </p>
-<h3 id="EventLoop继承自boost-noncopyale"><a href="#EventLoop继承自boost-noncopyale" class="headerlink" title="EventLoop继承自boost::noncopyale"></a>EventLoop继承自boost::noncopyale</h3><p>EventLoop是不可拷贝的，所以源码中继承了boost::noncopyable。boost::noncopyable的思想是把构造函数和析构函数设置成protected权限，这样子类可以调用，但是外面的类不能调用，那么当子类需要定义构造函数的时候不至于通不过编译。但是更关键的是noncopyable把复制构造函数和复制赋值函数都做成了private，这就意味着除非子类定义自己的复制构造和赋值函数，否则在子类没有定义的情况下，外面的调用者是不能够通过复制构造和赋值等手段来产生一个新的子类对象的。<br>one loop per thread意味着每个线程智能有一个EventLoop对象，因此EventLoop的构造函数会检查当前线程是否已经创建了其他EventLoop对象。EventLoop的构造函数会记住本对象所属的线程。</p>
+        <p>EventLoop类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。<br><a id="more"></a>  </p>
+<h3 id="EventLoop继承自boost-noncopyale"><a href="#EventLoop继承自boost-noncopyale" class="headerlink" title="EventLoop继承自boost::noncopyale"></a>EventLoop继承自boost::noncopyale</h3><p>EventLoop是不可拷贝的，所以源码中继承了boost::noncopyable。boost::noncopyable的思想是把构造函数和析构函数设置成protected权限，这样子类可以调用，但是外面的类不能调用，那么当子类需要定义构造函数的时候不至于通不过编译。但是更关键的是noncopyable把复制构造函数和复制赋值函数都做成了private，这就意味着除非子类定义自己的复制构造和赋值函数，否则在子类没有定义的情况下，外面的调用者是不能够通过复制构造和赋值等手段来产生一个新的子类对象的。<br>one loop per thread模型意味着每个线程只能有一个EventLoop对象，因此EventLoop的构造函数会检查当前线程是否已经创建了其他EventLoop对象。EventLoop的构造函数会记住本对象所属的线程。</p>
 <pre><code>EventLoop::EventLoop()    
     :looping(false),
      threadId_(CurrentThread::tid())
+     ...
 {
     if(t_loopInthisThread)
         LOG_FATAL &lt;&lt; ...
@@ -304,16 +305,17 @@
 </code></pre><h3 id="Event-Hander的注册与删除"><a href="#Event-Hander的注册与删除" class="headerlink" title="Event Hander的注册与删除"></a>Event Hander的注册与删除</h3><p>在初始状态，一个EventLoop只是一个框架，其中并没有包含具体需要处理的事件及相应的资源。所以，要处理一个事件，必须要将相应的Event Handler信息注册到EventLoop中，这个用于注册的函数就是EventLoop::updateChannel()。</p>
 <pre><code>void EventLoop::updateChannel(Channel* channel)
 {
-    ...
+    assert(channel_-&gt;ownerLoop() == this);
+    asserInLoopThread();
     poller_-&gt;updateChannel(channel);
 }
-</code></pre><p>函数形参为Channel*类型，如前所述，Channel类似Reactor模式中的Handle。通过Channel类型的变量，Event Handler的相关信息被注册到了EventLoop中。具体的注册过程由poller<em>成员变量完成。这是muduo的Demultiplexer。同样的，Event Handler的删除与注册很相似，具体过程也通过poller</em>完成。</p>
+</code></pre><p>函数形参为Channel*类型，如前所述，Channel类似Reactor模式中的Handle。通过Channel类型的变量，Event Handler的相关信息被注册到了EventLoop中。具体的注册过程由poller<em>成员变量完成，这是muduo的Demultiplexer。poller</em>对应的Poller class在muduo中是个抽象基类，因为muduo同时支持poll()和epoll()两种IO复用机制。Poller::updateChannel()的主要功能就是负责维护和更新pollfds<em>数组。<br>同样的，Event Handler的删除与注册很相似，具体过程也通过poller</em>完成。</p>
 <pre><code>void EventLoop::removeChannel(Channel* channel)
 {
     ...
     poller_-&gt;removeChannel(channel);
 }
-</code></pre><h3 id="事件循环中的事件分发"><a href="#事件循环中的事件分发" class="headerlink" title="事件循环中的事件分发"></a>事件循环中的事件分发</h3><p>loop函数是EventLoop类的核心，用于事件循环的运行。在循环返回时，通过Demultiplexer获得已注册到EventLoop中Event Handler的就绪通知。然后Demultiplexer将所有就绪的事件Channel保存到容器activeChannels<em>中，接着一一处理activeChannels</em>中所有activeChannel的callback。EventLoop只提供框架，对要处理的事件一无所知，Channel中包含感兴趣的事件和对事件的处理方法(注册的回调函数)。<br>EventLoop在它的IO线程里执行某个用户任务回调，即EventLoop::runInLoop(const Functor&amp; cb),如果用户在当前IO线程调用这个函数，回调会同步进行，如果用户在其他线程调用runInLoop()，cb会被加入队列，IO线程会被唤醒来调用Functor。</p>
+</code></pre><h3 id="事件循环中的事件分发"><a href="#事件循环中的事件分发" class="headerlink" title="事件循环中的事件分发"></a>事件循环中的事件分发</h3><p>loop函数是EventLoop类的核心，用于事件循环的运行。在循环返回时，通过Demultiplexer获得已注册到EventLoop中Event Handler的就绪通知。然后Demultiplexer将所有就绪的事件Channel保存到容器activeChannels<em>中，接着一一处理activeChannels</em>中所有activeChannel的callback。EventLoop只提供框架，对要处理的事件一无所知，Channel中包含感兴趣的事件和对事件的处理方法(注册的回调函数)。    </p>
 <pre><code>void EventLoop::loop()
 {
     while(!quit)
@@ -326,6 +328,29 @@
             currentActiveChannel_-&gt;handleEvent(pollReturnTime_);
         }
         doPendingFunctors();
+    }
+}
+</code></pre><p>EventLoop在它的IO线程里执行某个用户任务回调，即EventLoop::runInLoop(const Functor&amp; cb),如果用户在当前IO线程调用这个函数，回调会同步进行，如果用户在其他线程调用runInLoop()，cb会被加入队列(queueInLoop(std::move(cb)))，IO线程会被唤醒来调用Functor,当然，这个过程需要锁保护。</p>
+<pre><code>void EventLoop::runInLoop(Functor&amp;&amp; cb)
+{
+    if(isInLoopThread())
+    {
+        cb();
+    }
+    else
+    {
+        queueInLoop(std::move(cb));
+    }
+}
+void EventLoop::queueInLoop(Functor&amp;&amp; cb)
+{
+    {
+        MutexLockGuard lock(mutex_);
+        pendingFunctors_.push_back(std::move(cb));
+    }
+    if(!isInLoopThread() || callingPendingFunctors_)
+    {
+        wakeup();
     }
 }
 </code></pre><h3 id="几个定时运行函数"><a href="#几个定时运行函数" class="headerlink" title="几个定时运行函数"></a>几个定时运行函数</h3><p>muduo的定时器功能由三个class实现，TimerId、Timer、TimerQueue。</p>
