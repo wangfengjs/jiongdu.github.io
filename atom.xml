@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-07-16T07:14:06.719Z</updated>
+  <updated>2016-07-16T07:24:26.005Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://blog.dujiong.net/2016/05/03/muduo-3/"/>
     <id>http://blog.dujiong.net/2016/05/03/muduo-3/</id>
     <published>2016-05-03T13:13:47.000Z</published>
-    <updated>2016-07-16T07:14:06.719Z</updated>
+    <updated>2016-07-16T07:24:26.005Z</updated>
     
     <content type="html">&lt;p&gt;EventLoop类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;  &lt;/p&gt;
 &lt;h3 id=&quot;EventLoop继承自boost-noncopyale&quot;&gt;&lt;a href=&quot;#EventLoop继承自boost-noncopyale&quot; class=&quot;headerlink&quot; title=&quot;EventLoop继承自boost::noncopyale&quot;&gt;&lt;/a&gt;EventLoop继承自boost::noncopyale&lt;/h3&gt;&lt;p&gt;EventLoop是不可拷贝的，所以源码中继承了boost::noncopyable。boost::noncopyable的思想是把构造函数和析构函数设置成protected权限，这样子类可以调用，但是外面的类不能调用，那么当子类需要定义构造函数的时候不至于通不过编译。但是更关键的是noncopyable把复制构造函数和复制赋值函数都做成了private，这就意味着除非子类定义自己的复制构造和赋值函数，否则在子类没有定义的情况下，外面的调用者是不能够通过复制构造和赋值等手段来产生一个新的子类对象的。&lt;br&gt;one loop per thread模型意味着每个线程只能有一个EventLoop对象，因此EventLoop的构造函数会检查当前线程是否已经创建了其他EventLoop对象。EventLoop的构造函数会记住本对象所属的线程。&lt;/p&gt;
@@ -39,13 +39,14 @@
     asserInLoopThread();
     poller_-&amp;gt;updateChannel(channel);
 }
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;函数形参为Channel*类型，如前所述，Channel类似Reactor模式中的Handle。通过Channel类型的变量，Event Handler的相关信息被注册到了EventLoop中。具体的注册过程由poller&lt;em&gt;成员变量完成，这是muduo的Demultiplexer。poller&lt;/em&gt;对应的Poller class在muduo中是个抽象基类，因为muduo同时支持poll()和epoll()两种IO复用机制。Poller::updateChannel()的主要功能就是负责维护和更新pollfds&lt;em&gt;数组。&lt;br&gt;同样的，Event Handler的删除与注册很相似，具体过程也通过poller&lt;/em&gt;完成。&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;函数形参为Channel*类型，如前所述，Channel类似Reactor模式中的Handle。通过Channel类型的变量，Event Handler的相关信息被注册到了EventLoop中。具体的注册过程由形参为poller_成员变量完成，这是muduo的多路复用机制。Poller class在muduo中是个抽象基类，因为muduo同时支持poll()和epoll()两种IO复用机制.Poller::updateChannel()的主要功能就是负责维护和更新pollfds数组。                                                                                                                                &lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;void EventLoop::removeChannel(Channel* channel)
 {
     ...
     poller_-&amp;gt;removeChannel(channel);
 }
-&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;事件循环中的事件分发&quot;&gt;&lt;a href=&quot;#事件循环中的事件分发&quot; class=&quot;headerlink&quot; title=&quot;事件循环中的事件分发&quot;&gt;&lt;/a&gt;事件循环中的事件分发&lt;/h3&gt;&lt;p&gt;loop函数是EventLoop类的核心，用于事件循环的运行。在循环返回时，通过Demultiplexer获得已注册到EventLoop中Event Handler的就绪通知。然后Demultiplexer将所有就绪的事件Channel保存到容器activeChannels&lt;em&gt;中，接着一一处理activeChannels&lt;/em&gt;中所有activeChannel的callback。EventLoop只提供框架，对要处理的事件一无所知，Channel中包含感兴趣的事件和对事件的处理方法(注册的回调函数)。    &lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;同样，Event Handler的删除与注册很相似，具体过程也通过poller_完成。&lt;/p&gt;
+&lt;h3 id=&quot;事件循环中的事件分发&quot;&gt;&lt;a href=&quot;#事件循环中的事件分发&quot; class=&quot;headerlink&quot; title=&quot;事件循环中的事件分发&quot;&gt;&lt;/a&gt;事件循环中的事件分发&lt;/h3&gt;&lt;p&gt;loop函数是EventLoop类的核心，用于事件循环的运行。在循环返回时，通过Demultiplexer获得已注册到EventLoop中Event Handler的就绪通知。然后Demultiplexer将所有就绪的事件Channel保存到容器activeChannels&lt;em&gt;中，接着一一处理activeChannels&lt;/em&gt;中所有activeChannel的callback。EventLoop只提供框架，对要处理的事件一无所知，Channel中包含感兴趣的事件和对事件的处理方法(注册的回调函数)。    &lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;void EventLoop::loop()
 {
     while(!quit)
