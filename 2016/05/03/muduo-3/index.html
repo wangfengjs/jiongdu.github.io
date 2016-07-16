@@ -65,7 +65,7 @@
 <meta property="og:url" content="http://blog.dujiong.net/2016/05/03/muduo-3/index.html">
 <meta property="og:site_name" content="一期一会">
 <meta property="og:description" content="EventLoop类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。">
-<meta property="og:updated_time" content="2016-07-16T07:24:26.005Z">
+<meta property="og:updated_time" content="2016-07-16T07:28:15.961Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="muduo源码阅读之EventLoop类">
 <meta name="twitter:description" content="EventLoop类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。">
@@ -302,7 +302,7 @@
     if(t_loopInthisThread)
         LOG_FATAL &lt;&lt; ...
 }
-</code></pre><h3 id="Event-Hander的注册与删除"><a href="#Event-Hander的注册与删除" class="headerlink" title="Event Hander的注册与删除"></a>Event Hander的注册与删除</h3><p>在初始状态，一个EventLoop只是一个框架，其中并没有包含具体需要处理的事件及相应的资源。所以，要处理一个事件，必须要将相应的Event Handler信息注册到EventLoop中，这个用于注册的函数就是EventLoop::updateChannel()。</p>
+</code></pre><h3 id="Event-Hander的注册与删除"><a href="#Event-Hander的注册与删除" class="headerlink" title="Event Hander的注册与删除"></a>Event Hander的注册与删除</h3><p>在初始状态，一个EventLoop只是一个框架，其中并没有包含具体需要处理的事件及相应的资源。所以，要处理一个事件，必须要将相应的Handler信息注册到EventLoop中，这个用于注册的函数就是EventLoop::updateChannel()。</p>
 <pre><code>void EventLoop::updateChannel(Channel* channel)
 {
     assert(channel_-&gt;ownerLoop() == this);
@@ -316,7 +316,7 @@
     poller_-&gt;removeChannel(channel);
 }
 </code></pre><p>同样，Event Handler的删除与注册很相似，具体过程也通过poller_完成。</p>
-<h3 id="事件循环中的事件分发"><a href="#事件循环中的事件分发" class="headerlink" title="事件循环中的事件分发"></a>事件循环中的事件分发</h3><p>loop函数是EventLoop类的核心，用于事件循环的运行。在循环返回时，通过Demultiplexer获得已注册到EventLoop中Event Handler的就绪通知。然后Demultiplexer将所有就绪的事件Channel保存到容器activeChannels<em>中，接着一一处理activeChannels</em>中所有activeChannel的callback。EventLoop只提供框架，对要处理的事件一无所知，Channel中包含感兴趣的事件和对事件的处理方法(注册的回调函数)。    </p>
+<h3 id="事件循环中的事件分发"><a href="#事件循环中的事件分发" class="headerlink" title="事件循环中的事件分发"></a>事件循环中的事件分发</h3><p>loop函数是EventLoop类的核心，用于事件循环的运行。在循环返回时，通过Demultiplexer获得已注册到EventLoop中Event Handler的就绪通知。然后Demultiplexer将所有就绪的事件Channel保存到容器activeChannels_中，接着一一处理其中所有activeChannel的callback。EventLoop只提供框架，对要处理的事件一无所知，Channel中包含感兴趣的事件和对事件的处理方法(注册的回调函数)。    </p>
 <pre><code>void EventLoop::loop()
 {
     while(!quit)
