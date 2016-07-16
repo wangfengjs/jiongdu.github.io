@@ -65,7 +65,7 @@
 <meta property="og:url" content="http://blog.dujiong.net/2016/05/03/muduo-3/index.html">
 <meta property="og:site_name" content="一期一会">
 <meta property="og:description" content="EventLoop类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。">
-<meta property="og:updated_time" content="2016-07-16T07:28:15.961Z">
+<meta property="og:updated_time" content="2016-07-16T07:33:49.956Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="muduo源码阅读之EventLoop类">
 <meta name="twitter:description" content="EventLoop类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。">
@@ -302,14 +302,14 @@
     if(t_loopInthisThread)
         LOG_FATAL &lt;&lt; ...
 }
-</code></pre><h3 id="Event-Hander的注册与删除"><a href="#Event-Hander的注册与删除" class="headerlink" title="Event Hander的注册与删除"></a>Event Hander的注册与删除</h3><p>在初始状态，一个EventLoop只是一个框架，其中并没有包含具体需要处理的事件及相应的资源。所以，要处理一个事件，必须要将相应的Handler信息注册到EventLoop中，这个用于注册的函数就是EventLoop::updateChannel()。</p>
+</code></pre><h3 id="Event-Hander的注册与删除"><a href="#Event-Hander的注册与删除" class="headerlink" title="Event Hander的注册与删除"></a>Event Hander的注册与删除</h3><p>在初始状态，一个EventLoop只是一个框架，其中并没有包含具体需要处理的事件及相应的资源。所以，要处理一个事件，必须要将相应的Handler信息注册到EventLoop中，muduo中，这个用于注册的函数就是EventLoop::updateChannel()。</p>
 <pre><code>void EventLoop::updateChannel(Channel* channel)
 {
     assert(channel_-&gt;ownerLoop() == this);
     asserInLoopThread();
     poller_-&gt;updateChannel(channel);
 }
-</code></pre><p>函数形参为Channel*类型，如前所述，Channel类似Reactor模式中的Handle。通过Channel类型的变量，Event Handler的相关信息被注册到了EventLoop中。具体的注册过程由形参为poller_成员变量完成，这是muduo的多路复用机制。Poller class在muduo中是个抽象基类，因为muduo同时支持poll()和epoll()两种IO复用机制.Poller::updateChannel()的主要功能就是负责维护和更新pollfds数组。                                                                                                                                </p>
+</code></pre><p>函数形参为Channel*类型，如前所述，Channel类似Reactor模式中的Handle。通过Channel类型的变量，Event Handler的相关信息被注册到了EventLoop中。具体的注册过程由形参为poller_成员变量完成，这是muduo的多路复用机制。Poller class在muduo中是个抽象基类，因为muduo同时支持poll()和epoll()两种IO复用机制。Poller::updateChannel()的主要功能就是负责维护和更新pollfds数组。                                                                                                                                </p>
 <pre><code>void EventLoop::removeChannel(Channel* channel)
 {
     ...
