@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-07-21T12:32:47.117Z</updated>
+  <updated>2016-07-21T12:44:00.273Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -20,41 +20,43 @@
     <link href="http://blog.dujiong.net/2016/05/06/muduo-4/"/>
     <id>http://blog.dujiong.net/2016/05/06/muduo-4/</id>
     <published>2016-05-06T10:39:19.000Z</published>
-    <updated>2016-07-21T12:32:47.117Z</updated>
+    <updated>2016-07-21T12:44:00.273Z</updated>
     
     <content type="html">&lt;p&gt;如前所述，Reactor模式包括四个部分的组件:Handle, Synchronous Event Demultiplexer，Initiation Dispatcher和Event Handler。上一篇已经学习了muduo中的Initiation Dispatcher—EventLoop类，接下来分别讲述Handle—Channel类和Synchronous Event Demultiplexer—Poller类。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;           &lt;/p&gt;
 &lt;h3 id=&quot;Channel&quot;&gt;&lt;a href=&quot;#Channel&quot; class=&quot;headerlink&quot; title=&quot;Channel&quot;&gt;&lt;/a&gt;Channel&lt;/h3&gt;&lt;p&gt;Channel类的功能类似于JAVA NIO的SelectableChannel和SelectionKey的组合。每个Channel对象自始至终只属于一个EventLoop，而根据muduo采用的one loop per thread模型，每个Channel对象都只属于某一个IO线程。每个Channel对象只负责一个文件描述符(fd)的IO事件分发，但它不拥有这个fd，也不会在析构的时候关闭这个fd。&lt;br&gt;Channel在Event Handler与Dispatcher之间起到中介的作用。一方面可与Event Handler交互，Event Hanlder设置Channel的：    &lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;与I/O相关的文件描述符，即成员变量fd_；     &lt;/li&gt;
 &lt;li&gt;在当前Channel上感兴趣的事件(events_)，在Event Handler中通过调用Channel的enableReading()、enableWriting()函数设置；   &lt;/li&gt;
-&lt;li&gt;&lt;p&gt;处理各种类型事件的回调函数，相应成员变量包括readCallback_、&lt;em&gt;writeCallback\&lt;/em&gt;、errorCallback_等，在Event Handler中通过调用Channel的接口函数setXXXCallback()等完成。&lt;br&gt;相应的代码如下(部分)。&lt;/p&gt;
-&lt;p&gt; class EventLoop;&lt;/p&gt;
-&lt;p&gt; class Channel : boost::noncopyable&lt;br&gt; {&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;public:
-    ...
-    void handleEvent();
-    void setReadCallback(const EventCallback&amp;amp; cb)
-    { readCallback_ = cb; }
-    ...
-    void enableReading() 
-    { events_ |= kReadEvent; update(); }
-    ...
-    int index() { return index_; }
-    EventLoop* ownerLoop() { return loop_; }
+&lt;li&gt;处理各种类型事件的回调函数，相应成员变量包括readCallback_、writeCallback_、errorCallback_等，在Event Handler中通过调用Channel的接口函数setXXXCallback()等完成。&lt;br&gt;相应的代码如下(部分)。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre&gt;&lt;code&gt;class Channel : boost::noncopyable
+{
+    public:
+        ...
+        void handleEvent();
+        void setReadCallback(const EventCallback&amp;amp; cb)
+        { readCallback_ = cb; }
+        ...
+        void enableReading() 
+        { events_ |= kReadEvent; update(); }
+        ...
+        int index() { return index_; }
+        EventLoop* ownerLoop() { return loop_; }
 
-private:    
-    void update();
-    static const int kReadEvent;
-    ...
-    EventLoop* loop_;
-    int fd_;
-    int events_;
-    int revents_;
-    int index_;
-    EventCallback readCallback_;
-    ...
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt; }&lt;br&gt;另一方面，EventLoop与Channel通信，包括以下内容:      &lt;/p&gt;
-&lt;/li&gt;
+    private:    
+        void update();
+        static const int kReadEvent;
+        ...
+        EventLoop* loop_;
+        int fd_;
+        int events_;
+        int revents_;
+        int index_;
+        EventCallback readCallback_;
+        ...
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;另一方面，EventLoop与Channel通信，包括以下内容:      &lt;/p&gt;
+&lt;ol&gt;
 &lt;li&gt;Channel包含EventLoop类型的成员变量loop_，Channel在成员函数update()函数中调用loop_的成员函数updateChannel()，后者转而调用Poller::updateChannel()。   &lt;/li&gt;
 &lt;li&gt;通知在当前Channel中就绪的事件。EventLoop通过Demultiplexer得到就绪Channel中发生的事件，并将其保存在成员变量revents_中。    &lt;/li&gt;
 &lt;li&gt;&lt;p&gt;Channel事件处理函数handleEvent()的调用。Channel::handleEvent()是Channel的核心，由EventLoop::loop()调用，Channel根据revents_的值调用Event Handler传入的相应回调函数。&lt;br&gt;所以，Channel是Event Handler与Dispatcher之间的桥梁，二者不直接通信，而是分别与Channel交互。&lt;br&gt;Channel::handleEvent()会调用Channel::handleEventWithGuard()，后者完成具体的事件处理过程。&lt;/p&gt;
