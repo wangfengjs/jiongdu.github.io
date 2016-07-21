@@ -2,6 +2,27 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://blog.dujiong.net/2016/03/18/startAP/</loc>
+    
+    <lastmod>2016-07-21T08:44:05.984Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://blog.dujiong.net/2016/03/15/dumbap/</loc>
+    
+    <lastmod>2016-07-21T08:44:05.172Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://blog.dujiong.net/2016/04/20/wifi-data-get/</loc>
+    
+    <lastmod>2016-07-21T08:44:02.200Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://blog.dujiong.net/2016/05/03/muduo-3/</loc>
     
     <lastmod>2016-07-16T07:38:55.800Z</lastmod>
@@ -33,27 +54,6 @@
     <loc>http://blog.dujiong.net/2016/03/25/Seq&Substring/</loc>
     
     <lastmod>2016-06-28T11:03:42.060Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://blog.dujiong.net/2016/04/20/wifi-data-get/</loc>
-    
-    <lastmod>2016-05-20T02:20:22.606Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://blog.dujiong.net/2016/03/15/dumbap/</loc>
-    
-    <lastmod>2016-05-13T11:24:51.527Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://blog.dujiong.net/2016/03/18/startAP/</loc>
-    
-    <lastmod>2016-05-13T11:24:06.753Z</lastmod>
     
   </url>
   

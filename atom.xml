@@ -297,7 +297,7 @@ int main()
     <link href="http://blog.dujiong.net/2016/04/20/wifi-data-get/"/>
     <id>http://blog.dujiong.net/2016/04/20/wifi-data-get/</id>
     <published>2016-04-20T01:56:09.000Z</published>
-    <updated>2016-05-20T02:20:22.606Z</updated>
+    <updated>2016-07-21T08:44:02.200Z</updated>
     
     <content type="html">&lt;p&gt;本文介绍并实现无线网卡获取周围wifi关键通信数据，捕捉所需要的MAC层管理数据包，通过解包获取到周围AP和终端设备的MAC地址和RSSI，并存入数据库中，可用于定位，通信链路分析等。&lt;/p&gt;
 &lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
@@ -312,9 +312,7 @@ int main()
     </summary>
     
     
-      <category term="openwrt" scheme="http://blog.dujiong.net/tags/openwrt/"/>
-    
-      <category term="wifi" scheme="http://blog.dujiong.net/tags/wifi/"/>
+      <category term="openwrt/wifi" scheme="http://blog.dujiong.net/tags/openwrt-wifi/"/>
     
   </entry>
   
@@ -517,7 +515,7 @@ for(int i=0;i&amp;lt;xlen;i++)
     <link href="http://blog.dujiong.net/2016/03/18/startAP/"/>
     <id>http://blog.dujiong.net/2016/03/18/startAP/</id>
     <published>2016-03-18T09:05:23.000Z</published>
-    <updated>2016-05-13T11:24:06.753Z</updated>
+    <updated>2016-07-21T08:44:05.984Z</updated>
     
     <content type="html">&lt;h3 id=&quot;OpenWrt启动脚本&quot;&gt;&lt;a href=&quot;#OpenWrt启动脚本&quot; class=&quot;headerlink&quot; title=&quot;OpenWrt启动脚本&quot;&gt;&lt;/a&gt;OpenWrt启动脚本&lt;/h3&gt;&lt;p&gt;需要在OpenWrt中-将自己的程序设置为开机自启动。虽然OpenWrt是基于Linux的嵌入式发行版，但是和其设置方法还是略有差异，在此做一份记录。参考：&lt;a href=&quot;http://wiki.openwrt.org/doc/techref/initscripts&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://wiki.openwrt.org/doc/techref/initscripts&lt;/a&gt;&lt;br&gt;OpenWrt的启动脚本在/etc/init.d/目录下，而系统开机时自动运行/etc/rc.d/目录下的脚本，所以在rc.d目录下，有init.d脚本的连接文件。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h3 id=&quot;编写自己的启动脚本&quot;&gt;&lt;a href=&quot;#编写自己的启动脚本&quot; class=&quot;headerlink&quot; title=&quot;编写自己的启动脚本&quot;&gt;&lt;/a&gt;编写自己的启动脚本&lt;/h3&gt;&lt;p&gt;按照以下结构编写自己的shell脚本(这里以我的startAP为例说明)。特别注意一下，OpenWrt中的shell解析器与常用的Linux桌面、服务器（bash）不一样，记得当时写的时候就用的是#/bin/bash，后面找了好久才发现。&lt;/p&gt;
@@ -543,7 +541,7 @@ stop()
     </summary>
     
     
-      <category term="openwrt" scheme="http://blog.dujiong.net/tags/openwrt/"/>
+      <category term="openwrt/wifi" scheme="http://blog.dujiong.net/tags/openwrt-wifi/"/>
     
   </entry>
   
@@ -552,7 +550,7 @@ stop()
     <link href="http://blog.dujiong.net/2016/03/15/dumbap/"/>
     <id>http://blog.dujiong.net/2016/03/15/dumbap/</id>
     <published>2016-03-15T13:21:29.466Z</published>
-    <updated>2016-05-13T11:24:51.527Z</updated>
+    <updated>2016-07-21T08:44:05.172Z</updated>
     
     <content type="html">&lt;h2 id=&quot;Dumb-AP&quot;&gt;&lt;a href=&quot;#Dumb-AP&quot; class=&quot;headerlink&quot; title=&quot;Dumb AP&quot;&gt;&lt;/a&gt;Dumb AP&lt;/h2&gt;&lt;p&gt;Dumb AP，简单说，就是将路由器作为一个纯接入点，没有路由转发，没有DHCP。这时的路由器相当于一台二层交换机，没有三层功能。所以，实验环境中，将Dumb AP连接在上级路由器下，子网段为192.168.1.1/24。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&quot;配置Dumb-AP&quot;&gt;&lt;a href=&quot;#配置Dumb-AP&quot; class=&quot;headerlink&quot; title=&quot;配置Dumb AP&quot;&gt;&lt;/a&gt;配置Dumb AP&lt;/h2&gt;&lt;h3 id=&quot;修改网络配置文件-etc-config-network&quot;&gt;&lt;a href=&quot;#修改网络配置文件-etc-config-network&quot; class=&quot;headerlink&quot; title=&quot;修改网络配置文件(/etc/config/network)&quot;&gt;&lt;/a&gt;修改网络配置文件(/etc/config/network)&lt;/h3&gt;&lt;p&gt;修改OpenWrt的网络配置文件，将wan口和lan口桥接起来:&lt;br&gt;&lt;code&gt;config interface lan&lt;/code&gt;&lt;br&gt;    &lt;code&gt;option type &amp;#39;bridge&amp;#39;&lt;/code&gt;&lt;br&gt;    &lt;code&gt;option ifname &amp;#39;eth0.1 eth0.2&amp;#39;&lt;/code&gt;  ##将二者桥接&lt;br&gt;    &lt;code&gt;option proto static&lt;/code&gt;&lt;br&gt;    &lt;code&gt;option ipaddr &amp;#39;192.168.1.196&amp;#39;&lt;/code&gt;  ##采用静态ip&lt;br&gt;    &lt;code&gt;option netmask 255.255.255.0&lt;/code&gt;&lt;br&gt;然后注释掉路由器关于wan口的设置，包括ipv4和ipv6。&lt;br&gt;需要说明的是，上述的配置文件中桥接的而是eth0.1和eth0.2，但事实上路由器的接口不尽相同，比如有的wan口事实上是eth1。所以，需要因地制宜。&lt;/p&gt;
@@ -573,7 +571,7 @@ stop()
     </summary>
     
     
-      <category term="openwrt" scheme="http://blog.dujiong.net/tags/openwrt/"/>
+      <category term="openwrt/wifi" scheme="http://blog.dujiong.net/tags/openwrt-wifi/"/>
     
   </entry>
   
