@@ -41,7 +41,7 @@
 <link href="/css/main.css?v=0.5.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="openwrt/wifi," />
+  <meta name="keywords" content="muduo," />
 
 
 
@@ -59,16 +59,16 @@
 
 
 
-<meta name="description" content="OpenWrt启动脚本需要在OpenWrt中-将自己的程序设置为开机自启动。虽然OpenWrt是基于Linux的嵌入式发行版，但是和其设置方法还是略有差异，在此做一份记录。参考：http://wiki.openwrt.org/doc/techref/initscriptsOpenWrt的启动脚本在/etc/init.d/目录下，而系统开机时自动运行/etc/rc.d/目录下的脚本，所以在rc.d目">
+<meta name="description" content="如前所述，Reactor模式包括四个部分的组件:Handle, Synchronous Event Demultiplexer，Initiation Dispatcher和Event Handler。上一篇已经学习了muduo中的Initiation Dispatcher—EventLoop类，接下来分别讲述Handle—Channel类和Synchronous Event Demultiplex">
 <meta property="og:type" content="article">
-<meta property="og:title" content="OpenWrt设置程序开机自启动">
-<meta property="og:url" content="http://blog.dujiong.net/2016/03/18/startAP/index.html">
+<meta property="og:title" content="muduo源码阅读之Channel与Poller">
+<meta property="og:url" content="http://blog.dujiong.net/2016/05/06/muduo-4/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="OpenWrt启动脚本需要在OpenWrt中-将自己的程序设置为开机自启动。虽然OpenWrt是基于Linux的嵌入式发行版，但是和其设置方法还是略有差异，在此做一份记录。参考：http://wiki.openwrt.org/doc/techref/initscriptsOpenWrt的启动脚本在/etc/init.d/目录下，而系统开机时自动运行/etc/rc.d/目录下的脚本，所以在rc.d目">
-<meta property="og:updated_time" content="2016-07-21T08:44:05.984Z">
+<meta property="og:description" content="如前所述，Reactor模式包括四个部分的组件:Handle, Synchronous Event Demultiplexer，Initiation Dispatcher和Event Handler。上一篇已经学习了muduo中的Initiation Dispatcher—EventLoop类，接下来分别讲述Handle—Channel类和Synchronous Event Demultiplex">
+<meta property="og:updated_time" content="2016-07-21T12:32:47.117Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="OpenWrt设置程序开机自启动">
-<meta name="twitter:description" content="OpenWrt启动脚本需要在OpenWrt中-将自己的程序设置为开机自启动。虽然OpenWrt是基于Linux的嵌入式发行版，但是和其设置方法还是略有差异，在此做一份记录。参考：http://wiki.openwrt.org/doc/techref/initscriptsOpenWrt的启动脚本在/etc/init.d/目录下，而系统开机时自动运行/etc/rc.d/目录下的脚本，所以在rc.d目">
+<meta name="twitter:title" content="muduo源码阅读之Channel与Poller">
+<meta name="twitter:description" content="如前所述，Reactor模式包括四个部分的组件:Handle, Synchronous Event Demultiplexer，Initiation Dispatcher和Event Handler。上一篇已经学习了muduo中的Initiation Dispatcher—EventLoop类，接下来分别讲述Handle—Channel类和Synchronous Event Demultiplex">
 
 
 
@@ -86,7 +86,7 @@
   };
 </script>
 
-  <title> OpenWrt设置程序开机自启动 | 一期一会 </title>
+  <title> muduo源码阅读之Channel与Poller | 一期一会 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -246,7 +246,7 @@
             
             
               
-                OpenWrt设置程序开机自启动
+                muduo源码阅读之Channel与Poller
               
             
           </h1>
@@ -258,8 +258,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-03-18T17:05:23+08:00" content="2016-03-18">
-              2016-03-18
+            <time itemprop="dateCreated" datetime="2016-05-06T18:39:19+08:00" content="2016-05-06">
+              2016-05-06
             </time>
           </span>
 
@@ -269,8 +269,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/03/18/startAP/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/03/18/startAP/" itemprop="commentsCount"></span>
+                <a href="/2016/05/06/muduo-4/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/05/06/muduo-4/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -292,21 +292,83 @@
       
 
       
-        <h3 id="OpenWrt启动脚本"><a href="#OpenWrt启动脚本" class="headerlink" title="OpenWrt启动脚本"></a>OpenWrt启动脚本</h3><p>需要在OpenWrt中-将自己的程序设置为开机自启动。虽然OpenWrt是基于Linux的嵌入式发行版，但是和其设置方法还是略有差异，在此做一份记录。参考：<a href="http://wiki.openwrt.org/doc/techref/initscripts" target="_blank" rel="external">http://wiki.openwrt.org/doc/techref/initscripts</a><br>OpenWrt的启动脚本在/etc/init.d/目录下，而系统开机时自动运行/etc/rc.d/目录下的脚本，所以在rc.d目录下，有init.d脚本的连接文件。<br><a id="more"></a></p>
-<h3 id="编写自己的启动脚本"><a href="#编写自己的启动脚本" class="headerlink" title="编写自己的启动脚本"></a>编写自己的启动脚本</h3><p>按照以下结构编写自己的shell脚本(这里以我的startAP为例说明)。特别注意一下，OpenWrt中的shell解析器与常用的Linux桌面、服务器（bash）不一样，记得当时写的时候就用的是#/bin/bash，后面找了好久才发现。</p>
-<pre><code>#!/bin/sh /etc/rc.common
-#/init.d/startAP
-START=50
-start()
+        <p>如前所述，Reactor模式包括四个部分的组件:Handle, Synchronous Event Demultiplexer，Initiation Dispatcher和Event Handler。上一篇已经学习了muduo中的Initiation Dispatcher—EventLoop类，接下来分别讲述Handle—Channel类和Synchronous Event Demultiplexer—Poller类。<br><a id="more"></a>           </p>
+<h3 id="Channel"><a href="#Channel" class="headerlink" title="Channel"></a>Channel</h3><p>Channel类的功能类似于JAVA NIO的SelectableChannel和SelectionKey的组合。每个Channel对象自始至终只属于一个EventLoop，而根据muduo采用的one loop per thread模型，每个Channel对象都只属于某一个IO线程。每个Channel对象只负责一个文件描述符(fd)的IO事件分发，但它不拥有这个fd，也不会在析构的时候关闭这个fd。<br>Channel在Event Handler与Dispatcher之间起到中介的作用。一方面可与Event Handler交互，Event Hanlder设置Channel的：    </p>
+<ol>
+<li>与I/O相关的文件描述符，即成员变量fd_；     </li>
+<li>在当前Channel上感兴趣的事件(events_)，在Event Handler中通过调用Channel的enableReading()、enableWriting()函数设置；   </li>
+<li><p>处理各种类型事件的回调函数，相应成员变量包括readCallback_、<em>writeCallback\</em>、errorCallback_等，在Event Handler中通过调用Channel的接口函数setXXXCallback()等完成。<br>相应的代码如下(部分)。</p>
+<p> class EventLoop;</p>
+<p> class Channel : boost::noncopyable<br> {</p>
+<pre><code>public:
+    ...
+    void handleEvent();
+    void setReadCallback(const EventCallback&amp; cb)
+    { readCallback_ = cb; }
+    ...
+    void enableReading() 
+    { events_ |= kReadEvent; update(); }
+    ...
+    int index() { return index_; }
+    EventLoop* ownerLoop() { return loop_; }
+
+private:    
+    void update();
+    static const int kReadEvent;
+    ...
+    EventLoop* loop_;
+    int fd_;
+    int events_;
+    int revents_;
+    int index_;
+    EventCallback readCallback_;
+    ...
+</code></pre><p> }<br>另一方面，EventLoop与Channel通信，包括以下内容:      </p>
+</li>
+<li>Channel包含EventLoop类型的成员变量loop_，Channel在成员函数update()函数中调用loop_的成员函数updateChannel()，后者转而调用Poller::updateChannel()。   </li>
+<li>通知在当前Channel中就绪的事件。EventLoop通过Demultiplexer得到就绪Channel中发生的事件，并将其保存在成员变量revents_中。    </li>
+<li><p>Channel事件处理函数handleEvent()的调用。Channel::handleEvent()是Channel的核心，由EventLoop::loop()调用，Channel根据revents_的值调用Event Handler传入的相应回调函数。<br>所以，Channel是Event Handler与Dispatcher之间的桥梁，二者不直接通信，而是分别与Channel交互。<br>Channel::handleEvent()会调用Channel::handleEventWithGuard()，后者完成具体的事件处理过程。</p>
+<p> void Channel::handleEventWithGuard(Timestamp receiveTime)<br> {</p>
+<pre><code>...
+if((revents_ &amp; POLLHUP) &amp;&amp; !(revents_ &amp; POLLIN))
 {
+    if(closeCallback_) closeCallback_();
+}
+if(revents_ &amp; (POLLIN | POLLPRI | POLLRDHUP))
+{
+    if(readCallback_) readCallback_();
+}
+if(revents_ &amp; POLLOUT)
+{
+    if(writeCallback_) writeCallback_();
+}
+...
+</code></pre><p> }<br>函数中的POLLIN，POLLNVAL，POLLERR都是poll函数的测试条件，handleEventWithGuard()根据这些测试条件调用相应的回调函数。<br>最后来看一下对感兴趣事件的设置，具体来说，设置当前Channel是否关系读、写事件的发生。通过update()函数或者将Channel插入Demultiplexer，或者更新Demultiplexer中相应Channel的状态。     </p>
+<p> const int Channel::kNoneEvent = 0;<br> const int Channel::kReadEvent = POLLIN | POLLPRI;<br> const int Chennel::kWriteEvent = POLLOUT;<br> void enableReading() { events<em> |= kReadEvent; update(); }<br> …<br> void diableAll() { events</em> |= kNoneEvent; update(); }</p>
+</li>
+</ol>
+<h3 id="Poller"><a href="#Poller" class="headerlink" title="Poller"></a>Poller</h3><p>Poller类是IO多路复用的封装，在muduo中是个抽象基类，因为muduo同时支持poll()和epoll()两种IO复用机制，是muduo中少有的使用到继承的模块。Poller是EventLoop的间接成员，只供其owner EventLoop在IO线程调用，其生命期与EventLoop相等。Poller并不拥有Channel，Channel在析构之前必须自己unregister(EventLoop::removeChannel()),避免空悬指针。<br>Poller接口很简单，主要包括三个成员函数：      </p>
+<p> <code>1. virtual Timestamp poll(int timeoutMs, ChannelList* activeChannels) = 0；</code> </p>
+<p>poll()是Poller的核心功能，调用poll(), epoll()获得当前活动的IO事件，然后填充调用方传入的activeChannes，并返回poll()返回的时刻。</p>
+<pre><code>Timestamp EPollPoller::poll(int timeoutMs, ChannelList* activeChannels)
+{
+    int numEvents = ::epoll_wait(epollfd_,
+                           &amp;*events_.begin(),
+                           static_cast&lt;int&gt;(events_.size()),
+                           timeoutMs);
+    ...
+    if(numEvents&gt;0)
+    {
+        fillActiveChannels(numEvents, activeChannels);
+    }
     ...
 }
-stop()
-{
-    ...
-}
-</code></pre><p>在start()中写入需要开机运行的程序命令，在stop()中写入终止程序的命令。START=50是指优先级，数字越大，优先级越低。一般优先级高的脚本会先运行。<br>编写好自己的程序启动脚本后，熟悉Linux的都知道，要让程序执行，需要给脚本赋予可执行权限。所以，运行命令chmod+x xxx。</p>
-<h3 id="为启动脚本做一个软链接"><a href="#为启动脚本做一个软链接" class="headerlink" title="为启动脚本做一个软链接"></a>为启动脚本做一个软链接</h3><p>如上所述，系统启动时会按顺序自动运行/etc/rc.d/目录下的脚本链接，对应执行/etc/init.d/目录下的启动脚本。所以，需要在/etc/rc.d/下为启动脚本创建一个链接。注意，链接文件要命名要规范，在脚本名前加S+启动顺序数字。顺便提一句，这里的启动顺序数字和前面所说到的优先级可是两码事。<br>所以，执行命令ln -s /etc/init.d/startAP /etc/rc.d/S95startAP创建链接。<br>最后，重启，就可以开机启动程序了。不妨使用ps查看一下吧。</p>
+</code></pre><p>以epoll()实现为例，fillActiveChannels()遍历找出有活动事件的fd_，把其对应的Channel填入activeChannels。 </p>
+<p><code>2. virtual void updateChannel(Channel* channel) = 0；</code></p>
+<p>Poller::updateChannel()的主要功能是负责维护和更新pollfds_数组(以poll()实现为例)。添加新Channel的复杂度是O(logN)，原因是channels<em>对应的数据结构： <code>typedef std::map&lt;int,Channel*&gt; ChannelMap;</code>，更新已有的Channel的复杂度是O(1)，因为Channel记住了自己在pollfds\</em>数组中的下标，可以快速定位。  </p>
+<p><code>3. virtual void removeChannel(Channel* channel) = 0；</code> </p>
+<p>Channel的删除。同样，需要更改pollfds_、channels_数据成员。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>至此，Reactor模式中最核心的事件分发机制中的关键结构已讲述完毕，对应muduo中的EventLoop，Channel，Poller三个class。</p>
 
       
     </div>
@@ -321,7 +383,7 @@ stop()
       
         <div class="post-tags">
           
-            <a href="/tags/openwrt-wifi/" rel="tag">#openwrt/wifi</a>
+            <a href="/tags/muduo/" rel="tag">#muduo</a>
           
         </div>
       
@@ -330,17 +392,13 @@ stop()
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/03/15/dumbap/" rel="next" title="配置OpenWrt路由器为Dumb AP">
-                <i class="fa fa-chevron-left"></i> 配置OpenWrt路由器为Dumb AP
+              <a href="/2016/05/03/muduo-3/" rel="next" title="muduo源码阅读之EventLoop类">
+                <i class="fa fa-chevron-left"></i> muduo源码阅读之EventLoop类
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/03/25/Seq&Substring/" rel="prev" title="动态规划之最长公共子序列，最长公共子串，最长递增子序列，最长子序列和等">
-                动态规划之最长公共子序列，最长公共子串，最长递增子序列，最长子序列和等 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -366,8 +424,8 @@ stop()
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/03/18/startAP/"
-           data-title="OpenWrt设置程序开机自启动" data-url="http://blog.dujiong.net/2016/03/18/startAP/">
+      <div class="ds-thread" data-thread-key="2016/05/06/muduo-4/"
+           data-title="muduo源码阅读之Channel与Poller" data-url="http://blog.dujiong.net/2016/05/06/muduo-4/">
       </div>
     
   </div>
@@ -481,7 +539,7 @@ stop()
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#OpenWrt启动脚本"><span class="nav-number">1.</span> <span class="nav-text">OpenWrt启动脚本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#编写自己的启动脚本"><span class="nav-number">2.</span> <span class="nav-text">编写自己的启动脚本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#为启动脚本做一个软链接"><span class="nav-number">3.</span> <span class="nav-text">为启动脚本做一个软链接</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Channel"><span class="nav-number">1.</span> <span class="nav-text">Channel</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Poller"><span class="nav-number">2.</span> <span class="nav-text">Poller</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">

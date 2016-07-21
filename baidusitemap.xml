@@ -4,6 +4,23 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/05/06/muduo-4/</loc>
+    <lastmod>2016-07-21T12:32:47.117Z</lastmod>
+    <data>
+        <display>
+        <title>muduo源码阅读之Channel与Poller</title>
+        <pubTime>2016-05-06T10:39:19.000Z</pubTime>
+        
+        <tag>muduo</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/03/18/startAP/</loc>
     <lastmod>2016-07-21T08:44:05.984Z</lastmod>
     <data>

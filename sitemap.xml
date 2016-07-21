@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://blog.dujiong.net/2016/05/06/muduo-4/</loc>
+    
+    <lastmod>2016-07-21T12:32:47.117Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://blog.dujiong.net/2016/03/18/startAP/</loc>
     
     <lastmod>2016-07-21T08:44:05.984Z</lastmod>
