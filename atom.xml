@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-07-24T14:54:38.231Z</updated>
+  <updated>2016-07-24T15:27:29.414Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://blog.dujiong.net/2016/05/15/cplusplus-sematics/"/>
     <id>http://blog.dujiong.net/2016/05/15/cplusplus-sematics/</id>
     <published>2016-05-15T11:29:20.000Z</published>
-    <updated>2016-07-24T14:54:38.231Z</updated>
+    <updated>2016-07-24T15:27:29.414Z</updated>
     
     <content type="html">&lt;p&gt;###值语义和对象语义&lt;br&gt;值语义(value sematics)指的是对象的拷贝与原对象无关，拷贝之后就与原对象脱离关系。C++的内置类型(bool/int/double等)都是值语义，标准库里的pair&amp;lt;&amp;gt;,vector&amp;lt;&amp;gt;,map&amp;lt;&amp;gt;，string等类型也都是值语义。Java语言的primitive types(原生数据类型)也是值语义。&lt;br&gt;与值语义(object sematics)对应的是”对象语义”，或者也叫做”引用语义”。对象语义指的是面向对象意义下的对象，对象是禁止拷贝的或拷贝后与原来的对象存在关联。比如，拷贝一个Employee对象是没有意义的，一个雇员不会变成两个雇员。同样，muduo库中的TcpConnection，显然也是不可复制的，因为牵涉到系统的资源。Java里面的class对象都是对象语义/引用语义。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;br&gt;下面举Java和C++几个简单的例子看值语义和对象语义:&lt;/p&gt;
 &lt;p&gt;####Java&lt;/p&gt;
