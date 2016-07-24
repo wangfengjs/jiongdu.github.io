@@ -4,6 +4,23 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/05/15/cplusplus-sematics/</loc>
+    <lastmod>2016-07-24T14:54:38.231Z</lastmod>
+    <data>
+        <display>
+        <title>浅谈C++值语义和对象语义</title>
+        <pubTime>2016-05-15T11:29:20.000Z</pubTime>
+        
+        <tag>C++</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/05/06/muduo-4/</loc>
     <lastmod>2016-07-21T12:50:06.928Z</lastmod>
     <data>

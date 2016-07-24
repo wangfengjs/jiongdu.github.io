@@ -41,7 +41,7 @@
 <link href="/css/main.css?v=0.5.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="openwrt/wifi," />
+  <meta name="keywords" content="C++," />
 
 
 
@@ -59,16 +59,19 @@
 
 
 
-<meta name="description" content="Dumb APDumb AP，简单说，就是将路由器作为一个纯接入点，没有路由转发，没有DHCP。这时的路由器相当于一台二层交换机，没有三层功能。所以，实验环境中，将Dumb AP连接在上级路由器下，子网段为192.168.1.1/24。">
+<meta name="description" content="###值语义和对象语义值语义(value sematics)指的是对象的拷贝与原对象无关，拷贝之后就与原对象脱离关系。C++的内置类型(bool/int/double等)都是值语义，标准库里的pair&amp;lt;&amp;gt;,vector&amp;lt;&amp;gt;,map&amp;lt;&amp;gt;，string等类型也都是值语义。Java语言的primitive types(原生数据类型)也是值语义。与值语义(object">
 <meta property="og:type" content="article">
-<meta property="og:title" content="配置OpenWrt路由器为Dumb AP">
-<meta property="og:url" content="http://blog.dujiong.net/2016/03/15/dumbap/index.html">
+<meta property="og:title" content="浅谈C++值语义和对象语义">
+<meta property="og:url" content="http://blog.dujiong.net/2016/05/15/cplusplus-sematics/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="Dumb APDumb AP，简单说，就是将路由器作为一个纯接入点，没有路由转发，没有DHCP。这时的路由器相当于一台二层交换机，没有三层功能。所以，实验环境中，将Dumb AP连接在上级路由器下，子网段为192.168.1.1/24。">
-<meta property="og:updated_time" content="2016-07-21T08:44:05.172Z">
+<meta property="og:description" content="###值语义和对象语义值语义(value sematics)指的是对象的拷贝与原对象无关，拷贝之后就与原对象脱离关系。C++的内置类型(bool/int/double等)都是值语义，标准库里的pair&amp;lt;&amp;gt;,vector&amp;lt;&amp;gt;,map&amp;lt;&amp;gt;，string等类型也都是值语义。Java语言的primitive types(原生数据类型)也是值语义。与值语义(object">
+<meta property="og:image" content="http://i.imgur.com/xN0fihh.png">
+<meta property="og:image" content="http://i.imgur.com/ptaBium.png">
+<meta property="og:updated_time" content="2016-07-24T14:54:38.231Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="配置OpenWrt路由器为Dumb AP">
-<meta name="twitter:description" content="Dumb APDumb AP，简单说，就是将路由器作为一个纯接入点，没有路由转发，没有DHCP。这时的路由器相当于一台二层交换机，没有三层功能。所以，实验环境中，将Dumb AP连接在上级路由器下，子网段为192.168.1.1/24。">
+<meta name="twitter:title" content="浅谈C++值语义和对象语义">
+<meta name="twitter:description" content="###值语义和对象语义值语义(value sematics)指的是对象的拷贝与原对象无关，拷贝之后就与原对象脱离关系。C++的内置类型(bool/int/double等)都是值语义，标准库里的pair&amp;lt;&amp;gt;,vector&amp;lt;&amp;gt;,map&amp;lt;&amp;gt;，string等类型也都是值语义。Java语言的primitive types(原生数据类型)也是值语义。与值语义(object">
+<meta name="twitter:image" content="http://i.imgur.com/xN0fihh.png">
 
 
 
@@ -86,7 +89,7 @@
   };
 </script>
 
-  <title> 配置OpenWrt路由器为Dumb AP | 一期一会 </title>
+  <title> 浅谈C++值语义和对象语义 | 一期一会 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -246,7 +249,7 @@
             
             
               
-                配置OpenWrt路由器为Dumb AP
+                浅谈C++值语义和对象语义
               
             
           </h1>
@@ -258,8 +261,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-03-15T21:21:29+08:00" content="2016-03-15">
-              2016-03-15
+            <time itemprop="dateCreated" datetime="2016-05-15T19:29:20+08:00" content="2016-05-15">
+              2016-05-15
             </time>
           </span>
 
@@ -269,8 +272,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/03/15/dumbap/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/03/15/dumbap/" itemprop="commentsCount"></span>
+                <a href="/2016/05/15/cplusplus-sematics/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/05/15/cplusplus-sematics/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -292,16 +295,117 @@
       
 
       
-        <h2 id="Dumb-AP"><a href="#Dumb-AP" class="headerlink" title="Dumb AP"></a>Dumb AP</h2><p>Dumb AP，简单说，就是将路由器作为一个纯接入点，没有路由转发，没有DHCP。这时的路由器相当于一台二层交换机，没有三层功能。所以，实验环境中，将Dumb AP连接在上级路由器下，子网段为192.168.1.1/24。<br><a id="more"></a></p>
-<h2 id="配置Dumb-AP"><a href="#配置Dumb-AP" class="headerlink" title="配置Dumb AP"></a>配置Dumb AP</h2><h3 id="修改网络配置文件-etc-config-network"><a href="#修改网络配置文件-etc-config-network" class="headerlink" title="修改网络配置文件(/etc/config/network)"></a>修改网络配置文件(/etc/config/network)</h3><p>修改OpenWrt的网络配置文件，将wan口和lan口桥接起来:<br><code>config interface lan</code><br>    <code>option type &#39;bridge&#39;</code><br>    <code>option ifname &#39;eth0.1 eth0.2&#39;</code>  ##将二者桥接<br>    <code>option proto static</code><br>    <code>option ipaddr &#39;192.168.1.196&#39;</code>  ##采用静态ip<br>    <code>option netmask 255.255.255.0</code><br>然后注释掉路由器关于wan口的设置，包括ipv4和ipv6。<br>需要说明的是，上述的配置文件中桥接的而是eth0.1和eth0.2，但事实上路由器的接口不尽相同，比如有的wan口事实上是eth1。所以，需要因地制宜。</p>
-<h3 id="关掉DHCP"><a href="#关掉DHCP" class="headerlink" title="关掉DHCP"></a>关掉DHCP</h3><p>因为这里将路由器作为Dumb AP使用，作为一个纯无线接入点和交换机使用，不再需要其DHCP功能，所以关掉DHCP。<br>可以通过uci或者是修改配置文件(/etc/config/dhcp)设置DHCP。这里采用的是后者，即注释掉文件中lan口dhcp配置相关的设置。<br><code>#config dhcp &#39;lan&#39;</code><br>    <code>#option interface &#39;lan&#39;</code><br>    <code>#option dhcpv6 &#39;server&#39;</code><br>    <code>#option ra &#39;server&#39;</code><br>    <code>#option ignore &#39;1&#39;</code><br>    <code>#option ra_management &#39;1&#39;</code> </p>
-<h3 id="关掉防火墙"><a href="#关掉防火墙" class="headerlink" title="关掉防火墙"></a>关掉防火墙</h3><p>某些情况下，需要关闭防火墙，同样的，修改配置文件/etc/config/firewall，将相应的REJECT改成ACCEPT即可，具体不再详述。<br>最后，载入新的配置即可。</p>
-<h2 id="附：完整的-etc-config-network文件"><a href="#附：完整的-etc-config-network文件" class="headerlink" title="附：完整的/etc/config/network文件"></a>附：完整的/etc/config/network文件</h2><p><code>config interface &#39;loopback&#39;</code><br><code>option ifname &#39;lo&#39;</code><br><code>option proto &#39;static&#39;</code><br><code>option ipaddr &#39;127.0.0.1&#39;</code><br><code>option netmask &#39;255.0.0.0&#39;</code></p>
-<p><code>config globals &#39;globals&#39;</code><br><code>option ula_prefix &#39;fd9f:91f8:3d14::/48&#39;</code></p>
-<p><code>config interface &#39;lan&#39;</code><br><code>option ifname &#39;eth0.1 eth0.2&#39;</code><br><code>option force_link &#39;1&#39;</code><br><code>option macaddr &#39;b0:68:b6:ff:d6:b8&#39;</code><br><code>option type &#39;bridge&#39;</code><br><code>option proto &#39;static&#39;</code><br><code>option ipaddr &#39;192.168.1.196&#39;</code><br><code>option netmask &#39;255.255.255.0&#39;</code><br><code>option ip6assign &#39;60&#39;</code></p>
-<p><code>#config interface &#39;wan&#39;</code><br><code>#option ifname &#39;eth0.2&#39;</code><br><code>#option force_link &#39;1&#39;</code><br><code>#option macaddr &#39;b0:68:b6:ff:d6:b9&#39;</code><br><code>#option proto &#39;dhcp&#39;</code></p>
-<p><code>#config interface &#39;wan6&#39;</code><br><code>#option ifname &#39;eth0.2&#39;</code><br><code>#option proto &#39;dhcpv6&#39;</code></p>
-<p><code>以下均保持原状</code><br><code>config switch</code><br><code>option name &#39;switch0&#39;</code><br><code>option reset &#39;1&#39;</code><br><code>option enable_vlan &#39;1&#39;</code><br><code>config switch_vlan</code><br><code>option device &#39;switch0&#39;</code><br><code>option vlan &#39;1&#39;</code><br><code>option ports &#39;0 1 2 3 6t&#39;</code><br><code>config switch_vlan</code><br><code>option device &#39;switch0&#39;</code><br><code>option vlan &#39;2&#39;</code><br><code>option ports &#39;4 6t</code></p>
+        <p>###值语义和对象语义<br>值语义(value sematics)指的是对象的拷贝与原对象无关，拷贝之后就与原对象脱离关系。C++的内置类型(bool/int/double等)都是值语义，标准库里的pair&lt;&gt;,vector&lt;&gt;,map&lt;&gt;，string等类型也都是值语义。Java语言的primitive types(原生数据类型)也是值语义。<br>与值语义(object sematics)对应的是”对象语义”，或者也叫做”引用语义”。对象语义指的是面向对象意义下的对象，对象是禁止拷贝的或拷贝后与原来的对象存在关联。比如，拷贝一个Employee对象是没有意义的，一个雇员不会变成两个雇员。同样，muduo库中的TcpConnection，显然也是不可复制的，因为牵涉到系统的资源。Java里面的class对象都是对象语义/引用语义。<br><a id="more"></a><br>下面举Java和C++几个简单的例子看值语义和对象语义:</p>
+<p>####Java</p>
+<pre><code>int a = 8;
+int b = a;
+</code></pre><p>这里的a，b都是int， 属于Java中原生数据类型，他们的特点是复制后二者再无关联。它们表现出来是两个value。<br>与他们形成对比的是用户自定义的class，如下:</p>
+<pre><code>Student a1 = new Student(&quot;dujiong&quot;, 23);
+Student a2 = a1;
+a2.setAge(25);    
+System.out.println(a1.getAge());
+</code></pre><p>代码输出为25，因为第二行语句，导致a和b指向的是同一个对象，修改a2也会影响a1，所以表现的行为是一种reference。</p>
+<p>####C++<br>如前所述，C++的内置类型、标准库容器如vector&lt;&gt;，map&lt;&gt;等都是值语义，C++要求凡是可以放入容器的元素都必须具备值语义，即必须具备拷贝的能力，放入标准容器的元素和之前的元素没有任何的关联。<br>而C++的普通类呢?</p>
+<pre><code>class Book
+{
+    private:
+        string isbn_;
+        double price_;
+        int amount_;
+};
+</code></pre><p>如果以下面的代码:</p>
+<pre><code>Book a1;
+Book a2 = a1;
+</code></pre><p>那么a1和a2复制后将没有任何关联，他们的表现属于值语义。</p>
+<p>###值语义与C++语言<br>C++的class本质上是值语义的。C++的设计初衷是让用户定义的类型(class)能像内置类型一样工作，具有同等的地位。为此，C++做了妥协:<br>(1) class的layout与C struct一样，没有额外的开销，定义一个”只包含一个int成员的class”的对象开销和一个int一样。<br>(2) class可以在stack上创建，也可以在heap上创建。。<br>(3) class的data member默认都是uninitialized。<br>(4) class的数组是一个个class对象挨着，没有额外的indirection。<br>(5) 编译器为class默认生成copy constructor和assignment operator。其他语言没有copy constructor，也不允许重载assignment operator。C++的对象默认是可以拷贝的。<br>(6) 当class类型传入函数时，默认是make a copy(除非参数声明为reference)。<br>(7) 当函数返回一个class type时，只能通过make a copy(C++不得不定义RVO来解决性能问题)。<br>(8) 当class type为成员时，数据成员时嵌入的。<br>C++这样的设计带来了性能上的好处。比如在C++里定义复数类(complex<double>class)和其数组(array)、向量(vector)，它们的layout分别是:</double></p>
+<p>   <img src="http://i.imgur.com/xN0fihh.png" alt=""></p>
+<p>而如果在Java中定义同样的结构，就不一样。</p>
+<p><img src="http://i.imgur.com/ptaBium.png" alt=""></p>
+<p>Java中每个object都有header。对比Java，C++的对象模型更紧凑。</p>
+<p>###值语义与生命期<br>值语义的一个巨大好处是生命期管理很简单，就像你不需要操心基本数据类型的生命期一样。值语义的对象要么是栈上对象，要么作为其他对象的成员(一个成员函数使用自己的数据成员对象)。而，对象语义由于不能拷贝，只能通过指针或引用来使用它。而一旦使用指针或引用来操作对象，那么就要担心所指的对象是否已被释放，而这也是C++ bug的主要来源。此外，C++只能通过指针或引用来获得多态，所以，在C++中进行继承和多态的面向对象编程中，资源管理成为了一大难题。            </p>
+<p>####模型1<br>模型1: a Parent has a Child, a Child knows his/her Parent<br>Java中很好些，不用担心内存泄露，也不用担心空悬指针。    </p>
+<pre><code>public class Parent{
+    private Child myChild;    
+}
+public class Child{
+    private Parent myParent;    
+}
+</code></pre><p>只要正确初始化myChild和myParent即可。<br>而在C++里就要为资源管理费一番脑筋:Parent 和 Child 都代表的是真人，肯定是不能拷贝的，因此具有对象语义。Parent 是直接持有 Child 吗？抑或 Parent 和 Child 通过指针互指？Child 的生命期由 Parent 控制吗？<br>直接但是易错的写法:</p>
+<pre><code>class Child;
+class Parent : boost::noncopyable
+{
+    private:
+        Child* myChild;
+};
+
+class Child : boodt::noncopyable
+{
+    private:
+        Parent* myParent;
+};
+</code></pre><p>那么，直接使用指针作为成员，那么如何确保指针的有效性？如何防止出现空悬指针？Child 和 Parent 由谁负责释放？在释放某个 Parent 对象的时候，如何确保程序中没有指向它的指针？在释放某个 Child 对象的时候，如何确保程序中没有指向它的指针？<br>这一系列问题都是C++面向对象编程令人头疼的问题。现在可以使用boost智能指针解决(C++11引入,用栈上对象管理堆上对象的生命期），借助于智能指针把对象语义转换为值语义，从而解决对象生命期问题：让Parent持有Child的智能指针，同时让Child持有Parent的智能指针，这样始终引用对方的时候就不用担心出现空悬指针。当然，其中一个智能应该是weak reference，否则会出现循环引用，导致内存泄露。<br>所以，如果Parent拥有Child，Child的生命期由其Parent控制，Child的生命期小于Parent，那么代码：     </p>
+<pre><code>class Parent;
+class Child : boost::noncopyable
+{
+    public:
+        explicit Child(Parent* myParent) : myParent_(myParent)
+        { }
+    private:
+        Parent* myParent_;
+};
+class Parent : boost::noncopyable
+{
+    public:
+        Parent() : myChild(new Child(this))
+        { }
+    private:
+        boost::scoped_ptr&lt;Child&gt; myChild;
+}; 
+</code></pre><p>####模型2<br>模型2: a Child has parents:mom and dad; a Parent has one or more Child; a Parent knows his/her spouser<br>Java描述还是很简单，垃圾收集会搞定对象生命期。</p>
+<pre><code>public class Parent{
+    private Parent mySpouser;
+    private ArrayList&lt;Child&gt; myChildren;    
+}
+public class Child{
+    private Parent myMom;
+    private Parent myDad;
+}
+</code></pre><p>而如果用C++实现，还是需要借助于智能指针将裸指针转化为值语义。</p>
+<pre><code>class Parent;
+typedef boost::shared_ptr&lt;Parent&gt; ParentPtr;
+
+class Child : boost::noncopyable
+{
+    public:
+        explicit Child(const ParentPtr&amp; myMom, const ParentPtr&amp; myDad)
+        : myMom_(myMom), myDad_(myDad)
+        { }
+    private:
+        boost::weak_ptr&lt;Parent&gt; myMom_;
+        boost::weak_ptr&lt;Parent&gt; myDad_;
+};
+
+typedef boost::shared_ptr&lt;Child&gt; ChildPtr;
+
+class Parent :　boost::noncopyable
+{
+    public:
+        Parent(){}
+        void setSpouser(const ParentPtr&amp; spouser)
+        {
+            mySpouser_ = spouser;
+        }
+        void addChild(const ChildPtr&amp; child)
+        {
+            myChildren_.push_back(child);    
+        }
+    private:
+        boost::weak_ptr&lt;Parent&gt; mySpouser_;
+        std::vector&lt;ChildPtr&gt; myChildren_;
+}
+</code></pre><p>可以看出，如果不使用智能指针，使用C++面向对象编程，有效的资源管理将会很困难。</p>
+<p>###待续<br>对于智能指针，这里只是有一些简单的介绍，后面还将深入研究。</p>
+<p>参考: <a href="http://www.cnblogs.com/Solstice/archive/2011/08/16/2141515.html" target="_blank" rel="external">http://www.cnblogs.com/Solstice/archive/2011/08/16/2141515.html</a></p>
 
       
     </div>
@@ -316,7 +420,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/openwrt-wifi/" rel="tag">#openwrt/wifi</a>
+            <a href="/tags/C/" rel="tag">#C++</a>
           
         </div>
       
@@ -325,17 +429,13 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/03/11/welcome/" rel="next" title="Welcome to My Blog">
-                <i class="fa fa-chevron-left"></i> Welcome to My Blog
+              <a href="/2016/05/06/muduo-4/" rel="next" title="muduo源码阅读之Channel与Poller">
+                <i class="fa fa-chevron-left"></i> muduo源码阅读之Channel与Poller
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/03/18/startAP/" rel="prev" title="OpenWrt设置程序开机自启动">
-                OpenWrt设置程序开机自启动 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -361,8 +461,8 @@
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/03/15/dumbap/"
-           data-title="配置OpenWrt路由器为Dumb AP" data-url="http://blog.dujiong.net/2016/03/15/dumbap/">
+      <div class="ds-thread" data-thread-key="2016/05/15/cplusplus-sematics/"
+           data-title="浅谈C++值语义和对象语义" data-url="http://blog.dujiong.net/2016/05/15/cplusplus-sematics/">
       </div>
     
   </div>
@@ -476,7 +576,7 @@
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Dumb-AP"><span class="nav-number">1.</span> <span class="nav-text">Dumb AP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#配置Dumb-AP"><span class="nav-number">2.</span> <span class="nav-text">配置Dumb AP</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#修改网络配置文件-etc-config-network"><span class="nav-number">2.1.</span> <span class="nav-text">修改网络配置文件(/etc/config/network)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#关掉DHCP"><span class="nav-number">2.2.</span> <span class="nav-text">关掉DHCP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#关掉防火墙"><span class="nav-number">2.3.</span> <span class="nav-text">关掉防火墙</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#附：完整的-etc-config-network文件"><span class="nav-number">3.</span> <span class="nav-text">附：完整的/etc/config/network文件</span></a></li></ol></div>
+              <p class="post-toc-empty">此文章未包含目录</p>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">
