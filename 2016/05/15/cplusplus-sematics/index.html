@@ -59,18 +59,18 @@
 
 
 
-<meta name="description" content="###值语义和对象语义值语义(value sematics)指的是对象的拷贝与原对象无关，拷贝之后就与原对象脱离关系。C++的内置类型(bool/int/double等)都是值语义，标准库里的pair&amp;lt;&amp;gt;,vector&amp;lt;&amp;gt;,map&amp;lt;&amp;gt;，string等类型也都是值语义。Java语言的primitive types(原生数据类型)也是值语义。与值语义(object">
+<meta name="description" content="值语义和对象语义值语义(value sematics)指的是对象的拷贝与原对象无关，拷贝之后就与原对象脱离关系。C++的内置类型(bool/int/double等)都是值语义，标准库里的pair&amp;lt;&amp;gt;,vector&amp;lt;&amp;gt;,map&amp;lt;&amp;gt;，string等类型也都是值语义。Java语言的primitive types(原生数据类型)也是值语义。与值语义(object sem">
 <meta property="og:type" content="article">
 <meta property="og:title" content="浅谈C++值语义和对象语义">
 <meta property="og:url" content="http://blog.dujiong.net/2016/05/15/cplusplus-sematics/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="###值语义和对象语义值语义(value sematics)指的是对象的拷贝与原对象无关，拷贝之后就与原对象脱离关系。C++的内置类型(bool/int/double等)都是值语义，标准库里的pair&amp;lt;&amp;gt;,vector&amp;lt;&amp;gt;,map&amp;lt;&amp;gt;，string等类型也都是值语义。Java语言的primitive types(原生数据类型)也是值语义。与值语义(object">
+<meta property="og:description" content="值语义和对象语义值语义(value sematics)指的是对象的拷贝与原对象无关，拷贝之后就与原对象脱离关系。C++的内置类型(bool/int/double等)都是值语义，标准库里的pair&amp;lt;&amp;gt;,vector&amp;lt;&amp;gt;,map&amp;lt;&amp;gt;，string等类型也都是值语义。Java语言的primitive types(原生数据类型)也是值语义。与值语义(object sem">
 <meta property="og:image" content="http://i.imgur.com/xN0fihh.png">
 <meta property="og:image" content="http://i.imgur.com/ptaBium.png">
-<meta property="og:updated_time" content="2016-07-24T15:27:29.414Z">
+<meta property="og:updated_time" content="2016-08-02T05:59:06.295Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="浅谈C++值语义和对象语义">
-<meta name="twitter:description" content="###值语义和对象语义值语义(value sematics)指的是对象的拷贝与原对象无关，拷贝之后就与原对象脱离关系。C++的内置类型(bool/int/double等)都是值语义，标准库里的pair&amp;lt;&amp;gt;,vector&amp;lt;&amp;gt;,map&amp;lt;&amp;gt;，string等类型也都是值语义。Java语言的primitive types(原生数据类型)也是值语义。与值语义(object">
+<meta name="twitter:description" content="值语义和对象语义值语义(value sematics)指的是对象的拷贝与原对象无关，拷贝之后就与原对象脱离关系。C++的内置类型(bool/int/double等)都是值语义，标准库里的pair&amp;lt;&amp;gt;,vector&amp;lt;&amp;gt;,map&amp;lt;&amp;gt;，string等类型也都是值语义。Java语言的primitive types(原生数据类型)也是值语义。与值语义(object sem">
 <meta name="twitter:image" content="http://i.imgur.com/xN0fihh.png">
 
 
@@ -295,9 +295,8 @@
       
 
       
-        <p>###值语义和对象语义<br>值语义(value sematics)指的是对象的拷贝与原对象无关，拷贝之后就与原对象脱离关系。C++的内置类型(bool/int/double等)都是值语义，标准库里的pair&lt;&gt;,vector&lt;&gt;,map&lt;&gt;，string等类型也都是值语义。Java语言的primitive types(原生数据类型)也是值语义。<br>与值语义(object sematics)对应的是”对象语义”，或者也叫做”引用语义”。对象语义指的是面向对象意义下的对象，对象是禁止拷贝的或拷贝后与原来的对象存在关联。比如，拷贝一个Employee对象是没有意义的，一个雇员不会变成两个雇员。同样，muduo库中的TcpConnection，显然也是不可复制的，因为牵涉到系统的资源。Java里面的class对象都是对象语义/引用语义。<br><a id="more"></a><br>下面举Java和C++几个简单的例子看值语义和对象语义:</p>
-<p>####Java</p>
-<pre><code>int a = 8;
+        <h3 id="值语义和对象语义"><a href="#值语义和对象语义" class="headerlink" title="值语义和对象语义"></a>值语义和对象语义</h3><p>值语义(value sematics)指的是对象的拷贝与原对象无关，拷贝之后就与原对象脱离关系。C++的内置类型(bool/int/double等)都是值语义，标准库里的pair&lt;&gt;,vector&lt;&gt;,map&lt;&gt;，string等类型也都是值语义。Java语言的primitive types(原生数据类型)也是值语义。<br>与值语义(object sematics)对应的是”对象语义”，或者也叫做”引用语义”。对象语义指的是面向对象意义下的对象，对象是禁止拷贝的或拷贝后与原来的对象存在关联。比如，拷贝一个Employee对象是没有意义的，一个雇员不会变成两个雇员。同样，muduo库中的TcpConnection，显然也是不可复制的，因为牵涉到系统的资源。Java里面的class对象都是对象语义/引用语义。<br><a id="more"></a><br>下面举Java和C++几个简单的例子看值语义和对象语义:</p>
+<h4 id="Java"><a href="#Java" class="headerlink" title="Java"></a>Java</h4><pre><code>int a = 8;
 int b = a;
 </code></pre><p>这里的a，b都是int， 属于Java中原生数据类型，他们的特点是复制后二者再无关联。它们表现出来是两个value。<br>与他们形成对比的是用户自定义的class，如下:</p>
 <pre><code>Student a1 = new Student(&quot;dujiong&quot;, 23);
@@ -305,7 +304,7 @@ Student a2 = a1;
 a2.setAge(25);    
 System.out.println(a1.getAge());
 </code></pre><p>代码输出为25，因为第二行语句，导致a和b指向的是同一个对象，修改a2也会影响a1，所以表现的行为是一种reference。</p>
-<p>####C++<br>如前所述，C++的内置类型、标准库容器如vector&lt;&gt;，map&lt;&gt;等都是值语义，C++要求凡是可以放入容器的元素都必须具备值语义，即必须具备拷贝的能力，放入标准容器的元素和之前的元素没有任何的关联。<br>而C++的普通类呢?</p>
+<h4 id="C"><a href="#C" class="headerlink" title="C++"></a>C++</h4><p>如前所述，C++的内置类型、标准库容器如vector&lt;&gt;，map&lt;&gt;等都是值语义，C++要求凡是可以放入容器的元素都必须具备值语义，即必须具备拷贝的能力，放入标准容器的元素和之前的元素没有任何的关联。<br>而C++的普通类呢?</p>
 <pre><code>class Book
 {
     private:
@@ -317,13 +316,13 @@ System.out.println(a1.getAge());
 <pre><code>Book a1;
 Book a2 = a1;
 </code></pre><p>那么a1和a2复制后将没有任何关联，他们的表现属于值语义。</p>
-<p>###值语义与C++语言<br>C++的class本质上是值语义的。C++的设计初衷是让用户定义的类型(class)能像内置类型一样工作，具有同等的地位。为此，C++做了妥协:<br>(1) class的layout与C struct一样，没有额外的开销，定义一个”只包含一个int成员的class”的对象开销和一个int一样。<br>(2) class可以在stack上创建，也可以在heap上创建。。<br>(3) class的data member默认都是uninitialized。<br>(4) class的数组是一个个class对象挨着，没有额外的indirection。<br>(5) 编译器为class默认生成copy constructor和assignment operator。其他语言没有copy constructor，也不允许重载assignment operator。C++的对象默认是可以拷贝的。<br>(6) 当class类型传入函数时，默认是make a copy(除非参数声明为reference)。<br>(7) 当函数返回一个class type时，只能通过make a copy(C++不得不定义RVO来解决性能问题)。<br>(8) 当class type为成员时，数据成员时嵌入的。<br>C++这样的设计带来了性能上的好处。比如在C++里定义复数类(complex<double>class)和其数组(array)、向量(vector)，它们的layout分别是:</double></p>
+<h3 id="值语义与C-语言"><a href="#值语义与C-语言" class="headerlink" title="值语义与C++语言"></a>值语义与C++语言</h3><p>C++的class本质上是值语义的。C++的设计初衷是让用户定义的类型(class)能像内置类型一样工作，具有同等的地位。为此，C++做了妥协:<br>(1) class的layout与C struct一样，没有额外的开销，定义一个”只包含一个int成员的class”的对象开销和一个int一样。<br>(2) class可以在stack上创建，也可以在heap上创建。。<br>(3) class的data member默认都是uninitialized。<br>(4) class的数组是一个个class对象挨着，没有额外的indirection。<br>(5) 编译器为class默认生成copy constructor和assignment operator。其他语言没有copy constructor，也不允许重载assignment operator。C++的对象默认是可以拷贝的。<br>(6) 当class类型传入函数时，默认是make a copy(除非参数声明为reference)。<br>(7) 当函数返回一个class type时，只能通过make a copy(C++不得不定义RVO来解决性能问题)。<br>(8) 当class type为成员时，数据成员时嵌入的。<br>C++这样的设计带来了性能上的好处。比如在C++里定义复数类(complex<double>class)和其数组(array)、向量(vector)，它们的layout分别是:</double></p>
 <p>   <img src="http://i.imgur.com/xN0fihh.png" alt=""></p>
 <p>而如果在Java中定义同样的结构，就不一样。</p>
 <p><img src="http://i.imgur.com/ptaBium.png" alt=""></p>
 <p>Java中每个object都有header。对比Java，C++的对象模型更紧凑。</p>
-<p>###值语义与生命期<br>值语义的一个巨大好处是生命期管理很简单，就像你不需要操心基本数据类型的生命期一样。值语义的对象要么是栈上对象，要么作为其他对象的成员(一个成员函数使用自己的数据成员对象)。而，对象语义由于不能拷贝，只能通过指针或引用来使用它。而一旦使用指针或引用来操作对象，那么就要担心所指的对象是否已被释放，而这也是C++ bug的主要来源。此外，C++只能通过指针或引用来获得多态，所以，在C++中进行继承和多态的面向对象编程中，资源管理成为了一大难题。            </p>
-<p>####模型1<br>模型1: a Parent has a Child, a Child knows his/her Parent<br>Java中很好些，不用担心内存泄露，也不用担心空悬指针。    </p>
+<h3 id="值语义与生命期"><a href="#值语义与生命期" class="headerlink" title="值语义与生命期"></a>值语义与生命期</h3><p>值语义的一个巨大好处是生命期管理很简单，就像你不需要操心基本数据类型的生命期一样。值语义的对象要么是栈上对象，要么作为其他对象的成员(一个成员函数使用自己的数据成员对象)。而，对象语义由于不能拷贝，只能通过指针或引用来使用它。而一旦使用指针或引用来操作对象，那么就要担心所指的对象是否已被释放，而这也是C++ bug的主要来源。此外，C++只能通过指针或引用来获得多态，所以，在C++中进行继承和多态的面向对象编程中，资源管理成为了一大难题。            </p>
+<h4 id="模型1"><a href="#模型1" class="headerlink" title="模型1"></a>模型1</h4><p>模型1: a Parent has a Child, a Child knows his/her Parent<br>Java中很好些，不用担心内存泄露，也不用担心空悬指针。    </p>
 <pre><code>public class Parent{
     private Child myChild;    
 }
@@ -361,7 +360,7 @@ class Parent : boost::noncopyable
     private:
         boost::scoped_ptr&lt;Child&gt; myChild;
 }; 
-</code></pre><p>####模型2<br>模型2: a Child has parents:mom and dad; a Parent has one or more Child; a Parent knows his/her spouser<br>Java描述还是很简单，垃圾收集会搞定对象生命期。</p>
+</code></pre><h4 id="模型2"><a href="#模型2" class="headerlink" title="模型2"></a>模型2</h4><p>模型2: a Child has parents:mom and dad; a Parent has one or more Child; a Parent knows his/her spouser<br>Java描述还是很简单，垃圾收集会搞定对象生命期。</p>
 <pre><code>public class Parent{
     private Parent mySpouser;
     private ArrayList&lt;Child&gt; myChildren;    
@@ -404,7 +403,7 @@ class Parent :　boost::noncopyable
         std::vector&lt;ChildPtr&gt; myChildren_;
 }
 </code></pre><p>可以看出，如果不使用智能指针，使用C++面向对象编程，有效的资源管理将会很困难。</p>
-<p>###待续<br>对于智能指针，这里只是有一些简单的介绍，后面还将深入研究。</p>
+<h3 id="待续"><a href="#待续" class="headerlink" title="待续"></a>待续</h3><p>对于智能指针，这里只是有一些简单的介绍，后面还将深入研究。</p>
 <p>参考: <a href="http://www.cnblogs.com/Solstice/archive/2011/08/16/2141515.html" target="_blank" rel="external">http://www.cnblogs.com/Solstice/archive/2011/08/16/2141515.html</a></p>
 
       
@@ -576,7 +575,7 @@ class Parent :　boost::noncopyable
               
             
             
-              <p class="post-toc-empty">此文章未包含目录</p>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#值语义和对象语义"><span class="nav-number">1.</span> <span class="nav-text">值语义和对象语义</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Java"><span class="nav-number">1.1.</span> <span class="nav-text">Java</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#C"><span class="nav-number">1.2.</span> <span class="nav-text">C++</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#值语义与C-语言"><span class="nav-number">2.</span> <span class="nav-text">值语义与C++语言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#值语义与生命期"><span class="nav-number">3.</span> <span class="nav-text">值语义与生命期</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#模型1"><span class="nav-number">3.1.</span> <span class="nav-text">模型1</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#模型2"><span class="nav-number">3.2.</span> <span class="nav-text">模型2</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#待续"><span class="nav-number">4.</span> <span class="nav-text">待续</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">
