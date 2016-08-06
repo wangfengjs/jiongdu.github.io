@@ -41,7 +41,7 @@
 <link href="/css/main.css?v=0.5.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="openwrt/wifi," />
+  <meta name="keywords" content="network/linux muduo," />
 
 
 
@@ -59,16 +59,19 @@
 
 
 
-<meta name="description" content="本文介绍并实现无线网卡获取周围wifi关键通信数据，捕捉所需要的MAC层管理数据包，通过解包获取到周围AP和终端设备的MAC地址和RSSI，并存入数据库中，可用于定位，通信链路分析等。">
+<meta name="description" content="《Unix网络编程(第三版)》(以下简称[UNP])中第三十章”客户/服务器程序设计范式”总结了一些常见的并发网络服务程序设计方案，而随着互联网、大数据等浪潮的兴起，业界对服务器程序的高并发能力、稳定性等提出了更高的要求，客户/服务器程序设计范式也在随着时代的需求而不断改进和提升，下面就对常见的并发网络服务程序设计方案作简单总结。
+《Unix网络编程》传统方案方案0这并不是并发服务器，正如在[UN">
 <meta property="og:type" content="article">
-<meta property="og:title" content="wifi关键指标提取">
-<meta property="og:url" content="http://blog.dujiong.net/2016/04/20/wifi-data-get/index.html">
+<meta property="og:title" content="常见并发网络服务程序设计方案">
+<meta property="og:url" content="http://blog.dujiong.net/2016/05/28/concurrent-server-conclusion/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="本文介绍并实现无线网卡获取周围wifi关键通信数据，捕捉所需要的MAC层管理数据包，通过解包获取到周围AP和终端设备的MAC地址和RSSI，并存入数据库中，可用于定位，通信链路分析等。">
-<meta property="og:updated_time" content="2016-07-21T08:44:02.200Z">
+<meta property="og:description" content="《Unix网络编程(第三版)》(以下简称[UNP])中第三十章”客户/服务器程序设计范式”总结了一些常见的并发网络服务程序设计方案，而随着互联网、大数据等浪潮的兴起，业界对服务器程序的高并发能力、稳定性等提出了更高的要求，客户/服务器程序设计范式也在随着时代的需求而不断改进和提升，下面就对常见的并发网络服务程序设计方案作简单总结。
+《Unix网络编程》传统方案方案0这并不是并发服务器，正如在[UN">
+<meta property="og:updated_time" content="2016-08-06T03:32:10.602Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="wifi关键指标提取">
-<meta name="twitter:description" content="本文介绍并实现无线网卡获取周围wifi关键通信数据，捕捉所需要的MAC层管理数据包，通过解包获取到周围AP和终端设备的MAC地址和RSSI，并存入数据库中，可用于定位，通信链路分析等。">
+<meta name="twitter:title" content="常见并发网络服务程序设计方案">
+<meta name="twitter:description" content="《Unix网络编程(第三版)》(以下简称[UNP])中第三十章”客户/服务器程序设计范式”总结了一些常见的并发网络服务程序设计方案，而随着互联网、大数据等浪潮的兴起，业界对服务器程序的高并发能力、稳定性等提出了更高的要求，客户/服务器程序设计范式也在随着时代的需求而不断改进和提升，下面就对常见的并发网络服务程序设计方案作简单总结。
+《Unix网络编程》传统方案方案0这并不是并发服务器，正如在[UN">
 
 
 
@@ -86,7 +89,7 @@
   };
 </script>
 
-  <title> wifi关键指标提取 | 一期一会 </title>
+  <title> 常见并发网络服务程序设计方案 | 一期一会 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -246,7 +249,7 @@
             
             
               
-                wifi关键指标提取
+                常见并发网络服务程序设计方案
               
             
           </h1>
@@ -258,8 +261,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-04-20T09:56:09+08:00" content="2016-04-20">
-              2016-04-20
+            <time itemprop="dateCreated" datetime="2016-05-28T10:14:00+08:00" content="2016-05-28">
+              2016-05-28
             </time>
           </span>
 
@@ -269,8 +272,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/04/20/wifi-data-get/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/04/20/wifi-data-get/" itemprop="commentsCount"></span>
+                <a href="/2016/05/28/concurrent-server-conclusion/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/05/28/concurrent-server-conclusion/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -292,10 +295,10 @@
       
 
       
-        <p>本文介绍并实现无线网卡获取周围wifi关键通信数据，捕捉所需要的MAC层管理数据包，通过解包获取到周围AP和终端设备的MAC地址和RSSI，并存入数据库中，可用于定位，通信链路分析等。</p>
-<a id="more"></a>
-<p>###基本方法<br>在实现MAC地址和RSSI的提取时，借鉴了OpenWRT现有的iwcap工具包，iwcap是OpenWRT上用来调试wifi功能的一个抓包工具，可以抓取监听到的所有802.11帧，并获取到pcap格式的网卡原始数据。</p>
-<p>###程序分析<br>详细程序见: <a href="https://github.com/jiongdu" target="_blank" rel="external">github</a></p>
+        <p>《Unix网络编程(第三版)》(以下简称[UNP])中第三十章”客户/服务器程序设计范式”总结了一些常见的并发网络服务程序设计方案，而随着互联网、大数据等浪潮的兴起，业界对服务器程序的高并发能力、稳定性等提出了更高的要求，客户/服务器程序设计范式也在随着时代的需求而不断改进和提升，下面就对常见的并发网络服务程序设计方案作简单总结。</p>
+<h3 id="《Unix网络编程》传统方案"><a href="#《Unix网络编程》传统方案" class="headerlink" title="《Unix网络编程》传统方案"></a>《Unix网络编程》传统方案</h3><h4 id="方案0"><a href="#方案0" class="headerlink" title="方案0"></a>方案0</h4><p>这并不是并发服务器，正如在[UNP]第一章入门的时间获取客户/服务器程序中所看到的，一次只能服务一个客户。服务器通过循环监听套接字等待连接，在连接建立以后处理所需的逻辑。对应到程序中，服务器和客户端都只是简单的调用socket API，完成连接和处理工作。</p>
+<h4 id="方案1"><a href="#方案1" class="headerlink" title="方案1"></a>方案1</h4><p>这是传统的并发网络编程方案，也是[UNP]中第一个阐述的并发方案，称之为fork()-per-client或process-per-connection，即为每一个客户连接新建一个子进程(fork())，在子进程调用handler()处理客户业务，从而同时服务多个客户端。<br>这种方案适合并发连接数不大、计算响应的工作量远大于fork()的开销等情况，考虑到操作系统对运行服务器的用户能够同时拥有多少子进程的限制和为每个客户现场fork()一个子进程的开销。</p>
+<h4 id="方案2"><a href="#方案2" class="headerlink" title="方案2"></a>方案2</h4><p>对方案1的优化，采用进程池，即在启动阶段预先派生一定数量的子进程，当各个客户连接到达时，这些子进程立即就能为它们服务。</p>
 
       
     </div>
@@ -310,7 +313,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/openwrt-wifi/" rel="tag">#openwrt/wifi</a>
+            <a href="/tags/network-linux-muduo/" rel="tag">#network/linux muduo</a>
           
         </div>
       
@@ -319,16 +322,16 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/04/13/cplusplusMem/" rel="next" title="C++内存管理--部分总结">
-                <i class="fa fa-chevron-left"></i> C++内存管理--部分总结
+              <a href="/2016/05/15/cplusplus-sematics/" rel="next" title="浅谈C++值语义和对象语义">
+                <i class="fa fa-chevron-left"></i> 浅谈C++值语义和对象语义
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2016/04/25/muduo-1/" rel="prev" title="muduo源码阅读之Reactor模式和muduo">
-                muduo源码阅读之Reactor模式和muduo <i class="fa fa-chevron-right"></i>
+              <a href="/2016/08/06/folder/" rel="prev" title="folder...">
+                folder... <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -355,8 +358,8 @@
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/04/20/wifi-data-get/"
-           data-title="wifi关键指标提取" data-url="http://blog.dujiong.net/2016/04/20/wifi-data-get/">
+      <div class="ds-thread" data-thread-key="2016/05/28/concurrent-server-conclusion/"
+           data-title="常见并发网络服务程序设计方案" data-url="http://blog.dujiong.net/2016/05/28/concurrent-server-conclusion/">
       </div>
     
   </div>
@@ -470,7 +473,7 @@
               
             
             
-              <p class="post-toc-empty">此文章未包含目录</p>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#《Unix网络编程》传统方案"><span class="nav-number">1.</span> <span class="nav-text">《Unix网络编程》传统方案</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#方案0"><span class="nav-number">1.1.</span> <span class="nav-text">方案0</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#方案1"><span class="nav-number">1.2.</span> <span class="nav-text">方案1</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#方案2"><span class="nav-number">1.3.</span> <span class="nav-text">方案2</span></a></li></ol></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">
