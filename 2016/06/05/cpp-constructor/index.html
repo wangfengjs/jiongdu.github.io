@@ -41,7 +41,7 @@
 <link href="/css/main.css?v=0.5.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="openwrt/wifi," />
+  <meta name="keywords" content="C++," />
 
 
 
@@ -59,16 +59,16 @@
 
 
 
-<meta name="description" content="本文介绍并实现无线网卡获取周围wifi关键通信数据，捕捉所需要的MAC层管理数据包，通过解包获取到周围AP和终端设备的MAC地址和RSSI，并存入数据库中，可用于定位，通信链路分析等。">
+<meta name="description" content="近期，在阅读陈皓老师博客的时候，看到几年前的一篇关于C++构造函数的FAQ，想来自己学习C++也有段时间了，就尝试着回答一下，并乘机总结一下C++构造函数的一些常见问题，记录于此。借此机会逛了逛C++ FAQ，以前都不了解，以后得多去学习学习，检验下自己的C++基础知识扎不扎实。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="wifi关键指标提取">
-<meta property="og:url" content="http://blog.dujiong.net/2016/04/20/wifi-data-get/index.html">
+<meta property="og:title" content="C++构造函数一些常见问题分析">
+<meta property="og:url" content="http://blog.dujiong.net/2016/06/05/cpp-constructor/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="本文介绍并实现无线网卡获取周围wifi关键通信数据，捕捉所需要的MAC层管理数据包，通过解包获取到周围AP和终端设备的MAC地址和RSSI，并存入数据库中，可用于定位，通信链路分析等。">
-<meta property="og:updated_time" content="2016-07-21T08:44:02.200Z">
+<meta property="og:description" content="近期，在阅读陈皓老师博客的时候，看到几年前的一篇关于C++构造函数的FAQ，想来自己学习C++也有段时间了，就尝试着回答一下，并乘机总结一下C++构造函数的一些常见问题，记录于此。借此机会逛了逛C++ FAQ，以前都不了解，以后得多去学习学习，检验下自己的C++基础知识扎不扎实。">
+<meta property="og:updated_time" content="2016-08-06T12:47:20.196Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="wifi关键指标提取">
-<meta name="twitter:description" content="本文介绍并实现无线网卡获取周围wifi关键通信数据，捕捉所需要的MAC层管理数据包，通过解包获取到周围AP和终端设备的MAC地址和RSSI，并存入数据库中，可用于定位，通信链路分析等。">
+<meta name="twitter:title" content="C++构造函数一些常见问题分析">
+<meta name="twitter:description" content="近期，在阅读陈皓老师博客的时候，看到几年前的一篇关于C++构造函数的FAQ，想来自己学习C++也有段时间了，就尝试着回答一下，并乘机总结一下C++构造函数的一些常见问题，记录于此。借此机会逛了逛C++ FAQ，以前都不了解，以后得多去学习学习，检验下自己的C++基础知识扎不扎实。">
 
 
 
@@ -86,7 +86,7 @@
   };
 </script>
 
-  <title> wifi关键指标提取 | 一期一会 </title>
+  <title> C++构造函数一些常见问题分析 | 一期一会 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -246,7 +246,7 @@
             
             
               
-                wifi关键指标提取
+                C++构造函数一些常见问题分析
               
             
           </h1>
@@ -258,8 +258,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-04-20T09:56:09+08:00" content="2016-04-20">
-              2016-04-20
+            <time itemprop="dateCreated" datetime="2016-06-05T16:58:57+08:00" content="2016-06-05">
+              2016-06-05
             </time>
           </span>
 
@@ -269,8 +269,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/04/20/wifi-data-get/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/04/20/wifi-data-get/" itemprop="commentsCount"></span>
+                <a href="/2016/06/05/cpp-constructor/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/06/05/cpp-constructor/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -292,10 +292,76 @@
       
 
       
-        <p>本文介绍并实现无线网卡获取周围wifi关键通信数据，捕捉所需要的MAC层管理数据包，通过解包获取到周围AP和终端设备的MAC地址和RSSI，并存入数据库中，可用于定位，通信链路分析等。</p>
-<a id="more"></a>
-<p>###基本方法<br>在实现MAC地址和RSSI的提取时，借鉴了OpenWRT现有的iwcap工具包，iwcap是OpenWRT上用来调试wifi功能的一个抓包工具，可以抓取监听到的所有802.11帧，并获取到pcap格式的网卡原始数据。</p>
-<p>###程序分析<br>详细程序见: <a href="https://github.com/jiongdu" target="_blank" rel="external">github</a></p>
+        <p>近期，在阅读陈皓老师博客的时候，看到几年前的一篇<a href="http://coolshell.cn/articles/804.html" target="_blank" rel="external">关于C++构造函数的FAQ</a>，想来自己学习C++也有段时间了，就尝试着回答一下，并乘机总结一下C++构造函数的一些常见问题，记录于此。<br>借此机会逛了逛C++ FAQ，以前都不了解，以后得多去学习学习，检验下自己的C++基础知识扎不扎实。<br><a id="more"></a>  </p>
+<h3 id="构造函数是用来干什么的？"><a href="#构造函数是用来干什么的？" class="headerlink" title="构造函数是用来干什么的？"></a>构造函数是用来干什么的？</h3><p>顾名思义，构造函数是用来从无到有的构建对象。它将一些（连续的）最小粒度的内存单元变成对象。它要初始化对象内部所定义的域，还可以分配资源(内存、文件、套接字等)。</p>
+<h3 id="List-x-和List-x-有什么不同？"><a href="#List-x-和List-x-有什么不同？" class="headerlink" title="List x;和List x();有什么不同？"></a>List x;和List x();有什么不同？</h3><p>List x;是声明了一个类List的对象x，而List x()是声明了一个函数x()，它返回一个List对象。二者自然是有本质的差别。 </p>
+<h3 id="一个类的构造函数可否调用另一个构造函数来初始化自己？"><a href="#一个类的构造函数可否调用另一个构造函数来初始化自己？" class="headerlink" title="一个类的构造函数可否调用另一个构造函数来初始化自己？"></a>一个类的构造函数可否调用另一个构造函数来初始化自己？</h3><p>不能。如果调用另一个构造函数，编译器将初始化一个临时局部对象，而不是初始化this对象。</p>
+<h3 id="是否Fred类的默认的构造函数就一定是Fred-Fred-？"><a href="#是否Fred类的默认的构造函数就一定是Fred-Fred-？" class="headerlink" title="是否Fred类的默认的构造函数就一定是Fred::Fred()？"></a>是否Fred类的默认的构造函数就一定是Fred::Fred()？</h3><p>不，默认构造函数是可以带提供默认值的参数的。<br>比如这里：</p>
+<pre><code>class Fred
+{
+    public:
+        Fred(int i=1);
+};
+</code></pre><h3 id="如果要创建一个Fred对象数组，什么样的构造函数会被调用？"><a href="#如果要创建一个Fred对象数组，什么样的构造函数会被调用？" class="headerlink" title="如果要创建一个Fred对象数组，什么样的构造函数会被调用？"></a>如果要创建一个Fred对象数组，什么样的构造函数会被调用？</h3><p>Fred类的默认构造函数。<br>当然，更多的情况下我们都会选择使用标准容器vector，而且vector的一大优势是可以指定Fred的构造函数，而不仅仅是默认构造函数。</p>
+<h3 id="构造函数初始化成员变量时，用”初始化列表”还是”赋值”？"><a href="#构造函数初始化成员变量时，用”初始化列表”还是”赋值”？" class="headerlink" title="构造函数初始化成员变量时，用”初始化列表”还是”赋值”？"></a>构造函数初始化成员变量时，用”初始化列表”还是”赋值”？</h3><p>无疑，初始化列表，在很多C++语法方面的书上都会讲，这里再总结一下。<br>使用”初始化列表”最大的好处是可以提高性能，比如使用 Fred::Fread() :x_(x)来初始化成员变量x_，x_直接由x构造–编译器不会产生对象的拷贝。<br>而通过赋值的话，<code>Fred::Fred() { x_ = x }</code>，x作为一个临时对象被建立，并传递给x_成员作为赋值操作，然后临时对象x在语句的结束被析构，所以，这样的效率是较低的。<br>当然，如果x_的类型是int/char这样的内置类型的话，性能是没有区别的。总之，使用初始化列表来初始化成员变量是更佳的选择。</p>
+<h3 id="构造函数初始化列表的初始化顺序？"><a href="#构造函数初始化列表的初始化顺序？" class="headerlink" title="构造函数初始化列表的初始化顺序？"></a>构造函数初始化列表的初始化顺序？</h3><p>C++初始化成员变量的顺序是按照它们定义的顺序，而非在初始化列表的顺序。<br>如果有继承关系的话，先基类，再派生类。</p>
+<h3 id="在构造函数中用this指针是否有问题？"><a href="#在构造函数中用this指针是否有问题？" class="headerlink" title="在构造函数中用this指针是否有问题？"></a>在构造函数中用this指针是否有问题？</h3><p>一般情况下是不应该的，因为在构造阶段，this对象还没有完全形成。<br>当然也不绝对，比如构造函数的函数体或其中调用的函数可以访问基类中声明的数据成员或类的静态数据成员，这时它们都已经完整的建立起来了。<br>所以，一般情况下不这样做，如果要，也得记住，唯一准则是：这时this指针已经完整构造形成了。</p>
+<h3 id="什么是“命名的构造函数法”？"><a href="#什么是“命名的构造函数法”？" class="headerlink" title="什么是“命名的构造函数法”？"></a>什么是“命名的构造函数法”？</h3><p>为类的用户提供一种更安全、直接的构造。<br>因为构造函数的特殊性，函数名和类名相同。因此，区分类的不同的构造函数只能通过参数列表。但如果有多个构造函数，很好地区分它们并不容易。<br>命名的构造函数法就是在private或protected内声明类所有的构造函数，并提供返回对象的public static函数。</p>
+<pre><code>class Point
+{
+    public:
+        static Point rectangular(float x, float y);
+        static Point polar(float radius, float angle);
+    private:
+        Point(float x, float y);
+        float x_, y_;
+};    
+inline Point::Point(float x, float y) : x_(x), y_(y) {}
+inline Point::rectangular(float x, float y) { return Point(x, y); }
+inline Point::polar(float radius, float angle)
+{
+    return Point(radius*cos(angle), radius*sin(angle));
+}
+int main()
+{
+    Point p1 = Point::rectangular(5.0,5.0);
+    Point p2 = Point::polar(5.0,5.0);
+}    
+</code></pre><h3 id="为什么不能在构造函数的初始化列表中初始化static数据？"><a href="#为什么不能在构造函数的初始化列表中初始化static数据？" class="headerlink" title="为什么不能在构造函数的初始化列表中初始化static数据？"></a>为什么不能在构造函数的初始化列表中初始化static数据？</h3><p>因为static数据成员是属于类的，而不是类的对象，所以，必须显示定义类的静态数据成员。</p>
+<h3 id="为什么有静态数据成员的类得到了链接错误？"><a href="#为什么有静态数据成员的类得到了链接错误？" class="headerlink" title="为什么有静态数据成员的类得到了链接错误？"></a>为什么有静态数据成员的类得到了链接错误？</h3><p>因为如上一条所述，static数据成员必须显示定义在一个编译单元中。<br>通常在在.cpp源文件中定义static数据成员。</p>
+<h3 id="什么是”static-initialization-order-fiasco”？"><a href="#什么是”static-initialization-order-fiasco”？" class="headerlink" title="什么是”static initialization order fiasco”？"></a>什么是”static initialization order fiasco”？</h3><p>还是初始化顺序的问题，比如两个源文件a.cpp和b.cpp中分别有两个静态对象a和b。假定a对象的构造函数会调用b对象的某些成员函数。由于static对象构造在main()开始之前，且顺序未知，所以，很可能发生a对象的构造函数先运行，当其想调用b对象的成员函数时，发现b对象还没被构造。</p>
+<h3 id="如何处理构造函数的失败？"><a href="#如何处理构造函数的失败？" class="headerlink" title="如何处理构造函数的失败？"></a>如何处理构造函数的失败？</h3><p>当然是抛异常啦。关于C++的异常机制，后面还得好好学学。</p>
+<h3 id="explicit关键字的作用？"><a href="#explicit关键字的作用？" class="headerlink" title="explicit关键字的作用？"></a>explicit关键字的作用？</h3><p>使用explicit就是告诉编译器禁止隐式转换。<br>下面通过实例说明。</p>
+<pre><code>class Foo
+{
+    public:
+        Foo(int x);
+        operator int();
+};        
+int main()
+{
+    Foo a = 42;                  
+    Foo b(42);              
+    Foo c = (Foo)(42);      //显示转换
+    int d = c;
+    return 0;    
+}
+</code></pre><p>以上都会编译成功，需要注意的是main()中的第一、四行，都涉及到了隐式转换。<br>但是，有些时候需要禁止这样的隐式转换。就得使用explicit关键字。</p>
+<pre><code>class Foo
+{
+    public:
+        explicit Foo(int x);
+        explicit operator int();
+};     
+int main()
+{
+    Foo a = 42;        //error
+    Foo b(42);
+    Foo c = (Foo)(42);
+    int d = c;        //error
+}
+</code></pre><p>这样的话，main()中的隐式转换（第一、四行）将不被允许。</p>
+<h3 id="待续"><a href="#待续" class="headerlink" title="待续"></a>待续</h3><p>C++博大精深，构造函数又是其中非常重要的部分，后面再需要继续学习、补充。</p>
 
       
     </div>
@@ -310,7 +376,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/openwrt-wifi/" rel="tag">#openwrt/wifi</a>
+            <a href="/tags/C/" rel="tag">#C++</a>
           
         </div>
       
@@ -319,17 +385,13 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/04/13/cplusplusMem/" rel="next" title="C++内存管理--部分总结">
-                <i class="fa fa-chevron-left"></i> C++内存管理--部分总结
+              <a href="/2016/05/28/concurrent-server-conclusion/" rel="next" title="常见并发网络服务程序设计方案">
+                <i class="fa fa-chevron-left"></i> 常见并发网络服务程序设计方案
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/04/25/muduo-1/" rel="prev" title="muduo源码阅读之Reactor模式和muduo">
-                muduo源码阅读之Reactor模式和muduo <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -355,8 +417,8 @@
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/04/20/wifi-data-get/"
-           data-title="wifi关键指标提取" data-url="http://blog.dujiong.net/2016/04/20/wifi-data-get/">
+      <div class="ds-thread" data-thread-key="2016/06/05/cpp-constructor/"
+           data-title="C++构造函数一些常见问题分析" data-url="http://blog.dujiong.net/2016/06/05/cpp-constructor/">
       </div>
     
   </div>
@@ -470,7 +532,7 @@
               
             
             
-              <p class="post-toc-empty">此文章未包含目录</p>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#构造函数是用来干什么的？"><span class="nav-number">1.</span> <span class="nav-text">构造函数是用来干什么的？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#List-x-和List-x-有什么不同？"><span class="nav-number">2.</span> <span class="nav-text">List x;和List x();有什么不同？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#一个类的构造函数可否调用另一个构造函数来初始化自己？"><span class="nav-number">3.</span> <span class="nav-text">一个类的构造函数可否调用另一个构造函数来初始化自己？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#是否Fred类的默认的构造函数就一定是Fred-Fred-？"><span class="nav-number">4.</span> <span class="nav-text">是否Fred类的默认的构造函数就一定是Fred::Fred()？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#如果要创建一个Fred对象数组，什么样的构造函数会被调用？"><span class="nav-number">5.</span> <span class="nav-text">如果要创建一个Fred对象数组，什么样的构造函数会被调用？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#构造函数初始化成员变量时，用”初始化列表”还是”赋值”？"><span class="nav-number">6.</span> <span class="nav-text">构造函数初始化成员变量时，用”初始化列表”还是”赋值”？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#构造函数初始化列表的初始化顺序？"><span class="nav-number">7.</span> <span class="nav-text">构造函数初始化列表的初始化顺序？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#在构造函数中用this指针是否有问题？"><span class="nav-number">8.</span> <span class="nav-text">在构造函数中用this指针是否有问题？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#什么是“命名的构造函数法”？"><span class="nav-number">9.</span> <span class="nav-text">什么是“命名的构造函数法”？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么不能在构造函数的初始化列表中初始化static数据？"><span class="nav-number">10.</span> <span class="nav-text">为什么不能在构造函数的初始化列表中初始化static数据？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么有静态数据成员的类得到了链接错误？"><span class="nav-number">11.</span> <span class="nav-text">为什么有静态数据成员的类得到了链接错误？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#什么是”static-initialization-order-fiasco”？"><span class="nav-number">12.</span> <span class="nav-text">什么是”static initialization order fiasco”？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#如何处理构造函数的失败？"><span class="nav-number">13.</span> <span class="nav-text">如何处理构造函数的失败？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#explicit关键字的作用？"><span class="nav-number">14.</span> <span class="nav-text">explicit关键字的作用？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#待续"><span class="nav-number">15.</span> <span class="nav-text">待续</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">

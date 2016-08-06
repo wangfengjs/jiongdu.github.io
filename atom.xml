@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-08-06T07:52:10.237Z</updated>
+  <updated>2016-08-06T12:47:20.196Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -14,6 +14,96 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>C++构造函数一些常见问题分析</title>
+    <link href="http://blog.dujiong.net/2016/06/05/cpp-constructor/"/>
+    <id>http://blog.dujiong.net/2016/06/05/cpp-constructor/</id>
+    <published>2016-06-05T08:58:57.000Z</published>
+    <updated>2016-08-06T12:47:20.196Z</updated>
+    
+    <content type="html">&lt;p&gt;近期，在阅读陈皓老师博客的时候，看到几年前的一篇&lt;a href=&quot;http://coolshell.cn/articles/804.html&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;关于C++构造函数的FAQ&lt;/a&gt;，想来自己学习C++也有段时间了，就尝试着回答一下，并乘机总结一下C++构造函数的一些常见问题，记录于此。&lt;br&gt;借此机会逛了逛C++ FAQ，以前都不了解，以后得多去学习学习，检验下自己的C++基础知识扎不扎实。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;  &lt;/p&gt;
+&lt;h3 id=&quot;构造函数是用来干什么的？&quot;&gt;&lt;a href=&quot;#构造函数是用来干什么的？&quot; class=&quot;headerlink&quot; title=&quot;构造函数是用来干什么的？&quot;&gt;&lt;/a&gt;构造函数是用来干什么的？&lt;/h3&gt;&lt;p&gt;顾名思义，构造函数是用来从无到有的构建对象。它将一些（连续的）最小粒度的内存单元变成对象。它要初始化对象内部所定义的域，还可以分配资源(内存、文件、套接字等)。&lt;/p&gt;
+&lt;h3 id=&quot;List-x-和List-x-有什么不同？&quot;&gt;&lt;a href=&quot;#List-x-和List-x-有什么不同？&quot; class=&quot;headerlink&quot; title=&quot;List x;和List x();有什么不同？&quot;&gt;&lt;/a&gt;List x;和List x();有什么不同？&lt;/h3&gt;&lt;p&gt;List x;是声明了一个类List的对象x，而List x()是声明了一个函数x()，它返回一个List对象。二者自然是有本质的差别。 &lt;/p&gt;
+&lt;h3 id=&quot;一个类的构造函数可否调用另一个构造函数来初始化自己？&quot;&gt;&lt;a href=&quot;#一个类的构造函数可否调用另一个构造函数来初始化自己？&quot; class=&quot;headerlink&quot; title=&quot;一个类的构造函数可否调用另一个构造函数来初始化自己？&quot;&gt;&lt;/a&gt;一个类的构造函数可否调用另一个构造函数来初始化自己？&lt;/h3&gt;&lt;p&gt;不能。如果调用另一个构造函数，编译器将初始化一个临时局部对象，而不是初始化this对象。&lt;/p&gt;
+&lt;h3 id=&quot;是否Fred类的默认的构造函数就一定是Fred-Fred-？&quot;&gt;&lt;a href=&quot;#是否Fred类的默认的构造函数就一定是Fred-Fred-？&quot; class=&quot;headerlink&quot; title=&quot;是否Fred类的默认的构造函数就一定是Fred::Fred()？&quot;&gt;&lt;/a&gt;是否Fred类的默认的构造函数就一定是Fred::Fred()？&lt;/h3&gt;&lt;p&gt;不，默认构造函数是可以带提供默认值的参数的。&lt;br&gt;比如这里：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;class Fred
+{
+    public:
+        Fred(int i=1);
+};
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;如果要创建一个Fred对象数组，什么样的构造函数会被调用？&quot;&gt;&lt;a href=&quot;#如果要创建一个Fred对象数组，什么样的构造函数会被调用？&quot; class=&quot;headerlink&quot; title=&quot;如果要创建一个Fred对象数组，什么样的构造函数会被调用？&quot;&gt;&lt;/a&gt;如果要创建一个Fred对象数组，什么样的构造函数会被调用？&lt;/h3&gt;&lt;p&gt;Fred类的默认构造函数。&lt;br&gt;当然，更多的情况下我们都会选择使用标准容器vector，而且vector的一大优势是可以指定Fred的构造函数，而不仅仅是默认构造函数。&lt;/p&gt;
+&lt;h3 id=&quot;构造函数初始化成员变量时，用”初始化列表”还是”赋值”？&quot;&gt;&lt;a href=&quot;#构造函数初始化成员变量时，用”初始化列表”还是”赋值”？&quot; class=&quot;headerlink&quot; title=&quot;构造函数初始化成员变量时，用”初始化列表”还是”赋值”？&quot;&gt;&lt;/a&gt;构造函数初始化成员变量时，用”初始化列表”还是”赋值”？&lt;/h3&gt;&lt;p&gt;无疑，初始化列表，在很多C++语法方面的书上都会讲，这里再总结一下。&lt;br&gt;使用”初始化列表”最大的好处是可以提高性能，比如使用 Fred::Fread() :x_(x)来初始化成员变量x_，x_直接由x构造–编译器不会产生对象的拷贝。&lt;br&gt;而通过赋值的话，&lt;code&gt;Fred::Fred() { x_ = x }&lt;/code&gt;，x作为一个临时对象被建立，并传递给x_成员作为赋值操作，然后临时对象x在语句的结束被析构，所以，这样的效率是较低的。&lt;br&gt;当然，如果x_的类型是int/char这样的内置类型的话，性能是没有区别的。总之，使用初始化列表来初始化成员变量是更佳的选择。&lt;/p&gt;
+&lt;h3 id=&quot;构造函数初始化列表的初始化顺序？&quot;&gt;&lt;a href=&quot;#构造函数初始化列表的初始化顺序？&quot; class=&quot;headerlink&quot; title=&quot;构造函数初始化列表的初始化顺序？&quot;&gt;&lt;/a&gt;构造函数初始化列表的初始化顺序？&lt;/h3&gt;&lt;p&gt;C++初始化成员变量的顺序是按照它们定义的顺序，而非在初始化列表的顺序。&lt;br&gt;如果有继承关系的话，先基类，再派生类。&lt;/p&gt;
+&lt;h3 id=&quot;在构造函数中用this指针是否有问题？&quot;&gt;&lt;a href=&quot;#在构造函数中用this指针是否有问题？&quot; class=&quot;headerlink&quot; title=&quot;在构造函数中用this指针是否有问题？&quot;&gt;&lt;/a&gt;在构造函数中用this指针是否有问题？&lt;/h3&gt;&lt;p&gt;一般情况下是不应该的，因为在构造阶段，this对象还没有完全形成。&lt;br&gt;当然也不绝对，比如构造函数的函数体或其中调用的函数可以访问基类中声明的数据成员或类的静态数据成员，这时它们都已经完整的建立起来了。&lt;br&gt;所以，一般情况下不这样做，如果要，也得记住，唯一准则是：这时this指针已经完整构造形成了。&lt;/p&gt;
+&lt;h3 id=&quot;什么是“命名的构造函数法”？&quot;&gt;&lt;a href=&quot;#什么是“命名的构造函数法”？&quot; class=&quot;headerlink&quot; title=&quot;什么是“命名的构造函数法”？&quot;&gt;&lt;/a&gt;什么是“命名的构造函数法”？&lt;/h3&gt;&lt;p&gt;为类的用户提供一种更安全、直接的构造。&lt;br&gt;因为构造函数的特殊性，函数名和类名相同。因此，区分类的不同的构造函数只能通过参数列表。但如果有多个构造函数，很好地区分它们并不容易。&lt;br&gt;命名的构造函数法就是在private或protected内声明类所有的构造函数，并提供返回对象的public static函数。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;class Point
+{
+    public:
+        static Point rectangular(float x, float y);
+        static Point polar(float radius, float angle);
+    private:
+        Point(float x, float y);
+        float x_, y_;
+};    
+inline Point::Point(float x, float y) : x_(x), y_(y) {}
+inline Point::rectangular(float x, float y) { return Point(x, y); }
+inline Point::polar(float radius, float angle)
+{
+    return Point(radius*cos(angle), radius*sin(angle));
+}
+int main()
+{
+    Point p1 = Point::rectangular(5.0,5.0);
+    Point p2 = Point::polar(5.0,5.0);
+}    
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;为什么不能在构造函数的初始化列表中初始化static数据？&quot;&gt;&lt;a href=&quot;#为什么不能在构造函数的初始化列表中初始化static数据？&quot; class=&quot;headerlink&quot; title=&quot;为什么不能在构造函数的初始化列表中初始化static数据？&quot;&gt;&lt;/a&gt;为什么不能在构造函数的初始化列表中初始化static数据？&lt;/h3&gt;&lt;p&gt;因为static数据成员是属于类的，而不是类的对象，所以，必须显示定义类的静态数据成员。&lt;/p&gt;
+&lt;h3 id=&quot;为什么有静态数据成员的类得到了链接错误？&quot;&gt;&lt;a href=&quot;#为什么有静态数据成员的类得到了链接错误？&quot; class=&quot;headerlink&quot; title=&quot;为什么有静态数据成员的类得到了链接错误？&quot;&gt;&lt;/a&gt;为什么有静态数据成员的类得到了链接错误？&lt;/h3&gt;&lt;p&gt;因为如上一条所述，static数据成员必须显示定义在一个编译单元中。&lt;br&gt;通常在在.cpp源文件中定义static数据成员。&lt;/p&gt;
+&lt;h3 id=&quot;什么是”static-initialization-order-fiasco”？&quot;&gt;&lt;a href=&quot;#什么是”static-initialization-order-fiasco”？&quot; class=&quot;headerlink&quot; title=&quot;什么是”static initialization order fiasco”？&quot;&gt;&lt;/a&gt;什么是”static initialization order fiasco”？&lt;/h3&gt;&lt;p&gt;还是初始化顺序的问题，比如两个源文件a.cpp和b.cpp中分别有两个静态对象a和b。假定a对象的构造函数会调用b对象的某些成员函数。由于static对象构造在main()开始之前，且顺序未知，所以，很可能发生a对象的构造函数先运行，当其想调用b对象的成员函数时，发现b对象还没被构造。&lt;/p&gt;
+&lt;h3 id=&quot;如何处理构造函数的失败？&quot;&gt;&lt;a href=&quot;#如何处理构造函数的失败？&quot; class=&quot;headerlink&quot; title=&quot;如何处理构造函数的失败？&quot;&gt;&lt;/a&gt;如何处理构造函数的失败？&lt;/h3&gt;&lt;p&gt;当然是抛异常啦。关于C++的异常机制，后面还得好好学学。&lt;/p&gt;
+&lt;h3 id=&quot;explicit关键字的作用？&quot;&gt;&lt;a href=&quot;#explicit关键字的作用？&quot; class=&quot;headerlink&quot; title=&quot;explicit关键字的作用？&quot;&gt;&lt;/a&gt;explicit关键字的作用？&lt;/h3&gt;&lt;p&gt;使用explicit就是告诉编译器禁止隐式转换。&lt;br&gt;下面通过实例说明。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;class Foo
+{
+    public:
+        Foo(int x);
+        operator int();
+};        
+int main()
+{
+    Foo a = 42;                  
+    Foo b(42);              
+    Foo c = (Foo)(42);      //显示转换
+    int d = c;
+    return 0;    
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;以上都会编译成功，需要注意的是main()中的第一、四行，都涉及到了隐式转换。&lt;br&gt;但是，有些时候需要禁止这样的隐式转换。就得使用explicit关键字。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;class Foo
+{
+    public:
+        explicit Foo(int x);
+        explicit operator int();
+};     
+int main()
+{
+    Foo a = 42;        //error
+    Foo b(42);
+    Foo c = (Foo)(42);
+    int d = c;        //error
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这样的话，main()中的隐式转换（第一、四行）将不被允许。&lt;/p&gt;
+&lt;h3 id=&quot;待续&quot;&gt;&lt;a href=&quot;#待续&quot; class=&quot;headerlink&quot; title=&quot;待续&quot;&gt;&lt;/a&gt;待续&lt;/h3&gt;&lt;p&gt;C++博大精深，构造函数又是其中非常重要的部分，后面再需要继续学习、补充。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;近期，在阅读陈皓老师博客的时候，看到几年前的一篇&lt;a href=&quot;http://coolshell.cn/articles/804.html&quot;&gt;关于C++构造函数的FAQ&lt;/a&gt;，想来自己学习C++也有段时间了，就尝试着回答一下，并乘机总结一下C++构造函数的一些常见问题，记录于此。&lt;br&gt;借此机会逛了逛C++ FAQ，以前都不了解，以后得多去学习学习，检验下自己的C++基础知识扎不扎实。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
+    
+  </entry>
   
   <entry>
     <title>常见并发网络服务程序设计方案</title>
@@ -49,9 +139,9 @@
     </summary>
     
     
-      <category term="network/linux" scheme="http://blog.dujiong.net/tags/network-linux/"/>
-    
       <category term="muduo" scheme="http://blog.dujiong.net/tags/muduo/"/>
+    
+      <category term="network/linux" scheme="http://blog.dujiong.net/tags/network-linux/"/>
     
   </entry>
   

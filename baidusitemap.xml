@@ -4,6 +4,23 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/06/05/cpp-constructor/</loc>
+    <lastmod>2016-08-06T12:47:20.196Z</lastmod>
+    <data>
+        <display>
+        <title>C++构造函数一些常见问题分析</title>
+        <pubTime>2016-06-05T08:58:57.000Z</pubTime>
+        
+        <tag>C++</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/05/28/concurrent-server-conclusion/</loc>
     <lastmod>2016-08-06T07:52:10.237Z</lastmod>
     <data>
@@ -11,9 +28,9 @@
         <title>常见并发网络服务程序设计方案</title>
         <pubTime>2016-05-28T02:14:00.000Z</pubTime>
         
-        <tag>network/linux</tag>
-         
         <tag>muduo</tag>
+         
+        <tag>network/linux</tag>
          
          
            
