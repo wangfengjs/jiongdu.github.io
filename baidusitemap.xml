@@ -5,7 +5,7 @@
     
   <url>
     <loc>http://blog.dujiong.net/2016/05/28/concurrent-server-conclusion/</loc>
-    <lastmod>2016-08-06T03:32:10.602Z</lastmod>
+    <lastmod>2016-08-06T07:08:55.943Z</lastmod>
     <data>
         <display>
         <title>常见并发网络服务程序设计方案</title>
@@ -13,21 +13,6 @@
         
         <tag>network/linux muduo</tag>
          
-         
-           
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
-    <loc>http://blog.dujiong.net/2016/08/06/folder/</loc>
-    <lastmod>2016-08-06T02:07:59.529Z</lastmod>
-    <data>
-        <display>
-        <title>folder...</title>
-        <pubTime>2016-08-06T02:07:59.000Z</pubTime>
-        
          
            
         </display>
