@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-08-06T07:44:32.441Z</updated>
+  <updated>2016-08-06T07:52:10.237Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://blog.dujiong.net/2016/05/28/concurrent-server-conclusion/"/>
     <id>http://blog.dujiong.net/2016/05/28/concurrent-server-conclusion/</id>
     <published>2016-05-28T02:14:00.000Z</published>
-    <updated>2016-08-06T07:44:32.441Z</updated>
+    <updated>2016-08-06T07:52:10.237Z</updated>
     
     <content type="html">&lt;p&gt;《Unix网络编程(第三版)》(以下简称[UNP])中第三十章”客户/服务器程序设计范式”总结了一些常见的并发网络服务程序设计方案，而随着互联网、大数据等浪潮的兴起，业界对服务器程序的高并发能力、稳定性等提出了更高的要求，客户/服务器程序设计范式也在随着时代的需求而不断改进和提升，下面就对常见的并发网络服务程序设计方案作简单总结。&lt;/p&gt;
 &lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
@@ -49,7 +49,9 @@
     </summary>
     
     
-      <category term="network/linux muduo" scheme="http://blog.dujiong.net/tags/network-linux-muduo/"/>
+      <category term="network/linux" scheme="http://blog.dujiong.net/tags/network-linux/"/>
+    
+      <category term="muduo" scheme="http://blog.dujiong.net/tags/muduo/"/>
     
   </entry>
   
