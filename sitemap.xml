@@ -2,6 +2,20 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://blog.dujiong.net/2016/06/13/tcp-1/</loc>
+    
+    <lastmod>2016-08-07T07:48:25.266Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://blog.dujiong.net/2016/06/25/tcp-2/</loc>
+    
+    <lastmod>2016-08-07T07:41:24.898Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://blog.dujiong.net/2016/06/05/cpp-constructor/</loc>
     
     <lastmod>2016-08-06T12:49:26.202Z</lastmod>

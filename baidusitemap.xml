@@ -4,6 +4,38 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/06/13/tcp-1/</loc>
+    <lastmod>2016-08-07T07:48:25.266Z</lastmod>
+    <data>
+        <display>
+        <title>TCP协议总结（一）</title>
+        <pubTime>2016-06-13T05:07:19.000Z</pubTime>
+        
+        <tag>network/linux</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://blog.dujiong.net/2016/06/25/tcp-2/</loc>
+    <lastmod>2016-08-07T07:41:24.898Z</lastmod>
+    <data>
+        <display>
+        <title>tcp-2</title>
+        <pubTime>2016-06-25T12:06:14.000Z</pubTime>
+        
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/06/05/cpp-constructor/</loc>
     <lastmod>2016-08-06T12:49:26.202Z</lastmod>
     <data>
@@ -28,9 +60,9 @@
         <title>常见并发网络服务程序设计方案</title>
         <pubTime>2016-05-28T02:14:00.000Z</pubTime>
         
-        <tag>muduo</tag>
-         
         <tag>network/linux</tag>
+         
+        <tag>muduo</tag>
          
          
            
