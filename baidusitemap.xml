@@ -4,12 +4,12 @@
 
     
   <url>
-    <loc>http://blog.dujiong.net/2016/06/13/tcp-1/</loc>
-    <lastmod>2016-08-07T07:53:51.202Z</lastmod>
+    <loc>http://blog.dujiong.net/2016/06/25/tcp-2/</loc>
+    <lastmod>2016-08-07T07:59:03.678Z</lastmod>
     <data>
         <display>
-        <title>TCP协议总结（一）</title>
-        <pubTime>2016-06-13T05:07:19.000Z</pubTime>
+        <title>TCP协议总结（二）</title>
+        <pubTime>2016-06-25T12:06:14.000Z</pubTime>
         
         <tag>network/linux</tag>
          
@@ -21,13 +21,15 @@
 
     
   <url>
-    <loc>http://blog.dujiong.net/2016/06/25/tcp-2/</loc>
-    <lastmod>2016-08-07T07:41:24.898Z</lastmod>
+    <loc>http://blog.dujiong.net/2016/06/13/tcp-1/</loc>
+    <lastmod>2016-08-07T07:58:54.815Z</lastmod>
     <data>
         <display>
-        <title>tcp-2</title>
-        <pubTime>2016-06-25T12:06:14.000Z</pubTime>
+        <title>TCP协议总结（一）</title>
+        <pubTime>2016-06-13T05:07:19.000Z</pubTime>
         
+        <tag>network/linux</tag>
+         
          
            
         </display>

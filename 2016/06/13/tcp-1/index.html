@@ -59,28 +59,19 @@
 
 
 
-<meta name="description" content="最近，在学习和科研中，越来越发现自己对于TCP协议的掌握不够，作为一个成天和网络打交道的人，TCP/IP简直是我们最核心的知识之一，所以，准备利用接下来准备考试的间隙时间，结合《TCP/IP详解 卷一：协议》再重新学习和巩固一下TCP。          
-TCP首部首先，来看一下TCP首部的数据格式，如果不计算Option字段，它通常是20个字节。
-
-需要重点关注和理解的是:（1） 每个TCP连">
+<meta name="description" content="最近，在学习和科研中，越来越发现自己对于TCP协议的掌握不够，作为一个成天和网络打交道的人，TCP/IP简直是我们最核心的知识之一，所以，准备利用接下来准备考试的间隙时间，结合《TCP/IP详解 卷一：协议》再重新学习和巩固一下TCP。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="TCP协议总结（一）">
 <meta property="og:url" content="http://blog.dujiong.net/2016/06/13/tcp-1/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="最近，在学习和科研中，越来越发现自己对于TCP协议的掌握不够，作为一个成天和网络打交道的人，TCP/IP简直是我们最核心的知识之一，所以，准备利用接下来准备考试的间隙时间，结合《TCP/IP详解 卷一：协议》再重新学习和巩固一下TCP。          
-TCP首部首先，来看一下TCP首部的数据格式，如果不计算Option字段，它通常是20个字节。
-
-需要重点关注和理解的是:（1） 每个TCP连">
+<meta property="og:description" content="最近，在学习和科研中，越来越发现自己对于TCP协议的掌握不够，作为一个成天和网络打交道的人，TCP/IP简直是我们最核心的知识之一，所以，准备利用接下来准备考试的间隙时间，结合《TCP/IP详解 卷一：协议》再重新学习和巩固一下TCP。">
 <meta property="og:image" content="http://i.imgur.com/p9FVemz.jpg">
 <meta property="og:image" content="http://i.imgur.com/lP4JfiN.jpg">
 <meta property="og:image" content="http://i.imgur.com/m6HYlnp.png">
-<meta property="og:updated_time" content="2016-08-07T07:53:51.202Z">
+<meta property="og:updated_time" content="2016-08-07T07:58:54.815Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="TCP协议总结（一）">
-<meta name="twitter:description" content="最近，在学习和科研中，越来越发现自己对于TCP协议的掌握不够，作为一个成天和网络打交道的人，TCP/IP简直是我们最核心的知识之一，所以，准备利用接下来准备考试的间隙时间，结合《TCP/IP详解 卷一：协议》再重新学习和巩固一下TCP。          
-TCP首部首先，来看一下TCP首部的数据格式，如果不计算Option字段，它通常是20个字节。
-
-需要重点关注和理解的是:（1） 每个TCP连">
+<meta name="twitter:description" content="最近，在学习和科研中，越来越发现自己对于TCP协议的掌握不够，作为一个成天和网络打交道的人，TCP/IP简直是我们最核心的知识之一，所以，准备利用接下来准备考试的间隙时间，结合《TCP/IP详解 卷一：协议》再重新学习和巩固一下TCP。">
 <meta name="twitter:image" content="http://i.imgur.com/p9FVemz.jpg">
 
 
@@ -306,6 +297,7 @@ TCP首部首先，来看一下TCP首部的数据格式，如果不计算Option�
 
       
         <p>最近，在学习和科研中，越来越发现自己对于TCP协议的掌握不够，作为一个成天和网络打交道的人，TCP/IP简直是我们最核心的知识之一，所以，准备利用接下来准备考试的间隙时间，结合《TCP/IP详解 卷一：协议》再重新学习和巩固一下TCP。          </p>
+<a id="more"></a>
 <h3 id="TCP首部"><a href="#TCP首部" class="headerlink" title="TCP首部"></a>TCP首部</h3><p>首先，来看一下TCP首部的数据格式，如果不计算Option字段，它通常是20个字节。</p>
 <p><img src="http://i.imgur.com/p9FVemz.jpg" alt=""></p>
 <p>需要重点关注和理解的是:<br>（1） 每个TCP连接包含源端和目的端的端口号，用于标识发端和收端的应用进程。这两个值和下层IP层的源、目的IP地址构成了唯一标识一个TCP连接的四元组。<br>（2）序列号(Sequence Number)是包的序号，用来标识从TCP发端向收端发送的数据字节流，用来解决网络报乱序的问题。<br>（3）ACK，表示收到TCP包的确认。<br>（4）TCP Flags标志位，也就是包的类型，用于标识TCP连接的状态。<br>（5）Window就是著名的滑动窗口，用于流量控制的。</p>
@@ -350,8 +342,8 @@ TCP首部首先，来看一下TCP首部的数据格式，如果不计算Option�
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2016/06/25/tcp-2/" rel="prev" title="tcp-2">
-                tcp-2 <i class="fa fa-chevron-right"></i>
+              <a href="/2016/06/25/tcp-2/" rel="prev" title="TCP协议总结（二）">
+                TCP协议总结（二） <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
