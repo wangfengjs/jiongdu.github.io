@@ -74,7 +74,7 @@ TCP首部首先，来看一下TCP首部的数据格式，如果不计算Option�
 <meta property="og:image" content="http://i.imgur.com/p9FVemz.jpg">
 <meta property="og:image" content="http://i.imgur.com/lP4JfiN.jpg">
 <meta property="og:image" content="http://i.imgur.com/m6HYlnp.png">
-<meta property="og:updated_time" content="2016-08-07T07:48:25.266Z">
+<meta property="og:updated_time" content="2016-08-07T07:53:51.202Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="TCP协议总结（一）">
 <meta name="twitter:description" content="最近，在学习和科研中，越来越发现自己对于TCP协议的掌握不够，作为一个成天和网络打交道的人，TCP/IP简直是我们最核心的知识之一，所以，准备利用接下来准备考试的间隙时间，结合《TCP/IP详解 卷一：协议》再重新学习和巩固一下TCP。          
@@ -318,6 +318,7 @@ TCP首部首先，来看一下TCP首部的数据格式，如果不计算Option�
 <p><img src="http://i.imgur.com/m6HYlnp.png" alt=""></p>
 <p>需要重点关注的：<br>（1）MSL和TIME_WAIT状态。据说，这是90%的互联网后台岗位面试都会考的内容。<br>每个具体TCP实现必须选择一个报文段最大生存时间MSL（Maximum Segment Lifetime），它是任何报文段被丢弃前在网络内的最长时间。这个时间是有限的，因为TCP报文段封装在IP数据包在网络内传输，而IP数据包有限制其生存时间的TTL字段。<br>当TCP执行一个主动关闭，并发回最后一个ACK（收到对端的FIN，并发送ACK），该连接必须在TIME_WAIT状态停留的时间为2MSL。这样做可以确保有足够的时间让对端收到ACK，如果被动关闭的那方没有收到ACK，就会触发被动端重发最后的FIN。一来一去正好2MSL。此外，这样做的另一个结果是标识这个TCP连接的四元组在2MSL期间不能再被使用，只能再2MSL结束后才能再被使用。<br>（2）TIME_WAIT过多<br>出现问题了，在高并发短连接的TCP服务器上，当服务器处理完请求后立刻主动关闭连接，这样，就会有很多连接处在TIME_WAIT状态，会消耗许多系统资源。如果客户端的并发量持续很高，部分客户端就会显示连接不上。这时，可以通过设置tcp_tw_reuse和tcp_tw_recycle两个参数，前者表示开启重用，允许将处于TIME_WAIT的Socket重新用于新的TCP连接，后者表示开启TCP连接中TIME_WAIT socket的快速回收。<br>其实，个人觉得最好的办法就是想方设法让Client来关闭连接，这样Server作为被动关闭的一方，就不存在上述问题了。<br>（3）SYN Flood攻击<br>了解TCP三次握手后，很容易明白SYN Flood攻击的来源了，在客户端给服务器发了建立连接的SYN后，就下线了，于是服务器需要默认等待63s才会断开连接，这样，攻击者就可以把服务器的SYN连接队列耗尽，让正常的连接请求不能处理。于是，Linux下有一个tcp_syncookies的参数来应对攻击，当SYN队列满之后，TCP会根据源地址端口、目标地址端口和时间戳打造一个特别的Sequence Number（SYN Cookie）发回客户端，如果是攻击者则不会有相应，如果是正常连接，则会把这个SYN Cookie发回，然后服务端通过cookie建立连接。</p>
 <h3 id="TCP保活定时器"><a href="#TCP保活定时器" class="headerlink" title="TCP保活定时器"></a>TCP保活定时器</h3><p>许多时候服务器希望知道客户主机是否崩溃并关机或者崩溃又重新启动这样的非正常情况，这就需要保活功能。如果一个特定的连接在固定时间之内没有任何动作，则服务器就向客户端发送一个探查报文。<br>保活功能的实现由两种方式，一是应用层面的心跳机制。通过自定义心跳消息头来完成保活功能。另一种就是TCP自带的保活功能。而这也是许多协议专家所争论的点：到底保活功能应该再哪一层实现。对于这两种方式，我认为应用层面的心跳机制具有灵活、扩展性强的特点，可以随意控制，不依赖与协议，但是也增加了开发的复杂程度。而TCP的保活功能，使用简单，减少了应用层代码的复杂度。所以，开发者可以根据实际的应用场景选择适合的保活功能的实现方式。</p>
+<h3 id="待续"><a href="#待续" class="headerlink" title="待续"></a>待续</h3><p>这一篇是TCP协议的一些基础知识，下一篇将学习较复杂的滑动窗口、重传与拥塞控制。</p>
 
       
     </div>
@@ -492,7 +493,7 @@ TCP首部首先，来看一下TCP首部的数据格式，如果不计算Option�
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP首部"><span class="nav-number">1.</span> <span class="nav-text">TCP首部</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP连接的建立和终止"><span class="nav-number">2.</span> <span class="nav-text">TCP连接的建立和终止</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#三次握手建立连接"><span class="nav-number">2.1.</span> <span class="nav-text">三次握手建立连接</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#四次挥手终止连接"><span class="nav-number">2.2.</span> <span class="nav-text">四次挥手终止连接</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#连接建立的超时"><span class="nav-number">2.3.</span> <span class="nav-text">连接建立的超时</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP状态机"><span class="nav-number">3.</span> <span class="nav-text">TCP状态机</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP保活定时器"><span class="nav-number">4.</span> <span class="nav-text">TCP保活定时器</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP首部"><span class="nav-number">1.</span> <span class="nav-text">TCP首部</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP连接的建立和终止"><span class="nav-number">2.</span> <span class="nav-text">TCP连接的建立和终止</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#三次握手建立连接"><span class="nav-number">2.1.</span> <span class="nav-text">三次握手建立连接</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#四次挥手终止连接"><span class="nav-number">2.2.</span> <span class="nav-text">四次挥手终止连接</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#连接建立的超时"><span class="nav-number">2.3.</span> <span class="nav-text">连接建立的超时</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP状态机"><span class="nav-number">3.</span> <span class="nav-text">TCP状态机</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP保活定时器"><span class="nav-number">4.</span> <span class="nav-text">TCP保活定时器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#待续"><span class="nav-number">5.</span> <span class="nav-text">待续</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">
