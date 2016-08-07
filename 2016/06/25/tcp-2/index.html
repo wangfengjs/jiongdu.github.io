@@ -59,16 +59,19 @@
 
 
 
-<meta name="description" content="TCP重传机制TCP是可靠的、面向连接的协议，要保证所有的数据包都可以到达，所以，重传机制是必须的。由于接收端给发送端的ACK只会确认最后一个连续的包，比如，发送端发了1、2、3、4、5一共5份数据，接收端收到了1、2，于是回ACK 3，然后收到了4，此时3没收到，怎么办？">
+<meta name="description" content="首先，纪念一下，如果不出意外的话（没过 or 狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="TCP协议总结（二）">
 <meta property="og:url" content="http://blog.dujiong.net/2016/06/25/tcp-2/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="TCP重传机制TCP是可靠的、面向连接的协议，要保证所有的数据包都可以到达，所以，重传机制是必须的。由于接收端给发送端的ACK只会确认最后一个连续的包，比如，发送端发了1、2、3、4、5一共5份数据，接收端收到了1、2，于是回ACK 3，然后收到了4，此时3没收到，怎么办？">
-<meta property="og:updated_time" content="2016-08-07T07:59:03.678Z">
+<meta property="og:description" content="首先，纪念一下，如果不出意外的话（没过 or 狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。">
+<meta property="og:image" content="http://i.imgur.com/56fKXLt.png">
+<meta property="og:image" content="http://i.imgur.com/2oZwECU.jpg">
+<meta property="og:updated_time" content="2016-08-07T08:44:23.299Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="TCP协议总结（二）">
-<meta name="twitter:description" content="TCP重传机制TCP是可靠的、面向连接的协议，要保证所有的数据包都可以到达，所以，重传机制是必须的。由于接收端给发送端的ACK只会确认最后一个连续的包，比如，发送端发了1、2、3、4、5一共5份数据，接收端收到了1、2，于是回ACK 3，然后收到了4，此时3没收到，怎么办？">
+<meta name="twitter:description" content="首先，纪念一下，如果不出意外的话（没过 or 狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。">
+<meta name="twitter:image" content="http://i.imgur.com/56fKXLt.png">
 
 
 
@@ -292,11 +295,17 @@
       
 
       
-        <h3 id="TCP重传机制"><a href="#TCP重传机制" class="headerlink" title="TCP重传机制"></a>TCP重传机制</h3><p>TCP是可靠的、面向连接的协议，要保证所有的数据包都可以到达，所以，重传机制是必须的。<br>由于接收端给发送端的ACK只会确认最后一个连续的包，比如，发送端发了1、2、3、4、5一共5份数据，接收端收到了1、2，于是回ACK 3，然后收到了4，此时3没收到，怎么办？</p>
+        <p>首先，纪念一下，如果不出意外的话（没过 or 狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…<br>好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。</p>
 <a id="more"></a>
-<h4 id="超时重传机制"><a href="#超时重传机制" class="headerlink" title="超时重传机制"></a>超时重传机制</h4><p>一种方法是不回ACK，一直等3，当发送方发现收不到3的ACK，超时后会重传3.一旦接收方收到3后吗，会A回CK 4，表示3和4都收到了。<br>但是，问题来了，因为一直等3，可能会导致4和5即便已经收到了，发送方因为没有收到ACK，悲观地认为4和5也丢了，所以可能导致4和5的重传。对此有两种选择：一种是仅重传timeout的包。也就是第3份数据，另一种是重传timeout后所有的数据，也就是第3，4，5这三份数据。这两种方式有好也有不好。第一种会节省带宽，但是慢，第二种会快一点，但是会浪费带宽，很可能会有无用功。但总体来说都不好。因为都在等timeout，timeout可能会很长。</p>
-<h4 id="快速重传机制"><a href="#快速重传机制" class="headerlink" title="快速重传机制"></a>快速重传机制</h4><p>快速重传机制不以时间驱动，而以数据驱动重传</p>
-<h3 id="Nagle算法"><a href="#Nagle算法" class="headerlink" title="Nagle算法"></a>Nagle算法</h3><p>Nagle算法要求一个TCP连接上最多只能有一个未被确认的未完成的小分组，在该分组的确认到达之前不能发送其他的小分组。TCP将手机这些少量的分组，并在确认到来时以一个分组的方式发出去。<br>该算法主要用于避免过多小分组在网络中传输，降低网络容量利用率。比如：一个20字节的TCP首部+20字节的IP首部+1个字节的数据组成的TCP数据报，有效传输利用率只有近1/40，这些小分组在广域网上会增加拥塞出现的可能。<br>但是，有时我们又需要关闭Nagle算法，比如说一些需要快速响应、对时延敏感的应用，如窗口程序，可以通过套接字选项TCP_NODELAY来关闭该算法。</p>
+<h3 id="TCP重传机制"><a href="#TCP重传机制" class="headerlink" title="TCP重传机制"></a>TCP重传机制</h3><p>TCP是可靠的、面向连接的协议，要保证所有的数据包都可以到达，所以，重传机制是必须的。<br>由于接收端给发送端的ACK只会确认最后一个连续的包，比如，发送端发了1、2、3、4、5一共5份数据，接收端收到了1、2，于是回ACK 3，然后收到了4，此时3没收到，怎么办？</p>
+<h4 id="超时重传机制"><a href="#超时重传机制" class="headerlink" title="超时重传机制"></a>超时重传机制</h4><p>一种方法是不回ACK，一直等3，当发送方发现收不到3的ACK，超时后会重传3.一旦接收方收到3后吗，会A回CK 4，表示3和4都收到了。<br>但是，问题来了，因为一直等3，可能会导致4和5即便已经收到了，发送方因为没有收到ACK，悲观地认为4和5也丢了，所以可能导致4和5的重传。对此有两种选择：一种是仅重传timeout的包。也就是第3份数据，另一种是重传timeout后所有的数据，也就是第3，4，5这三份数据。这两种方式有好也有不好。第一种会节省带宽，但是慢，第二种会快一点，但是会浪费带宽，很可能会有无用功。但总体来说都不好。因为都在等timeout，timeout可能会很长（下面会说TCP怎么动态计算timeout）。</p>
+<h4 id="快速重传机制"><a href="#快速重传机制" class="headerlink" title="快速重传机制"></a>快速重传机制</h4><p>快速重传机制不以时间驱动，而以数据驱动重传。也就是说，如果包没有连续到达，就回复ACK最后那个可能被丢了的包，如果发送方连续收到3次相同的ACK，就重传。这样，好处是不用等timeout了再重传。<br>比如：如果发送方发出了1、2、3、4、5共5份数据，第一份先到了，于是接收方回复ACK 2，结果2因为某些原因没到、3到了，于是还是ACK 2，后面的4和5都到了，但是还是ACK 2，因为2还没有到，于是发送端收到了三个ACK 2的确认，就马上重传2。然后，接收端收到了2，此时3、4、5都已经收到了，于是ACK 6。其图示如下。<br><img src="http://i.imgur.com/56fKXLt.png" alt=""></p>
+<p>但是，这样还是没有解决重传之前的一个还是重传所有的问题。就上面例子来说，发送端并不清楚这三个ACK 2是接收端收到哪些数据后传回来的。</p>
+<h4 id="SACK方法"><a href="#SACK方法" class="headerlink" title="SACK方法"></a>SACK方法</h4><p>另外一种更好的方式是：Selective ACK，需要在TCP头里加一个SACK的东西，ACK还是上面快速重传机制中的ACK。</p>
+<p><img src="http://i.imgur.com/2oZwECU.jpg" alt=""></p>
+<p>这样，在发送端就可以根据回传的SACK来知道哪些数据到了，哪些数据没有到。在Linux下，可以通过tcp_sack这个参数打开这个功能。      </p>
+<h4 id="Timeout与RTT"><a href="#Timeout与RTT" class="headerlink" title="Timeout与RTT"></a>Timeout与RTT</h4><p>从上述的TCP重传机制中可以看出，Timeout对于TCP重传的性能非常重要。如果设置长了，重发就慢，丢了很久才重发，效率低、性能差。而如果设置短了，导致并没有丢包就重发，这样重发加快，会增加网络拥塞，导致更多的超时，更多的超时又引起更多的重法，这样恶性循环。<br>所以，根据不同时间、网络情况，Timeout这个值需要设置，所以，TCP引入了RTT（往返时间，也就是一个数据包从发出去到回来的时间），这样就可以方便、有效的设置Timeout。<br>具体的RTT测量算法这里就不详述，细节可以参考《TCP/IP详解 卷一：协议》。</p>
+<h3 id="TCP滑动窗口"><a href="#TCP滑动窗口" class="headerlink" title="TCP滑动窗口"></a>TCP滑动窗口</h3><p>Nagle算法要求一个TCP连接上最多只能有一个未被确认的未完成的小分组，在该分组的确认到达之前不能发送其他的小分组。TCP将手机这些少量的分组，并在确认到来时以一个分组的方式发出去。<br>该算法主要用于避免过多小分组在网络中传输，降低网络容量利用率。比如：一个20字节的TCP首部+20字节的IP首部+1个字节的数据组成的TCP数据报，有效传输利用率只有近1/40，这些小分组在广域网上会增加拥塞出现的可能。<br>但是，有时我们又需要关闭Nagle算法，比如说一些需要快速响应、对时延敏感的应用，如窗口程序，可以通过套接字选项TCP_NODELAY来关闭该算法。</p>
 
       
     </div>
@@ -467,7 +476,7 @@
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP重传机制"><span class="nav-number">1.</span> <span class="nav-text">TCP重传机制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#超时重传机制"><span class="nav-number">1.1.</span> <span class="nav-text">超时重传机制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#快速重传机制"><span class="nav-number">1.2.</span> <span class="nav-text">快速重传机制</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Nagle算法"><span class="nav-number">2.</span> <span class="nav-text">Nagle算法</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP重传机制"><span class="nav-number">1.</span> <span class="nav-text">TCP重传机制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#超时重传机制"><span class="nav-number">1.1.</span> <span class="nav-text">超时重传机制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#快速重传机制"><span class="nav-number">1.2.</span> <span class="nav-text">快速重传机制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SACK方法"><span class="nav-number">1.3.</span> <span class="nav-text">SACK方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Timeout与RTT"><span class="nav-number">1.4.</span> <span class="nav-text">Timeout与RTT</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP滑动窗口"><span class="nav-number">2.</span> <span class="nav-text">TCP滑动窗口</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">

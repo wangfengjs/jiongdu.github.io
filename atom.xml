@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-08-07T07:59:03.678Z</updated>
+  <updated>2016-08-07T08:44:23.299Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -20,18 +20,24 @@
     <link href="http://blog.dujiong.net/2016/06/25/tcp-2/"/>
     <id>http://blog.dujiong.net/2016/06/25/tcp-2/</id>
     <published>2016-06-25T12:06:14.000Z</published>
-    <updated>2016-08-07T07:59:03.678Z</updated>
+    <updated>2016-08-07T08:44:23.299Z</updated>
     
-    <content type="html">&lt;h3 id=&quot;TCP重传机制&quot;&gt;&lt;a href=&quot;#TCP重传机制&quot; class=&quot;headerlink&quot; title=&quot;TCP重传机制&quot;&gt;&lt;/a&gt;TCP重传机制&lt;/h3&gt;&lt;p&gt;TCP是可靠的、面向连接的协议，要保证所有的数据包都可以到达，所以，重传机制是必须的。&lt;br&gt;由于接收端给发送端的ACK只会确认最后一个连续的包，比如，发送端发了1、2、3、4、5一共5份数据，接收端收到了1、2，于是回ACK 3，然后收到了4，此时3没收到，怎么办？&lt;/p&gt;
+    <content type="html">&lt;p&gt;首先，纪念一下，如果不出意外的话（没过 or 狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…&lt;br&gt;好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。&lt;/p&gt;
 &lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
-&lt;h4 id=&quot;超时重传机制&quot;&gt;&lt;a href=&quot;#超时重传机制&quot; class=&quot;headerlink&quot; title=&quot;超时重传机制&quot;&gt;&lt;/a&gt;超时重传机制&lt;/h4&gt;&lt;p&gt;一种方法是不回ACK，一直等3，当发送方发现收不到3的ACK，超时后会重传3.一旦接收方收到3后吗，会A回CK 4，表示3和4都收到了。&lt;br&gt;但是，问题来了，因为一直等3，可能会导致4和5即便已经收到了，发送方因为没有收到ACK，悲观地认为4和5也丢了，所以可能导致4和5的重传。对此有两种选择：一种是仅重传timeout的包。也就是第3份数据，另一种是重传timeout后所有的数据，也就是第3，4，5这三份数据。这两种方式有好也有不好。第一种会节省带宽，但是慢，第二种会快一点，但是会浪费带宽，很可能会有无用功。但总体来说都不好。因为都在等timeout，timeout可能会很长。&lt;/p&gt;
-&lt;h4 id=&quot;快速重传机制&quot;&gt;&lt;a href=&quot;#快速重传机制&quot; class=&quot;headerlink&quot; title=&quot;快速重传机制&quot;&gt;&lt;/a&gt;快速重传机制&lt;/h4&gt;&lt;p&gt;快速重传机制不以时间驱动，而以数据驱动重传&lt;/p&gt;
-&lt;h3 id=&quot;Nagle算法&quot;&gt;&lt;a href=&quot;#Nagle算法&quot; class=&quot;headerlink&quot; title=&quot;Nagle算法&quot;&gt;&lt;/a&gt;Nagle算法&lt;/h3&gt;&lt;p&gt;Nagle算法要求一个TCP连接上最多只能有一个未被确认的未完成的小分组，在该分组的确认到达之前不能发送其他的小分组。TCP将手机这些少量的分组，并在确认到来时以一个分组的方式发出去。&lt;br&gt;该算法主要用于避免过多小分组在网络中传输，降低网络容量利用率。比如：一个20字节的TCP首部+20字节的IP首部+1个字节的数据组成的TCP数据报，有效传输利用率只有近1/40，这些小分组在广域网上会增加拥塞出现的可能。&lt;br&gt;但是，有时我们又需要关闭Nagle算法，比如说一些需要快速响应、对时延敏感的应用，如窗口程序，可以通过套接字选项TCP_NODELAY来关闭该算法。&lt;/p&gt;
+&lt;h3 id=&quot;TCP重传机制&quot;&gt;&lt;a href=&quot;#TCP重传机制&quot; class=&quot;headerlink&quot; title=&quot;TCP重传机制&quot;&gt;&lt;/a&gt;TCP重传机制&lt;/h3&gt;&lt;p&gt;TCP是可靠的、面向连接的协议，要保证所有的数据包都可以到达，所以，重传机制是必须的。&lt;br&gt;由于接收端给发送端的ACK只会确认最后一个连续的包，比如，发送端发了1、2、3、4、5一共5份数据，接收端收到了1、2，于是回ACK 3，然后收到了4，此时3没收到，怎么办？&lt;/p&gt;
+&lt;h4 id=&quot;超时重传机制&quot;&gt;&lt;a href=&quot;#超时重传机制&quot; class=&quot;headerlink&quot; title=&quot;超时重传机制&quot;&gt;&lt;/a&gt;超时重传机制&lt;/h4&gt;&lt;p&gt;一种方法是不回ACK，一直等3，当发送方发现收不到3的ACK，超时后会重传3.一旦接收方收到3后吗，会A回CK 4，表示3和4都收到了。&lt;br&gt;但是，问题来了，因为一直等3，可能会导致4和5即便已经收到了，发送方因为没有收到ACK，悲观地认为4和5也丢了，所以可能导致4和5的重传。对此有两种选择：一种是仅重传timeout的包。也就是第3份数据，另一种是重传timeout后所有的数据，也就是第3，4，5这三份数据。这两种方式有好也有不好。第一种会节省带宽，但是慢，第二种会快一点，但是会浪费带宽，很可能会有无用功。但总体来说都不好。因为都在等timeout，timeout可能会很长（下面会说TCP怎么动态计算timeout）。&lt;/p&gt;
+&lt;h4 id=&quot;快速重传机制&quot;&gt;&lt;a href=&quot;#快速重传机制&quot; class=&quot;headerlink&quot; title=&quot;快速重传机制&quot;&gt;&lt;/a&gt;快速重传机制&lt;/h4&gt;&lt;p&gt;快速重传机制不以时间驱动，而以数据驱动重传。也就是说，如果包没有连续到达，就回复ACK最后那个可能被丢了的包，如果发送方连续收到3次相同的ACK，就重传。这样，好处是不用等timeout了再重传。&lt;br&gt;比如：如果发送方发出了1、2、3、4、5共5份数据，第一份先到了，于是接收方回复ACK 2，结果2因为某些原因没到、3到了，于是还是ACK 2，后面的4和5都到了，但是还是ACK 2，因为2还没有到，于是发送端收到了三个ACK 2的确认，就马上重传2。然后，接收端收到了2，此时3、4、5都已经收到了，于是ACK 6。其图示如下。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/56fKXLt.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;但是，这样还是没有解决重传之前的一个还是重传所有的问题。就上面例子来说，发送端并不清楚这三个ACK 2是接收端收到哪些数据后传回来的。&lt;/p&gt;
+&lt;h4 id=&quot;SACK方法&quot;&gt;&lt;a href=&quot;#SACK方法&quot; class=&quot;headerlink&quot; title=&quot;SACK方法&quot;&gt;&lt;/a&gt;SACK方法&lt;/h4&gt;&lt;p&gt;另外一种更好的方式是：Selective ACK，需要在TCP头里加一个SACK的东西，ACK还是上面快速重传机制中的ACK。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/2oZwECU.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;这样，在发送端就可以根据回传的SACK来知道哪些数据到了，哪些数据没有到。在Linux下，可以通过tcp_sack这个参数打开这个功能。      &lt;/p&gt;
+&lt;h4 id=&quot;Timeout与RTT&quot;&gt;&lt;a href=&quot;#Timeout与RTT&quot; class=&quot;headerlink&quot; title=&quot;Timeout与RTT&quot;&gt;&lt;/a&gt;Timeout与RTT&lt;/h4&gt;&lt;p&gt;从上述的TCP重传机制中可以看出，Timeout对于TCP重传的性能非常重要。如果设置长了，重发就慢，丢了很久才重发，效率低、性能差。而如果设置短了，导致并没有丢包就重发，这样重发加快，会增加网络拥塞，导致更多的超时，更多的超时又引起更多的重法，这样恶性循环。&lt;br&gt;所以，根据不同时间、网络情况，Timeout这个值需要设置，所以，TCP引入了RTT（往返时间，也就是一个数据包从发出去到回来的时间），这样就可以方便、有效的设置Timeout。&lt;br&gt;具体的RTT测量算法这里就不详述，细节可以参考《TCP/IP详解 卷一：协议》。&lt;/p&gt;
+&lt;h3 id=&quot;TCP滑动窗口&quot;&gt;&lt;a href=&quot;#TCP滑动窗口&quot; class=&quot;headerlink&quot; title=&quot;TCP滑动窗口&quot;&gt;&lt;/a&gt;TCP滑动窗口&lt;/h3&gt;&lt;p&gt;Nagle算法要求一个TCP连接上最多只能有一个未被确认的未完成的小分组，在该分组的确认到达之前不能发送其他的小分组。TCP将手机这些少量的分组，并在确认到来时以一个分组的方式发出去。&lt;br&gt;该算法主要用于避免过多小分组在网络中传输，降低网络容量利用率。比如：一个20字节的TCP首部+20字节的IP首部+1个字节的数据组成的TCP数据报，有效传输利用率只有近1/40，这些小分组在广域网上会增加拥塞出现的可能。&lt;br&gt;但是，有时我们又需要关闭Nagle算法，比如说一些需要快速响应、对时延敏感的应用，如窗口程序，可以通过套接字选项TCP_NODELAY来关闭该算法。&lt;/p&gt;
 </content>
     
     <summary type="html">
     
-      &lt;h3 id=&quot;TCP重传机制&quot;&gt;&lt;a href=&quot;#TCP重传机制&quot; class=&quot;headerlink&quot; title=&quot;TCP重传机制&quot;&gt;&lt;/a&gt;TCP重传机制&lt;/h3&gt;&lt;p&gt;TCP是可靠的、面向连接的协议，要保证所有的数据包都可以到达，所以，重传机制是必须的。&lt;br&gt;由于接收端给发送端的ACK只会确认最后一个连续的包，比如，发送端发了1、2、3、4、5一共5份数据，接收端收到了1、2，于是回ACK 3，然后收到了4，此时3没收到，怎么办？&lt;/p&gt;
+      &lt;p&gt;首先，纪念一下，如果不出意外的话（没过 or 狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…&lt;br&gt;好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。&lt;/p&gt;
     
     </summary>
     
@@ -45,7 +51,7 @@
     <link href="http://blog.dujiong.net/2016/06/13/tcp-1/"/>
     <id>http://blog.dujiong.net/2016/06/13/tcp-1/</id>
     <published>2016-06-13T05:07:19.000Z</published>
-    <updated>2016-08-07T07:58:54.815Z</updated>
+    <updated>2016-08-07T08:17:13.754Z</updated>
     
     <content type="html">&lt;p&gt;最近，在学习和科研中，越来越发现自己对于TCP协议的掌握不够，作为一个成天和网络打交道的人，TCP/IP简直是我们最核心的知识之一，所以，准备利用接下来准备考试的间隙时间，结合《TCP/IP详解 卷一：协议》再重新学习和巩固一下TCP。          &lt;/p&gt;
 &lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
@@ -62,6 +68,7 @@
 &lt;p&gt;需要重点关注的：&lt;br&gt;（1）MSL和TIME_WAIT状态。据说，这是90%的互联网后台岗位面试都会考的内容。&lt;br&gt;每个具体TCP实现必须选择一个报文段最大生存时间MSL（Maximum Segment Lifetime），它是任何报文段被丢弃前在网络内的最长时间。这个时间是有限的，因为TCP报文段封装在IP数据包在网络内传输，而IP数据包有限制其生存时间的TTL字段。&lt;br&gt;当TCP执行一个主动关闭，并发回最后一个ACK（收到对端的FIN，并发送ACK），该连接必须在TIME_WAIT状态停留的时间为2MSL。这样做可以确保有足够的时间让对端收到ACK，如果被动关闭的那方没有收到ACK，就会触发被动端重发最后的FIN。一来一去正好2MSL。此外，这样做的另一个结果是标识这个TCP连接的四元组在2MSL期间不能再被使用，只能再2MSL结束后才能再被使用。&lt;br&gt;（2）TIME_WAIT过多&lt;br&gt;出现问题了，在高并发短连接的TCP服务器上，当服务器处理完请求后立刻主动关闭连接，这样，就会有很多连接处在TIME_WAIT状态，会消耗许多系统资源。如果客户端的并发量持续很高，部分客户端就会显示连接不上。这时，可以通过设置tcp_tw_reuse和tcp_tw_recycle两个参数，前者表示开启重用，允许将处于TIME_WAIT的Socket重新用于新的TCP连接，后者表示开启TCP连接中TIME_WAIT socket的快速回收。&lt;br&gt;其实，个人觉得最好的办法就是想方设法让Client来关闭连接，这样Server作为被动关闭的一方，就不存在上述问题了。&lt;br&gt;（3）SYN Flood攻击&lt;br&gt;了解TCP三次握手后，很容易明白SYN Flood攻击的来源了，在客户端给服务器发了建立连接的SYN后，就下线了，于是服务器需要默认等待63s才会断开连接，这样，攻击者就可以把服务器的SYN连接队列耗尽，让正常的连接请求不能处理。于是，Linux下有一个tcp_syncookies的参数来应对攻击，当SYN队列满之后，TCP会根据源地址端口、目标地址端口和时间戳打造一个特别的Sequence Number（SYN Cookie）发回客户端，如果是攻击者则不会有相应，如果是正常连接，则会把这个SYN Cookie发回，然后服务端通过cookie建立连接。&lt;/p&gt;
 &lt;h3 id=&quot;TCP保活定时器&quot;&gt;&lt;a href=&quot;#TCP保活定时器&quot; class=&quot;headerlink&quot; title=&quot;TCP保活定时器&quot;&gt;&lt;/a&gt;TCP保活定时器&lt;/h3&gt;&lt;p&gt;许多时候服务器希望知道客户主机是否崩溃并关机或者崩溃又重新启动这样的非正常情况，这就需要保活功能。如果一个特定的连接在固定时间之内没有任何动作，则服务器就向客户端发送一个探查报文。&lt;br&gt;保活功能的实现由两种方式，一是应用层面的心跳机制。通过自定义心跳消息头来完成保活功能。另一种就是TCP自带的保活功能。而这也是许多协议专家所争论的点：到底保活功能应该再哪一层实现。对于这两种方式，我认为应用层面的心跳机制具有灵活、扩展性强的特点，可以随意控制，不依赖与协议，但是也增加了开发的复杂程度。而TCP的保活功能，使用简单，减少了应用层代码的复杂度。所以，开发者可以根据实际的应用场景选择适合的保活功能的实现方式。&lt;/p&gt;
 &lt;h3 id=&quot;待续&quot;&gt;&lt;a href=&quot;#待续&quot; class=&quot;headerlink&quot; title=&quot;待续&quot;&gt;&lt;/a&gt;待续&lt;/h3&gt;&lt;p&gt;这一篇是TCP协议的一些基础知识，下一篇将学习较复杂的滑动窗口、重传与拥塞控制。&lt;/p&gt;
+&lt;p&gt;参考:  《TCP/IP详解 卷一：协议》   &lt;/p&gt;
 </content>
     
     <summary type="html">
