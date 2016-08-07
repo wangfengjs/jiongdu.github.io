@@ -59,19 +59,19 @@
 
 
 
-<meta name="description" content="首先，纪念一下，如果不出意外的话（没过 or 狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。">
+<meta name="description" content="首先，纪念一下，如果不出意外的话（没过or狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="TCP协议总结（二）">
 <meta property="og:url" content="http://blog.dujiong.net/2016/06/25/tcp-2/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="首先，纪念一下，如果不出意外的话（没过 or 狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。">
+<meta property="og:description" content="首先，纪念一下，如果不出意外的话（没过or狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。">
 <meta property="og:image" content="http://i.imgur.com/56fKXLt.png">
 <meta property="og:image" content="http://i.imgur.com/2oZwECU.jpg">
 <meta property="og:image" content="http://i.imgur.com/8afv8ge.jpg">
-<meta property="og:updated_time" content="2016-08-07T12:49:31.331Z">
+<meta property="og:updated_time" content="2016-08-07T13:00:43.518Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="TCP协议总结（二）">
-<meta name="twitter:description" content="首先，纪念一下，如果不出意外的话（没过 or 狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。">
+<meta name="twitter:description" content="首先，纪念一下，如果不出意外的话（没过or狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。">
 <meta name="twitter:image" content="http://i.imgur.com/56fKXLt.png">
 
 
@@ -296,7 +296,7 @@
       
 
       
-        <p>首先，纪念一下，如果不出意外的话（没过 or 狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…<br>好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。</p>
+        <p>首先，纪念一下，如果不出意外的话（没过or狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…<br>好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。</p>
 <a id="more"></a>
 <h3 id="TCP重传机制"><a href="#TCP重传机制" class="headerlink" title="TCP重传机制"></a>TCP重传机制</h3><p>TCP是可靠的、面向连接的协议，要保证所有的数据包都可以到达，所以，重传机制是必须的。<br>由于接收端给发送端的ACK只会确认最后一个连续的包，比如，发送端发了1、2、3、4、5一共5份数据，接收端收到了1、2，于是回ACK 3，然后收到了4，此时3没收到，怎么办？</p>
 <h4 id="超时重传机制"><a href="#超时重传机制" class="headerlink" title="超时重传机制"></a>超时重传机制</h4><p>一种方法是不回ACK，一直等3，当发送方发现收不到3的ACK，超时后会重传3.一旦接收方收到3后吗，会A回CK 4，表示3和4都收到了。<br>但是，问题来了，因为一直等3，可能会导致4和5即便已经收到了，发送方因为没有收到ACK，悲观地认为4和5也丢了，所以可能导致4和5的重传。对此有两种选择：一种是仅重传timeout的包。也就是第3份数据，另一种是重传timeout后所有的数据，也就是第3，4，5这三份数据。这两种方式有好也有不好。第一种会节省带宽，但是慢，第二种会快一点，但是会浪费带宽，很可能会有无用功。但总体来说都不好。因为都在等timeout，timeout可能会很长（下面会说TCP怎么动态计算timeout）。</p>
