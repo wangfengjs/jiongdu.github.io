@@ -4,6 +4,57 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/07/21/internetcompany/</loc>
+    <lastmod>2016-08-08T05:18:28.750Z</lastmod>
+    <data>
+        <display>
+        <title>2015-2016年互联网公司校招编程题汇总</title>
+        <pubTime>2016-07-21T12:16:02.000Z</pubTime>
+        
+        <tag>Algorithm</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://blog.dujiong.net/2016/07/17/muduo-6/</loc>
+    <lastmod>2016-08-08T05:17:36.540Z</lastmod>
+    <data>
+        <display>
+        <title>muduo源码阅读之线程同步</title>
+        <pubTime>2016-07-17T11:14:12.000Z</pubTime>
+        
+        <tag>muduo</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://blog.dujiong.net/2016/07/08/muduo-5/</loc>
+    <lastmod>2016-08-08T05:14:02.318Z</lastmod>
+    <data>
+        <display>
+        <title>muduo源码阅读之线程模型</title>
+        <pubTime>2016-07-08T07:07:13.000Z</pubTime>
+        
+        <tag>muduo</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/06/25/tcp-2/</loc>
     <lastmod>2016-08-07T13:00:43.518Z</lastmod>
     <data>
@@ -62,9 +113,9 @@
         <title>常见并发网络服务程序设计方案</title>
         <pubTime>2016-05-28T02:14:00.000Z</pubTime>
         
-        <tag>network/linux</tag>
-         
         <tag>muduo</tag>
+         
+        <tag>network/linux</tag>
          
          
            
