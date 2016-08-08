@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-08-08T05:18:28.750Z</updated>
+  <updated>2016-08-08T05:22:50.593Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://blog.dujiong.net/2016/07/21/internetcompany/"/>
     <id>http://blog.dujiong.net/2016/07/21/internetcompany/</id>
     <published>2016-07-21T12:16:02.000Z</published>
-    <updated>2016-08-08T05:18:28.750Z</updated>
+    <updated>2016-08-08T05:22:50.593Z</updated>
     
     <content type="html"></content>
     
@@ -29,7 +29,7 @@
     </summary>
     
     
-      <category term="Algorithm" scheme="http://blog.dujiong.net/tags/Algorithm/"/>
+      <category term="algorithm" scheme="http://blog.dujiong.net/tags/algorithm/"/>
     
   </entry>
   
@@ -270,9 +270,9 @@ int main()
     </summary>
     
     
-      <category term="muduo" scheme="http://blog.dujiong.net/tags/muduo/"/>
-    
       <category term="network/linux" scheme="http://blog.dujiong.net/tags/network-linux/"/>
+    
+      <category term="muduo" scheme="http://blog.dujiong.net/tags/muduo/"/>
     
   </entry>
   
