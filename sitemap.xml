@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://blog.dujiong.net/2016/08/08/shared-ptr/</loc>
+    
+    <lastmod>2016-08-08T13:46:35.925Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://blog.dujiong.net/2016/07/29/epoll/</loc>
     
     <lastmod>2016-08-08T12:29:46.599Z</lastmod>

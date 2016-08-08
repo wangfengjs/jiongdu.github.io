@@ -4,6 +4,23 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/08/08/shared-ptr/</loc>
+    <lastmod>2016-08-08T13:46:35.925Z</lastmod>
+    <data>
+        <display>
+        <title>shared_ptr的注意事项</title>
+        <pubTime>2016-08-08T13:38:44.000Z</pubTime>
+        
+        <tag>C++</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/07/29/epoll/</loc>
     <lastmod>2016-08-08T12:29:46.599Z</lastmod>
     <data>
