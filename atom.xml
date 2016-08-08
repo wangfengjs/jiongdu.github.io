@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-08-08T13:46:35.925Z</updated>
+  <updated>2016-08-08T13:49:13.833Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -20,9 +20,9 @@
     <link href="http://blog.dujiong.net/2016/08/08/shared-ptr/"/>
     <id>http://blog.dujiong.net/2016/08/08/shared-ptr/</id>
     <published>2016-08-08T13:38:44.000Z</published>
-    <updated>2016-08-08T13:46:35.925Z</updated>
+    <updated>2016-08-08T13:49:13.833Z</updated>
     
-    <content type="html">&lt;p&gt;前面在&lt;a href=&quot;http://blog.dujiong.net/2016/05/15/cplusplus-sematics/&quot;&gt;浅谈C++值语义和对象语义&lt;/a&gt;一文中简要的阐述了一下智能指针shared_ptr的作用和用法，作为C++11中最为广泛使用的智能指针，shared_ptr虽然解决了裸指针的诸多问题，但是它并非完美、无懈可击，所以，本文就shared_\ptr使用过程中需要注意的一些问题做一下总结。    &lt;/p&gt;
+    <content type="html">&lt;p&gt;前面在&lt;a href=&quot;http://blog.dujiong.net/2016/05/15/cplusplus-sematics/&quot;&gt;浅谈C++值语义和对象语义&lt;/a&gt;一文中简要的阐述了一下智能指针shared_ptr的作用和用法，作为C++11中最为广泛使用的智能指针，shared_ptr虽然解决了裸指针的诸多问题，但是它并非完美、无懈可击，所以，本文就shared_ptr使用过程中需要注意的一些问题做一下总结。    &lt;/p&gt;
 </content>
     
     <summary type="html">
