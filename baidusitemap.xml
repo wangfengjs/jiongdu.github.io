@@ -4,6 +4,23 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/07/29/epoll/</loc>
+    <lastmod>2016-08-08T12:08:50.201Z</lastmod>
+    <data>
+        <display>
+        <title>epoll总结</title>
+        <pubTime>2016-07-29T11:03:21.000Z</pubTime>
+        
+        <tag>network/linux</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/07/21/internetcompany/</loc>
     <lastmod>2016-08-08T08:23:21.083Z</lastmod>
     <data>
