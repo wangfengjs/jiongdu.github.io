@@ -65,7 +65,7 @@
 <meta property="og:url" content="http://blog.dujiong.net/2016/07/29/epoll/index.html">
 <meta property="og:site_name" content="一期一会">
 <meta property="og:description" content="在现如今的并发网络服务器程序开发中，我们都会见到IO多路复用（Linux下的epoll、Windows下的IOCP等）的影子，它们是各种服务器并发方案（常见并发网络服务程序设计方案）的基础，而我们知道，绝大部分服务器都是运行在Linux系统下，所以，本文就现如今Linux下用的最多的epoll的原理、用法进行一个简单总结。">
-<meta property="og:updated_time" content="2016-08-08T12:24:31.376Z">
+<meta property="og:updated_time" content="2016-08-08T12:29:46.599Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="epoll总结">
 <meta name="twitter:description" content="在现如今的并发网络服务器程序开发中，我们都会见到IO多路复用（Linux下的epoll、Windows下的IOCP等）的影子，它们是各种服务器并发方案（常见并发网络服务程序设计方案）的基础，而我们知道，绝大部分服务器都是运行在Linux系统下，所以，本文就现如今Linux下用的最多的epoll的原理、用法进行一个简单总结。">
@@ -302,7 +302,7 @@
 <h3 id="epoll的两种工作模式"><a href="#epoll的两种工作模式" class="headerlink" title="epoll的两种工作模式"></a>epoll的两种工作模式</h3><h4 id="LT模式"><a href="#LT模式" class="headerlink" title="LT模式"></a>LT模式</h4><p>LT（Level Triggered，水平触发）模式，这是缺省的工作模式，同时支持block和non-block socket，在这种模式中，内核告诉你一个文件描述符是否就绪了，然后你可以对这个就绪的fd进行IO操作。如果你不作任何操作，内核还是会继续通知你的，所以，这种模式编程出错误可能性要小一点。传统的select/poll都是这种模型的代表。 </p>
 <h4 id="ET模式"><a href="#ET模式" class="headerlink" title="ET模式"></a>ET模式</h4><p>ET(Edge Triggered，边沿触发)模式，这是高速工作模式，只支持non-block socket。在这种模式下，当描述符从未就绪变为就绪时，内核就通过epoll告诉你，然后它会假设你知道文件描述符已经就绪，并且不会再为那个文件描述符发送更多的就绪通知，直到你做了某些操作而导致那个文件描述符不再是就绪状态(比如你在发送、接收或是接受请求，或者发送接收的数据少于一定量时导致了一个EWOULDBLOCK 错误)。但是请注意，如果一直不对这个fd作IO操作(从而导致它再次变成未就绪)，内核就不会发送更多的通知(only once)。不过在TCP协议中，ET模式的加速效用仍需要更多的benchmark确认。所以，这种方式下，出错率比较高，需要增加一些检测程序。</p>
 <h4 id="使用ET和LT模式"><a href="#使用ET和LT模式" class="headerlink" title="使用ET和LT模式"></a>使用ET和LT模式</h4><p>上面已经说过了二者分别的特点，ET会更高效，但是只支持non-block socket，LT更加易用，且不易出错。个人觉得，一般的场景下，使用LT模式足以解决问题，如果碰到一些特殊场景要使用ET模式，一定要增加出错监测程序。        </p>
-<h3 id="使用epoll"><a href="#使用epoll" class="headerlink" title="使用epoll"></a>使用epoll</h3><p>epoll用到的所有数据结构和函数都是在头文件<sys epoll.h="">中声明的，下面逐一介绍。    </sys></p>
+<h3 id="使用epoll"><a href="#使用epoll" class="headerlink" title="使用epoll"></a>使用epoll</h3><p>epoll用到的所有数据结构和函数都是在头文件sys/epoll.h中声明的，下面逐一介绍。    </p>
 <h4 id="相关数据结构"><a href="#相关数据结构" class="headerlink" title="相关数据结构"></a>相关数据结构</h4><pre><code>typedef union epoll_data{
     void* ptr;
     int fd;
