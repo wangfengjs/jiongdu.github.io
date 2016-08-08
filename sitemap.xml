@@ -2,9 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://blog.dujiong.net/2016/07/21/internetcompany/</loc>
+    
+    <lastmod>2016-08-08T08:23:21.083Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://blog.dujiong.net/2016/07/08/muduo-5/</loc>
     
-    <lastmod>2016-08-08T07:38:52.921Z</lastmod>
+    <lastmod>2016-08-08T08:00:34.544Z</lastmod>
     
   </url>
   
@@ -12,13 +19,6 @@
     <loc>http://blog.dujiong.net/2016/07/17/muduo-6/</loc>
     
     <lastmod>2016-08-08T05:26:01.927Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://blog.dujiong.net/2016/07/21/internetcompany/</loc>
-    
-    <lastmod>2016-08-08T05:22:50.593Z</lastmod>
     
   </url>
   

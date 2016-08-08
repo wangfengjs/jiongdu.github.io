@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-08-08T05:22:50.593Z</updated>
+  <updated>2016-08-08T08:23:21.083Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -20,11 +20,18 @@
     <link href="http://blog.dujiong.net/2016/07/21/internetcompany/"/>
     <id>http://blog.dujiong.net/2016/07/21/internetcompany/</id>
     <published>2016-07-21T12:16:02.000Z</published>
-    <updated>2016-08-08T05:22:50.593Z</updated>
+    <updated>2016-08-08T08:23:21.083Z</updated>
     
-    <content type="html"></content>
+    <content type="html">&lt;p&gt;本文收录了近两年的各大互联网公司校招（实习）笔试的编程题，并提供了自己的思路和解法。希望能对自己和备战互联网校招的同学提供一些帮助。 &lt;/p&gt;
+&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
+&lt;p&gt;所有题目均来自于牛客网“校招真题编程题汇总”板块，感谢牛客网的汇总并提供在线编程平台。为了方便大家检验，下面每个题会链接到牛客网的OJ界面。而我提供的思路和解法会链接至我的&lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;github&lt;/a&gt;，欢迎大家多沟通、交流。&lt;/p&gt;
+&lt;h3 id=&quot;去哪儿&quot;&gt;&lt;a href=&quot;#去哪儿&quot; class=&quot;headerlink&quot; title=&quot;去哪儿&quot;&gt;&lt;/a&gt;去哪儿&lt;/h3&gt;&lt;p&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/28d5a9b7fc0b4a078c9a6d59830fb9b9?tpId=49&amp;amp;tqId=29278&amp;amp;rp=1&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;二分查找&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E5%8E%BB%E5%93%AA%E5%84%BF/%E4%BA%8C%E5%88%86%E6%9F%A5%E6%89%BE&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/dab59997905b4459a42587fece8a75f4?tpId=49&amp;amp;tqId=29279&amp;amp;rp=1&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;首个重复字符&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E5%8E%BB%E5%93%AA%E5%84%BF/%E9%A6%96%E4%B8%AA%E9%87%8D%E5%A4%8D%E5%AD%97%E7%AC%A6&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/a386fd3a5080435dad3252bac76950a7?tpId=49&amp;amp;tqId=29280&amp;amp;rp=1&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;寻找Coder&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E5%8E%BB%E5%93%AA%E5%84%BF/%E5%AF%BB%E6%89%BECoder&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&quot;美团&quot;&gt;&lt;a href=&quot;#美团&quot; class=&quot;headerlink&quot; title=&quot;美团&quot;&gt;&lt;/a&gt;美团&lt;/h3&gt;&lt;p&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/13ba51c3fec74b58bbc8fa8c3eedf877?tpId=49&amp;amp;tqId=29284&amp;amp;rp=1&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;直方图内最大矩形&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E7%BE%8E%E5%9B%A2/%E7%9B%B4%E6%96%B9%E5%9B%BE%E5%86%85%E6%9C%80%E5%A4%A7%E7%9F%A9%E5%BD%A2&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/0b5ab6cc51804dd59f9988ad70d8c4a0?tpId=49&amp;amp;tqId=29282&amp;amp;rp=1&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;棋子翻转&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E7%BE%8E%E5%9B%A2/%E6%A3%8B%E5%AD%90%E7%BF%BB%E8%BD%AC&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/3745638815d04c26babcfc463c25478c?tpId=49&amp;amp;tqId=29286&amp;amp;rp=1&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;平均年龄&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E7%BE%8E%E5%9B%A2/%E5%B9%B3%E5%9D%87%E5%B9%B4%E9%BE%84&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/1f7675ae7a9e40e4bd04eb754b62fd00?tpId=49&amp;amp;tqId=29281&amp;amp;rp=1&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;最大差值&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E7%BE%8E%E5%9B%A2/%E6%9C%80%E5%A4%A7%E5%B7%AE%E5%80%BC&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;/p&gt;
+</content>
     
     <summary type="html">
+    
+      &lt;p&gt;本文收录了近两年的各大互联网公司校招（实习）笔试的编程题，并提供了自己的思路和解法。希望能对自己和备战互联网校招的同学提供一些帮助。 &lt;/p&gt;
     
     </summary>
     
@@ -56,9 +63,10 @@
     <link href="http://blog.dujiong.net/2016/07/08/muduo-5/"/>
     <id>http://blog.dujiong.net/2016/07/08/muduo-5/</id>
     <published>2016-07-08T07:07:13.000Z</published>
-    <updated>2016-08-08T07:38:52.921Z</updated>
+    <updated>2016-08-08T08:00:34.544Z</updated>
     
     <content type="html">&lt;p&gt;前面的四篇“muduo源码阅读”文章都是从总体上（Reactor模式）出发把握muduo库的一些设计思想和架构，从这篇开始，将更深入细节、更贴近代码地阅读muduo网络库。&lt;br&gt;首先，是多线程编程中重中之重的线程同步问题。     &lt;/p&gt;
+&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
 &lt;h3 id=&quot;互斥锁&quot;&gt;&lt;a href=&quot;#互斥锁&quot; class=&quot;headerlink&quot; title=&quot;互斥锁&quot;&gt;&lt;/a&gt;互斥锁&lt;/h3&gt;&lt;p&gt;提到线程同步原语，相信绝大多数人首先想到的就是互斥锁(mutex)了，互斥锁保护了临界区，保证任何时刻最多只有一个线程在由mutex保护的临界区内活动。所以，一般使用mutex来保护共享数据。muduo中使用了C++ RAII的手法封装了mutex的创建、销毁、加锁和解锁四个操作，并最终封装成MutexLockGuard类，这样，一切都交给栈上的MutexLockGuard类的对象的构造和析构函数负责，对象的生命期正好等于临界区。        &lt;/p&gt;
 &lt;p&gt;下面，首先来看MutexLock类的主要代码。&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;class MutexLock : boost noncopyable
@@ -183,7 +191,6 @@ void enqueue(int x)
     <summary type="html">
     
       &lt;p&gt;前面的四篇“muduo源码阅读”文章都是从总体上（Reactor模式）出发把握muduo库的一些设计思想和架构，从这篇开始，将更深入细节、更贴近代码地阅读muduo网络库。&lt;br&gt;首先，是多线程编程中重中之重的线程同步问题。     &lt;/p&gt;
-&lt;h3 id=&quot;互斥锁&quot;&gt;&lt;a
     
     </summary>
     
@@ -390,9 +397,9 @@ int main()
     </summary>
     
     
-      <category term="muduo" scheme="http://blog.dujiong.net/tags/muduo/"/>
-    
       <category term="network/linux" scheme="http://blog.dujiong.net/tags/network-linux/"/>
+    
+      <category term="muduo" scheme="http://blog.dujiong.net/tags/muduo/"/>
     
   </entry>
   

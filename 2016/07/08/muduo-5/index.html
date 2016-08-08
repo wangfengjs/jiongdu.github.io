@@ -59,19 +59,16 @@
 
 
 
-<meta name="description" content="前面的四篇“muduo源码阅读”文章都是从总体上（Reactor模式）出发把握muduo库的一些设计思想和架构，从这篇开始，将更深入细节、更贴近代码地阅读muduo网络库。首先，是多线程编程中重中之重的线程同步问题。     
-互斥锁提到线程同步原语，相信绝大多数人首先想到的就是互斥锁(mutex)了，互斥锁保护了临界区，保证任何时刻最多只有一个线程在由mutex保护的临界区内活动。所以，一般使用">
+<meta name="description" content="前面的四篇“muduo源码阅读”文章都是从总体上（Reactor模式）出发把握muduo库的一些设计思想和架构，从这篇开始，将更深入细节、更贴近代码地阅读muduo网络库。首先，是多线程编程中重中之重的线程同步问题。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="muduo源码阅读之线程同步">
 <meta property="og:url" content="http://blog.dujiong.net/2016/07/08/muduo-5/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="前面的四篇“muduo源码阅读”文章都是从总体上（Reactor模式）出发把握muduo库的一些设计思想和架构，从这篇开始，将更深入细节、更贴近代码地阅读muduo网络库。首先，是多线程编程中重中之重的线程同步问题。     
-互斥锁提到线程同步原语，相信绝大多数人首先想到的就是互斥锁(mutex)了，互斥锁保护了临界区，保证任何时刻最多只有一个线程在由mutex保护的临界区内活动。所以，一般使用">
-<meta property="og:updated_time" content="2016-08-08T07:38:52.921Z">
+<meta property="og:description" content="前面的四篇“muduo源码阅读”文章都是从总体上（Reactor模式）出发把握muduo库的一些设计思想和架构，从这篇开始，将更深入细节、更贴近代码地阅读muduo网络库。首先，是多线程编程中重中之重的线程同步问题。">
+<meta property="og:updated_time" content="2016-08-08T08:00:34.544Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="muduo源码阅读之线程同步">
-<meta name="twitter:description" content="前面的四篇“muduo源码阅读”文章都是从总体上（Reactor模式）出发把握muduo库的一些设计思想和架构，从这篇开始，将更深入细节、更贴近代码地阅读muduo网络库。首先，是多线程编程中重中之重的线程同步问题。     
-互斥锁提到线程同步原语，相信绝大多数人首先想到的就是互斥锁(mutex)了，互斥锁保护了临界区，保证任何时刻最多只有一个线程在由mutex保护的临界区内活动。所以，一般使用">
+<meta name="twitter:description" content="前面的四篇“muduo源码阅读”文章都是从总体上（Reactor模式）出发把握muduo库的一些设计思想和架构，从这篇开始，将更深入细节、更贴近代码地阅读muduo网络库。首先，是多线程编程中重中之重的线程同步问题。">
 
 
 
@@ -296,6 +293,7 @@
 
       
         <p>前面的四篇“muduo源码阅读”文章都是从总体上（Reactor模式）出发把握muduo库的一些设计思想和架构，从这篇开始，将更深入细节、更贴近代码地阅读muduo网络库。<br>首先，是多线程编程中重中之重的线程同步问题。     </p>
+<a id="more"></a>
 <h3 id="互斥锁"><a href="#互斥锁" class="headerlink" title="互斥锁"></a>互斥锁</h3><p>提到线程同步原语，相信绝大多数人首先想到的就是互斥锁(mutex)了，互斥锁保护了临界区，保证任何时刻最多只有一个线程在由mutex保护的临界区内活动。所以，一般使用mutex来保护共享数据。muduo中使用了C++ RAII的手法封装了mutex的创建、销毁、加锁和解锁四个操作，并最终封装成MutexLockGuard类，这样，一切都交给栈上的MutexLockGuard类的对象的构造和析构函数负责，对象的生命期正好等于临界区。        </p>
 <p>下面，首先来看MutexLock类的主要代码。</p>
 <pre><code>class MutexLock : boost noncopyable
