@@ -4,6 +4,23 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/08/21/luguhu/</loc>
+    <lastmod>2016-08-21T14:08:25.479Z</lastmod>
+    <data>
+        <display>
+        <title>泸沽湖</title>
+        <pubTime>2016-08-21T13:57:13.000Z</pubTime>
+        
+        <tag>life/travel</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/07/21/internetcompany/</loc>
     <lastmod>2016-08-21T12:56:34.388Z</lastmod>
     <data>
@@ -147,9 +164,9 @@
         <title>常见并发网络服务程序设计方案</title>
         <pubTime>2016-05-28T02:14:00.000Z</pubTime>
         
-        <tag>muduo</tag>
-         
         <tag>network/linux</tag>
+         
+        <tag>muduo</tag>
          
          
            

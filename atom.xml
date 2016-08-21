@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-08-08T13:49:13.833Z</updated>
+  <updated>2016-08-21T14:08:25.479Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -14,6 +14,28 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>泸沽湖</title>
+    <link href="http://blog.dujiong.net/2016/08/21/luguhu/"/>
+    <id>http://blog.dujiong.net/2016/08/21/luguhu/</id>
+    <published>2016-08-21T13:57:13.000Z</published>
+    <updated>2016-08-21T14:08:25.479Z</updated>
+    
+    <content type="html">&lt;p&gt;向导师申请给自己放了十天假，回了趟家，然后和贝酱选择在泸沽湖一起过了六周年纪念日。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;向导师申请给自己放了十天假，回了趟家，然后和贝酱选择在泸沽湖一起过了六周年纪念日。&lt;/p&gt;
+
+    
+    </summary>
+    
+    
+      <category term="life/travel" scheme="http://blog.dujiong.net/tags/life-travel/"/>
+    
+  </entry>
   
   <entry>
     <title>shared_ptr的注意事项</title>
@@ -465,9 +487,9 @@ int main()
     </summary>
     
     
-      <category term="muduo" scheme="http://blog.dujiong.net/tags/muduo/"/>
-    
       <category term="network/linux" scheme="http://blog.dujiong.net/tags/network-linux/"/>
+    
+      <category term="muduo" scheme="http://blog.dujiong.net/tags/muduo/"/>
     
   </entry>
   
@@ -1263,28 +1285,6 @@ stop()
     
     
       <category term="openwrt/wifi" scheme="http://blog.dujiong.net/tags/openwrt-wifi/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Welcome to My Blog</title>
-    <link href="http://blog.dujiong.net/2016/03/11/welcome/"/>
-    <id>http://blog.dujiong.net/2016/03/11/welcome/</id>
-    <published>2016-03-11T03:05:15.275Z</published>
-    <updated>2016-03-18T08:24:03.699Z</updated>
-    
-    <content type="html">&lt;p&gt;Welcome to &lt;a href=&quot;https://blog.dujiong.net/&quot;&gt;My Blog&lt;/a&gt;! Happy Everyday！&lt;/p&gt;
-&lt;p&gt;This is where i am writing and leaning. Let’s go!&lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;Welcome to &lt;a href=&quot;https://blog.dujiong.net/&quot;&gt;My Blog&lt;/a&gt;! Happy Everyday！&lt;/p&gt;
-&lt;p&gt;This is where i am writing and leaning. Let’s go!&lt;/p&gt;
-
-    
-    </summary>
-    
     
   </entry>
   
