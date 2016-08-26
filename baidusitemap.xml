@@ -4,8 +4,27 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/08/26/muduo-7/</loc>
+    <lastmod>2016-08-26T07:49:10.062Z</lastmod>
+    <data>
+        <display>
+        <title>从BlockingQueue再探线程同步</title>
+        <pubTime>2016-08-26T05:18:11.000Z</pubTime>
+        
+        <tag>muduo</tag>
+         
+        <tag>多线程</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/08/21/Singleton/</loc>
-    <lastmod>2016-08-25T13:58:29.020Z</lastmod>
+    <lastmod>2016-08-25T14:03:50.483Z</lastmod>
     <data>
         <display>
         <title>单例模式</title>

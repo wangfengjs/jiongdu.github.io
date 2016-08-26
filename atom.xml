@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-08-25T13:58:29.020Z</updated>
+  <updated>2016-08-26T07:49:10.062Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -16,11 +16,78 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>从BlockingQueue再探线程同步</title>
+    <link href="http://blog.dujiong.net/2016/08/26/muduo-7/"/>
+    <id>http://blog.dujiong.net/2016/08/26/muduo-7/</id>
+    <published>2016-08-26T05:18:11.000Z</published>
+    <updated>2016-08-26T07:49:10.062Z</updated>
+    
+    <content type="html">&lt;p&gt;BlockingQueue（阻塞队列）在程序中被大量使用，特别是在多线程程序中，譬如需要提高吞吐量时采用将请求直接扔到阻塞队列中，然后返回，由其他线程从阻塞队列中获取请求再进一步处理。而经典的生产者-消费者模型，正是阻塞队列大放光彩之处。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;br&gt;Java中java.util.concurrent包便提供了BlockingQueue接口和其几种实现方式。muduo中也实现了无大小限制的BlockingQueue和固定大小的BoundedBlockingQueue。下面以BlockingQueue为例进行说明。     &lt;/p&gt;
+&lt;h3 id=&quot;BlockingQueue的实现&quot;&gt;&lt;a href=&quot;#BlockingQueue的实现&quot; class=&quot;headerlink&quot; title=&quot;BlockingQueue的实现&quot;&gt;&lt;/a&gt;BlockingQueue的实现&lt;/h3&gt;&lt;p&gt;muduo中BlockingQueue的实现非常简单，队列采用C++标准库中的deque，无大小限制，唯一需要注意的是使用互斥锁和条件变量做好线程同步。&lt;br&gt;BlockingQueue实现时运用了模板。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;template&amp;lt;typename T&amp;gt;
+class BlockingQueue : boost::noncopyable
+{
+    public:
+        BlockingQueue() : mutex_(), notEmpty_(mutex_), queue_() {}
+
+        void put(const T&amp;amp; x)
+        {
+            MutexLockGuard lock(mutex_);
+            queue_.push_back(x);
+            notEmpty_.notift();
+        }    
+
+        T take()
+        {
+            MutexLockGuard lock(mutex_);
+            while(queue_.empty())    
+            {
+                notEmpty_.wait();
+            }
+            assert(!queue_.empty());
+            T front(queue_.front());
+            queue_.pop_front();
+            return front;
+        }
+
+        size_t size() const
+        {
+            MutexLockGuard lock(mutex_);
+            return queue_.size();
+        }
+    private:
+        mutable MutexLock mutex_;
+        Condition notEmpty_;
+        std::deque&amp;lt;T&amp;gt; queue_;
+};
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;BlockingQueue提供了取元素(take)、放入元素(put)和取得队列大小(size)三个public成员函数完成对阻塞队列的操作。&lt;/p&gt;
+&lt;h3 id=&quot;线程同步的一些细究&quot;&gt;&lt;a href=&quot;#线程同步的一些细究&quot; class=&quot;headerlink&quot; title=&quot;线程同步的一些细究&quot;&gt;&lt;/a&gt;线程同步的一些细究&lt;/h3&gt;&lt;p&gt;细究BlockingQueue的实现，可以总结并学习一些问题。&lt;/p&gt;
+&lt;h4 id=&quot;spurious-wakeup&quot;&gt;&lt;a href=&quot;#spurious-wakeup&quot; class=&quot;headerlink&quot; title=&quot;spurious wakeup&quot;&gt;&lt;/a&gt;spurious wakeup&lt;/h4&gt;&lt;p&gt;首先是大名鼎鼎的spurious wakeup（虚假唤醒）。即对应代码中&lt;code&gt;while(queue_.empty())&lt;/code&gt;循环，可否改为&lt;code&gt;if(queue_.empty())&lt;/code&gt;？&lt;br&gt;答案是不能，否则会导致虚假唤醒，因为&lt;code&gt;notEmpty_.wait()&lt;/code&gt;封装的&lt;code&gt;pthread_cond_wait()&lt;/code&gt;不仅能被&lt;code&gt;pthread_cond_signal()/pthread_cond_broadcast()&lt;/code&gt;唤醒，而且还可能会被其他的信号唤醒，后者便是虚假唤醒，这时条件并不满足。所以，不仅要在&lt;code&gt;pthread_cond_wait()&lt;/code&gt;前检查条件是否成立，在&lt;code&gt;pthread_cond_wait()&lt;/code&gt;之后也要检查。 &lt;/p&gt;
+&lt;h4 id=&quot;unlock和signal的顺序&quot;&gt;&lt;a href=&quot;#unlock和signal的顺序&quot; class=&quot;headerlink&quot; title=&quot;unlock和signal的顺序&quot;&gt;&lt;/a&gt;unlock和signal的顺序&lt;/h4&gt;&lt;p&gt;muduo中采用RAII手法封装了互斥器，所以，在进行put操作时，是先notify其他线程，再释放锁。那么反过来呢，先释放锁，再notify其他线程？这二者有什么差别呢？&lt;br&gt;先notify，再释放锁，在某些平台下存在性能问题，原因是，假设线程1阻塞在条件变量上wait，线程2将其唤醒（notify），系统执行上下文切换，但是线程2仍持有锁，导致线程1不能从&lt;code&gt;pthread_cond_wait()&lt;/code&gt;(需要持有锁)返回，所以线程1又阻塞在互斥锁上，直到线程2释放锁，线程1才可以运行。&lt;br&gt;福音是，对于此问题，Glibc中使用的线程库NPTL对此进行了优化。&lt;br&gt;另一种情况是先释放锁，再notify，这样可以避免上述问题，但是，这样可能会唤醒其他阻塞在此mutex上的线程，而不是处于wait条件变量的线程，所以，这种情况下，在唤醒之后，最好还得再check下predicate（类似于spurious wakeup）。&lt;br&gt;所以，Pthreads实现平台下，建议使用第一种方法，可以避免一些&lt;a href=&quot;http://www.domaigne.com/blog/computing/condvars-signal-with-mutex-locked-or-not/&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;obscure bugs&lt;/a&gt;,除非采用第二种有较明显的性能的提升。&lt;/p&gt;
+&lt;h4 id=&quot;Linux快速同步机制（Futex）&quot;&gt;&lt;a href=&quot;#Linux快速同步机制（Futex）&quot; class=&quot;headerlink&quot; title=&quot;Linux快速同步机制（Futex）&quot;&gt;&lt;/a&gt;Linux快速同步机制（Futex）&lt;/h4&gt;&lt;p&gt;Futex（Fast Userspace mutexes，快速用户空间互斥体），是在Linux上实现锁定和构建高级抽象锁如信号量和POSIX互斥的基本工具，首先出现在Linux 2.5.7版。&lt;br&gt;在传统的Unix系统中，System V IPC，如消息队列，信号量，socket等进程间同步机制都是对一个内核对象操作来完成的，这个内核对象对于要同步的进程都是可见的，其提供了共享的状态信息和原子操作。当进程间要同步的时候必须要通过系统调用在内核中完成。可是研究发现，很多同步状态是无竞争的，即某个进程进入互斥去，到从互斥区出来这段时间，常常是没有进程进也要进入这个互斥区或者请求同一个同步变量的。而这种情况下，进程也要陷入到内核去看有没有竞争者，退出的时候还要陷入内核去看有没有进程等待在同一变量上。这些不必要的系统调用（陷入内核）造成了大量的性能开销。&lt;br&gt;而Futex就是在这样的背景下被提出的，以减少不必要的系统调用（内核陷入）。Funtex是一种用户态和内核态混合的同步机制。首先，同步的进程间通过mmap共享一段内存，Futex变量就位于这段共享的内存中且操作是原子的，当进程尝试进入互斥区或者退出互斥区的时候，先去查看共享内存中的futex变量，如果没有竞争发生，则只修改futex，而不用再执行系统调用了。当通过访问futex变量告诉进程有竞争发生，再去执行系统调用以完成相应的处理。futex通过这样的机制，大大提高了low-contention时的效率。     &lt;/p&gt;
+&lt;h5 id=&quot;Futex机制&quot;&gt;&lt;a href=&quot;#Futex机制&quot; class=&quot;headerlink&quot; title=&quot;Futex机制&quot;&gt;&lt;/a&gt;Futex机制&lt;/h5&gt;&lt;p&gt;所有的Futex同步操作都从用户空间开始，首先创建一个futex同步变量，也就是位于共享内存的一个整型计数器。&lt;br&gt;当进程尝试持有锁或者要进入互斥区的时候，对futex执行”down”操作，即原子性的给futex同步变量减1。如果同步变量变为0，则没有竞争发生，进程照常执行。如果同步变量是个负数，则意味着有竞争发生，需要调用futex系统调用的futex_wait操作休眠当前进程。&lt;br&gt;当进程释放锁或者要离开互斥区的时候，对futex进行”up”操作，即原子性的给futex同步变量加1。如果同步变量由0变成1，则没有竞争发生，进程照常执行。如果加之前同步变量是负数，则意味着有竞争发生，需要调用futex系统调用的futex_wake操作唤醒一个或者多个等待进程。&lt;br&gt;这里的原子性加减通常是用CAS(Compare and Swap)完成的，与平台相关。CAS的基本形式是：CAS(addr,old,new),当addr中存放的值等于old时，用new对其替换。在x86平台上有专门的一条指令来完成它: cmpxchg。    &lt;/p&gt;
+&lt;h5 id=&quot;Linux下使用glibc开发&quot;&gt;&lt;a href=&quot;#Linux下使用glibc开发&quot; class=&quot;headerlink&quot; title=&quot;Linux下使用glibc开发&quot;&gt;&lt;/a&gt;Linux下使用glibc开发&lt;/h5&gt;&lt;p&gt;上面讲了很多关于Futex的机制，重点是弄清楚其中的原理和思想，我们在实际的多线程程序开发中却没有必要去实现自己的futex同步原语。&lt;br&gt;因为NPTL库实现了POSIX标准定义的线程同步机制，他们都构造与futex之上，而glibc又使用NPTL作为自己的线程库。所以，在日常程序开发中，只需要正确地使用glibc所提供的同步方式，并在使用它们的过程中，意识到它们是利用futex机制和linux配合完成同步操作，重点是思想。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;BlockingQueue（阻塞队列）在程序中被大量使用，特别是在多线程程序中，譬如需要提高吞吐量时采用将请求直接扔到阻塞队列中，然后返回，由其他线程从阻塞队列中获取请求再进一步处理。而经典的生产者-消费者模型，正是阻塞队列大放光彩之处。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="muduo" scheme="http://blog.dujiong.net/tags/muduo/"/>
+    
+      <category term="多线程" scheme="http://blog.dujiong.net/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/"/>
+    
+  </entry>
+  
+  <entry>
     <title>单例模式</title>
     <link href="http://blog.dujiong.net/2016/08/21/Singleton/"/>
     <id>http://blog.dujiong.net/2016/08/21/Singleton/</id>
     <published>2016-08-21T13:57:13.000Z</published>
-    <updated>2016-08-25T13:58:29.020Z</updated>
+    <updated>2016-08-25T14:03:50.483Z</updated>
     
     <content type="html">&lt;p&gt;单例（Singleton）模式可能是被使用最广泛的一个设计模式之一，也可能是面试中被问到或被要求书写最多的一个设计模式了。该设计模式的主要目的是要求在整个系统中只出现一个类的实例。&lt;br&gt;下面采用Java语言描述单例模式的几种实现方式。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt; &lt;/p&gt;
 &lt;h3 id=&quot;懒汉-amp-amp-线程不安全&quot;&gt;&lt;a href=&quot;#懒汉-amp-amp-线程不安全&quot; class=&quot;headerlink&quot; title=&quot;懒汉&amp;amp;&amp;amp;线程不安全&quot;&gt;&lt;/a&gt;懒汉&amp;amp;&amp;amp;线程不安全&lt;/h3&gt;&lt;p&gt;懒汉式单例在调用取得实例方法的时候实例化对象。&lt;/p&gt;
@@ -79,7 +146,7 @@
         return singleton;
     }
 }
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;第一个if判定是说，如果实例创建了，就不需要同步了，直接return singleton就可以了。不然的话，就开始同步线程。第二个if判定是说，如果被同步的线程中，已经创建了对象，那么就不用创建了。保证了多线程条件下的安全。&lt;br&gt;此外，由于&lt;code&gt;singleton = new Singleton();&lt;/code&gt;不是原子操作，所以使用volatile关键字禁止指令重排序优化。&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;第一个if判定是说，如果实例创建了，就不需要同步了，直接return singleton就可以了。不然的话，就开始同步线程。第二个if判定是说，如果被同步的线程中，已经创建了对象，那么就不用创建了。这样，保证了多线程条件下的安全。&lt;br&gt;此外，由于&lt;code&gt;singleton = new Singleton();&lt;/code&gt;不是原子操作，所以使用volatile关键字禁止指令重排序优化。&lt;/p&gt;
 &lt;h3 id=&quot;枚举&quot;&gt;&lt;a href=&quot;#枚举&quot; class=&quot;headerlink&quot; title=&quot;枚举&quot;&gt;&lt;/a&gt;枚举&lt;/h3&gt;</content>
     
     <summary type="html">
@@ -1307,36 +1374,6 @@ stop()
     <summary type="html">
     
       &lt;h3 id=&quot;OpenWrt启动脚本&quot;&gt;&lt;a href=&quot;#OpenWrt启动脚本&quot; class=&quot;headerlink&quot; title=&quot;OpenWrt启动脚本&quot;&gt;&lt;/a&gt;OpenWrt启动脚本&lt;/h3&gt;&lt;p&gt;需要在OpenWrt中-将自己的程序设置为开机自启动。虽然OpenWrt是基于Linux的嵌入式发行版，但是和其设置方法还是略有差异，在此做一份记录。参考：&lt;a href=&quot;http://wiki.openwrt.org/doc/techref/initscripts&quot;&gt;http://wiki.openwrt.org/doc/techref/initscripts&lt;/a&gt;&lt;br&gt;OpenWrt的启动脚本在/etc/init.d/目录下，而系统开机时自动运行/etc/rc.d/目录下的脚本，所以在rc.d目录下，有init.d脚本的连接文件。&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="openwrt/wifi" scheme="http://blog.dujiong.net/tags/openwrt-wifi/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>配置OpenWrt路由器为Dumb AP</title>
-    <link href="http://blog.dujiong.net/2016/03/15/dumbap/"/>
-    <id>http://blog.dujiong.net/2016/03/15/dumbap/</id>
-    <published>2016-03-15T13:21:29.466Z</published>
-    <updated>2016-07-21T08:44:05.172Z</updated>
-    
-    <content type="html">&lt;h2 id=&quot;Dumb-AP&quot;&gt;&lt;a href=&quot;#Dumb-AP&quot; class=&quot;headerlink&quot; title=&quot;Dumb AP&quot;&gt;&lt;/a&gt;Dumb AP&lt;/h2&gt;&lt;p&gt;Dumb AP，简单说，就是将路由器作为一个纯接入点，没有路由转发，没有DHCP。这时的路由器相当于一台二层交换机，没有三层功能。所以，实验环境中，将Dumb AP连接在上级路由器下，子网段为192.168.1.1/24。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;h2 id=&quot;配置Dumb-AP&quot;&gt;&lt;a href=&quot;#配置Dumb-AP&quot; class=&quot;headerlink&quot; title=&quot;配置Dumb AP&quot;&gt;&lt;/a&gt;配置Dumb AP&lt;/h2&gt;&lt;h3 id=&quot;修改网络配置文件-etc-config-network&quot;&gt;&lt;a href=&quot;#修改网络配置文件-etc-config-network&quot; class=&quot;headerlink&quot; title=&quot;修改网络配置文件(/etc/config/network)&quot;&gt;&lt;/a&gt;修改网络配置文件(/etc/config/network)&lt;/h3&gt;&lt;p&gt;修改OpenWrt的网络配置文件，将wan口和lan口桥接起来:&lt;br&gt;&lt;code&gt;config interface lan&lt;/code&gt;&lt;br&gt;    &lt;code&gt;option type &amp;#39;bridge&amp;#39;&lt;/code&gt;&lt;br&gt;    &lt;code&gt;option ifname &amp;#39;eth0.1 eth0.2&amp;#39;&lt;/code&gt;  ##将二者桥接&lt;br&gt;    &lt;code&gt;option proto static&lt;/code&gt;&lt;br&gt;    &lt;code&gt;option ipaddr &amp;#39;192.168.1.196&amp;#39;&lt;/code&gt;  ##采用静态ip&lt;br&gt;    &lt;code&gt;option netmask 255.255.255.0&lt;/code&gt;&lt;br&gt;然后注释掉路由器关于wan口的设置，包括ipv4和ipv6。&lt;br&gt;需要说明的是，上述的配置文件中桥接的而是eth0.1和eth0.2，但事实上路由器的接口不尽相同，比如有的wan口事实上是eth1。所以，需要因地制宜。&lt;/p&gt;
-&lt;h3 id=&quot;关掉DHCP&quot;&gt;&lt;a href=&quot;#关掉DHCP&quot; class=&quot;headerlink&quot; title=&quot;关掉DHCP&quot;&gt;&lt;/a&gt;关掉DHCP&lt;/h3&gt;&lt;p&gt;因为这里将路由器作为Dumb AP使用，作为一个纯无线接入点和交换机使用，不再需要其DHCP功能，所以关掉DHCP。&lt;br&gt;可以通过uci或者是修改配置文件(/etc/config/dhcp)设置DHCP。这里采用的是后者，即注释掉文件中lan口dhcp配置相关的设置。&lt;br&gt;&lt;code&gt;#config dhcp &amp;#39;lan&amp;#39;&lt;/code&gt;&lt;br&gt;    &lt;code&gt;#option interface &amp;#39;lan&amp;#39;&lt;/code&gt;&lt;br&gt;    &lt;code&gt;#option dhcpv6 &amp;#39;server&amp;#39;&lt;/code&gt;&lt;br&gt;    &lt;code&gt;#option ra &amp;#39;server&amp;#39;&lt;/code&gt;&lt;br&gt;    &lt;code&gt;#option ignore &amp;#39;1&amp;#39;&lt;/code&gt;&lt;br&gt;    &lt;code&gt;#option ra_management &amp;#39;1&amp;#39;&lt;/code&gt; &lt;/p&gt;
-&lt;h3 id=&quot;关掉防火墙&quot;&gt;&lt;a href=&quot;#关掉防火墙&quot; class=&quot;headerlink&quot; title=&quot;关掉防火墙&quot;&gt;&lt;/a&gt;关掉防火墙&lt;/h3&gt;&lt;p&gt;某些情况下，需要关闭防火墙，同样的，修改配置文件/etc/config/firewall，将相应的REJECT改成ACCEPT即可，具体不再详述。&lt;br&gt;最后，载入新的配置即可。&lt;/p&gt;
-&lt;h2 id=&quot;附：完整的-etc-config-network文件&quot;&gt;&lt;a href=&quot;#附：完整的-etc-config-network文件&quot; class=&quot;headerlink&quot; title=&quot;附：完整的/etc/config/network文件&quot;&gt;&lt;/a&gt;附：完整的/etc/config/network文件&lt;/h2&gt;&lt;p&gt;&lt;code&gt;config interface &amp;#39;loopback&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option ifname &amp;#39;lo&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option proto &amp;#39;static&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option ipaddr &amp;#39;127.0.0.1&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option netmask &amp;#39;255.0.0.0&amp;#39;&lt;/code&gt;&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;config globals &amp;#39;globals&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option ula_prefix &amp;#39;fd9f:91f8:3d14::/48&amp;#39;&lt;/code&gt;&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;config interface &amp;#39;lan&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option ifname &amp;#39;eth0.1 eth0.2&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option force_link &amp;#39;1&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option macaddr &amp;#39;b0:68:b6:ff:d6:b8&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option type &amp;#39;bridge&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option proto &amp;#39;static&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option ipaddr &amp;#39;192.168.1.196&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option netmask &amp;#39;255.255.255.0&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option ip6assign &amp;#39;60&amp;#39;&lt;/code&gt;&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;#config interface &amp;#39;wan&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;#option ifname &amp;#39;eth0.2&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;#option force_link &amp;#39;1&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;#option macaddr &amp;#39;b0:68:b6:ff:d6:b9&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;#option proto &amp;#39;dhcp&amp;#39;&lt;/code&gt;&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;#config interface &amp;#39;wan6&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;#option ifname &amp;#39;eth0.2&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;#option proto &amp;#39;dhcpv6&amp;#39;&lt;/code&gt;&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;以下均保持原状&lt;/code&gt;&lt;br&gt;&lt;code&gt;config switch&lt;/code&gt;&lt;br&gt;&lt;code&gt;option name &amp;#39;switch0&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option reset &amp;#39;1&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option enable_vlan &amp;#39;1&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;config switch_vlan&lt;/code&gt;&lt;br&gt;&lt;code&gt;option device &amp;#39;switch0&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option vlan &amp;#39;1&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option ports &amp;#39;0 1 2 3 6t&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;config switch_vlan&lt;/code&gt;&lt;br&gt;&lt;code&gt;option device &amp;#39;switch0&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option vlan &amp;#39;2&amp;#39;&lt;/code&gt;&lt;br&gt;&lt;code&gt;option ports &amp;#39;4 6t&lt;/code&gt;&lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;h2 id=&quot;Dumb-AP&quot;&gt;&lt;a href=&quot;#Dumb-AP&quot; class=&quot;headerlink&quot; title=&quot;Dumb AP&quot;&gt;&lt;/a&gt;Dumb AP&lt;/h2&gt;&lt;p&gt;Dumb AP，简单说，就是将路由器作为一个纯接入点，没有路由转发，没有DHCP。这时的路由器相当于一台二层交换机，没有三层功能。所以，实验环境中，将Dumb AP连接在上级路由器下，子网段为192.168.1.1/24。&lt;br&gt;
     
     </summary>
     

@@ -65,7 +65,7 @@
 <meta property="og:url" content="http://blog.dujiong.net/2016/08/21/Singleton/index.html">
 <meta property="og:site_name" content="一期一会">
 <meta property="og:description" content="单例（Singleton）模式可能是被使用最广泛的一个设计模式之一，也可能是面试中被问到或被要求书写最多的一个设计模式了。该设计模式的主要目的是要求在整个系统中只出现一个类的实例。下面采用Java语言描述单例模式的几种实现方式。">
-<meta property="og:updated_time" content="2016-08-25T13:58:29.020Z">
+<meta property="og:updated_time" content="2016-08-25T14:03:50.483Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="单例模式">
 <meta name="twitter:description" content="单例（Singleton）模式可能是被使用最广泛的一个设计模式之一，也可能是面试中被问到或被要求书写最多的一个设计模式了。该设计模式的主要目的是要求在整个系统中只出现一个类的实例。下面采用Java语言描述单例模式的几种实现方式。">
@@ -349,7 +349,7 @@
         return singleton;
     }
 }
-</code></pre><p>第一个if判定是说，如果实例创建了，就不需要同步了，直接return singleton就可以了。不然的话，就开始同步线程。第二个if判定是说，如果被同步的线程中，已经创建了对象，那么就不用创建了。保证了多线程条件下的安全。<br>此外，由于<code>singleton = new Singleton();</code>不是原子操作，所以使用volatile关键字禁止指令重排序优化。</p>
+</code></pre><p>第一个if判定是说，如果实例创建了，就不需要同步了，直接return singleton就可以了。不然的话，就开始同步线程。第二个if判定是说，如果被同步的线程中，已经创建了对象，那么就不用创建了。这样，保证了多线程条件下的安全。<br>此外，由于<code>singleton = new Singleton();</code>不是原子操作，所以使用volatile关键字禁止指令重排序优化。</p>
 <h3 id="枚举"><a href="#枚举" class="headerlink" title="枚举"></a>枚举</h3>
       
     </div>
@@ -380,6 +380,10 @@
           </div>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/08/26/muduo-7/" rel="prev" title="从BlockingQueue再探线程同步">
+                从BlockingQueue再探线程同步 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -451,7 +455,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">21</span>
+              <span class="site-state-item-count">22</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
@@ -461,7 +465,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">6</span>
+                <span class="site-state-item-count">7</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>

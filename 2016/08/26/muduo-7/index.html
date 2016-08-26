@@ -41,7 +41,7 @@
 <link href="/css/main.css?v=0.5.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="network/linux," />
+  <meta name="keywords" content="muduo,多线程," />
 
 
 
@@ -59,20 +59,16 @@
 
 
 
-<meta name="description" content="首先，纪念一下，如果不出意外的话（没过or狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。">
+<meta name="description" content="BlockingQueue（阻塞队列）在程序中被大量使用，特别是在多线程程序中，譬如需要提高吞吐量时采用将请求直接扔到阻塞队列中，然后返回，由其他线程从阻塞队列中获取请求再进一步处理。而经典的生产者-消费者模型，正是阻塞队列大放光彩之处。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="TCP协议总结（二）">
-<meta property="og:url" content="http://blog.dujiong.net/2016/06/25/tcp-2/index.html">
+<meta property="og:title" content="从BlockingQueue再探线程同步">
+<meta property="og:url" content="http://blog.dujiong.net/2016/08/26/muduo-7/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="首先，纪念一下，如果不出意外的话（没过or狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。">
-<meta property="og:image" content="http://i.imgur.com/56fKXLt.png">
-<meta property="og:image" content="http://i.imgur.com/2oZwECU.jpg">
-<meta property="og:image" content="http://i.imgur.com/8afv8ge.jpg">
-<meta property="og:updated_time" content="2016-08-07T13:00:43.518Z">
+<meta property="og:description" content="BlockingQueue（阻塞队列）在程序中被大量使用，特别是在多线程程序中，譬如需要提高吞吐量时采用将请求直接扔到阻塞队列中，然后返回，由其他线程从阻塞队列中获取请求再进一步处理。而经典的生产者-消费者模型，正是阻塞队列大放光彩之处。">
+<meta property="og:updated_time" content="2016-08-26T07:49:10.062Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="TCP协议总结（二）">
-<meta name="twitter:description" content="首先，纪念一下，如果不出意外的话（没过or狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。">
-<meta name="twitter:image" content="http://i.imgur.com/56fKXLt.png">
+<meta name="twitter:title" content="从BlockingQueue再探线程同步">
+<meta name="twitter:description" content="BlockingQueue（阻塞队列）在程序中被大量使用，特别是在多线程程序中，譬如需要提高吞吐量时采用将请求直接扔到阻塞队列中，然后返回，由其他线程从阻塞队列中获取请求再进一步处理。而经典的生产者-消费者模型，正是阻塞队列大放光彩之处。">
 
 
 
@@ -90,7 +86,7 @@
   };
 </script>
 
-  <title> TCP协议总结（二） | 一期一会 </title>
+  <title> 从BlockingQueue再探线程同步 | 一期一会 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -250,7 +246,7 @@
             
             
               
-                TCP协议总结（二）
+                从BlockingQueue再探线程同步
               
             
           </h1>
@@ -262,8 +258,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-06-25T20:06:14+08:00" content="2016-06-25">
-              2016-06-25
+            <time itemprop="dateCreated" datetime="2016-08-26T13:18:11+08:00" content="2016-08-26">
+              2016-08-26
             </time>
           </span>
 
@@ -273,8 +269,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/06/25/tcp-2/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/06/25/tcp-2/" itemprop="commentsCount"></span>
+                <a href="/2016/08/26/muduo-7/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/08/26/muduo-7/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -296,24 +292,51 @@
       
 
       
-        <p>首先，纪念一下，如果不出意外的话（没过or狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…<br>好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。</p>
-<a id="more"></a>
-<h3 id="TCP重传机制"><a href="#TCP重传机制" class="headerlink" title="TCP重传机制"></a>TCP重传机制</h3><p>TCP是可靠的、面向连接的协议，要保证所有的数据包都可以到达，所以，重传机制是必须的。<br>由于接收端给发送端的ACK只会确认最后一个连续的包，比如，发送端发了1、2、3、4、5一共5份数据，接收端收到了1、2，于是回ACK 3，然后收到了4，此时3没收到，怎么办？</p>
-<h4 id="超时重传机制"><a href="#超时重传机制" class="headerlink" title="超时重传机制"></a>超时重传机制</h4><p>一种方法是不回ACK，一直等3，当发送方发现收不到3的ACK，超时后会重传3.一旦接收方收到3后吗，会A回CK 4，表示3和4都收到了。<br>但是，问题来了，因为一直等3，可能会导致4和5即便已经收到了，发送方因为没有收到ACK，悲观地认为4和5也丢了，所以可能导致4和5的重传。对此有两种选择：一种是仅重传timeout的包。也就是第3份数据，另一种是重传timeout后所有的数据，也就是第3，4，5这三份数据。这两种方式有好也有不好。第一种会节省带宽，但是慢，第二种会快一点，但是会浪费带宽，很可能会有无用功。但总体来说都不好。因为都在等timeout，timeout可能会很长（下面会说TCP怎么动态计算timeout）。</p>
-<h4 id="快速重传机制"><a href="#快速重传机制" class="headerlink" title="快速重传机制"></a>快速重传机制</h4><p>快速重传机制不以时间驱动，而以数据驱动重传。也就是说，如果包没有连续到达，就回复ACK最后那个可能被丢了的包，如果发送方连续收到3次相同的ACK，就重传。这样，好处是不用等timeout了再重传。<br>比如：如果发送方发出了1、2、3、4、5共5份数据，第一份先到了，于是接收方回复ACK 2，结果2因为某些原因没到、3到了，于是还是ACK 2，后面的4和5都到了，但是还是ACK 2，因为2还没有到，于是发送端收到了三个ACK 2的确认，就马上重传2。然后，接收端收到了2，此时3、4、5都已经收到了，于是ACK 6。其图示如下。<br><img src="http://i.imgur.com/56fKXLt.png" alt=""></p>
-<p>但是，这样还是没有解决重传之前的一个还是重传所有的问题。就上面例子来说，发送端并不清楚这三个ACK 2是接收端收到哪些数据后传回来的。</p>
-<h4 id="SACK方法"><a href="#SACK方法" class="headerlink" title="SACK方法"></a>SACK方法</h4><p>另外一种更好的方式是：Selective ACK，需要在TCP头里加一个SACK的东西，ACK还是上面快速重传机制中的ACK。</p>
-<p><img src="http://i.imgur.com/2oZwECU.jpg" alt=""></p>
-<p>这样，在发送端就可以根据回传的SACK来知道哪些数据到了，哪些数据没有到。在Linux下，可以通过tcp_sack这个参数打开这个功能。      </p>
-<h4 id="Timeout与RTT"><a href="#Timeout与RTT" class="headerlink" title="Timeout与RTT"></a>Timeout与RTT</h4><p>从上述的TCP重传机制中可以看出，Timeout对于TCP重传的性能非常重要。如果设置长了，重发就慢，丢了很久才重发，效率低、性能差。而如果设置短了，导致并没有丢包就重发，这样重发加快，会增加网络拥塞，导致更多的超时，更多的超时又引起更多的重法，这样恶性循环。<br>所以，根据不同时间、网络情况，Timeout这个值需要设置，所以，TCP引入了RTT（往返时间，也就是一个数据包从发出去到回来的时间），这样就可以方便、有效的设置Timeout。<br>具体的RTT测量算法这里就不详述，细节可以参考《TCP/IP详解 卷一：协议》。</p>
-<h3 id="TCP滑动窗口"><a href="#TCP滑动窗口" class="headerlink" title="TCP滑动窗口"></a>TCP滑动窗口</h3><p>在上一篇中提到了TCP头部里有一个字段Window，即滑动窗口，这个字段是接收端告诉发送端自己还有多少缓冲区可以接收数据。从而发送端可以根据这个接收端的处理能力来发送数据，而不会导致接收端处理不过来。为了说明滑动窗口，首先来看一下TCP缓冲区的结构：</p>
-<p>  <img src="http://i.imgur.com/8afv8ge.jpg" alt="">            </p>
-<p>从上图可以得到，接收端LastByteRead指向了TCP缓冲区中读到的位置，NextByteExpected指向的地方是收到的连续数据包的最后一个位置，LastByteRcved指向的是收到的包的最后一个位置，可以看到，中间有些数据还没有到达，所有有数据空白区。<br>而发送端的LastByteAcked指向了被接收端ACK了的位置（表示成功发送确认），LastByteSent表示发出去了，但还没有成功确认的地方，LastByteWritten指向的是上层应用正在写的地方。<br>所以，接收端会在给发送端返回的ACK中汇报自己的滑动窗口大小=MaxRcvBuffer-LastByteRcvd-1；而发送端会根据这个窗口大小来控制发送数据的大小，以保证接收方可以处理。要解决这个问题，就是要避免对小的window size做出响应，直到有足够大的window size再响应。     </p>
-<h4 id="Silly-Window-Syndrome和Nagle算法"><a href="#Silly-Window-Syndrome和Nagle算法" class="headerlink" title="Silly Window Syndrome和Nagle算法"></a>Silly Window Syndrome和Nagle算法</h4><p>网络上有个参数叫MTU，对于以太网来说，MTU是1500字节，除去TCP+IP头的40个字节，真正的数据传输可以有1460，这就是MSS（Max Segment Size），TCP的RFC中定义这个MSS的默认值是536。<br>那么，如果网络包可以塞满MTU，那么就可以用满整个带宽，如果不能，那么就会浪费带宽。这时，可以将其想象成一架飞机，如果飞机里满载的话，带宽最高，如果一个飞机只运一个人的话，无疑成本增加了。所以，Silly Window Syndrome这个现象就像是本来可以坐200人的飞机里只坐了一两人。<br>要解决这个问题，就要避免对小的窗口大小做出响应，直到有足够大的窗口大小再响应，这就是著名的Nagle算法。<br>Nagle算法要求一个TCP连接上最多只能有一个未被确认的未完成的小分组，在该分组的确认到达之前不能发送其他的小分组。TCP将手机这些少量的分组，并在确认到来时以一个分组的方式发出去。<br>该算法主要用于避免过多小分组在网络中传输，降低网络容量利用率。比如：一个20字节的TCP首部+20字节的IP首部+1个字节的数据组成的TCP数据报，有效传输利用率只有近1/40，这些小分组在广域网上会增加拥塞出现的可能。<br>但是，有时我们又需要关闭Nagle算法，比如说一些需要快速响应、对时延敏感的应用，如窗口程序，可以通过套接字选项TCP_NODELAY来关闭该算法。</p>
-<h3 id="TCP的拥塞处理"><a href="#TCP的拥塞处理" class="headerlink" title="TCP的拥塞处理"></a>TCP的拥塞处理</h3><p>如前面所描述的，TCP通过滑动窗口来做流控，但是这样还不够，因为滑动窗口只是依赖于连接的发送端和接收端，并不知道网络中间发生了什么。想象一下，网络上的延时突然增加，如果TCP对此作出的应对只有重传数据，但是，大量的重传会导致网络的负担更重，于是会导致更大的延迟以及更多的丢包，这样就产生了恶性循环，最终会拖垮整个网络。<br>所以，TCP不能一个劲地只是重发数据，所以，TCP的理念是，当拥塞发生的时候，要做自我牺牲，就像交通阻塞一样，每个车都应该把路让出来，而不要再去抢路了。<br>拥塞控制主要是四个算法：慢启动、拥塞避免、拥塞发生和快速恢复。       </p>
-<h4 id="慢启动、拥塞避免和拥塞发生"><a href="#慢启动、拥塞避免和拥塞发生" class="headerlink" title="慢启动、拥塞避免和拥塞发生"></a>慢启动、拥塞避免和拥塞发生</h4><p>慢启动的意思是，刚加入网络的连接，一点一点地提速。慢启动为发送方的TCP增加了另一个窗口：拥塞窗口（cwnd）。当与接收方建立TCP连接时，拥塞窗口被初始化为一个报文段，每收到一个ACK，拥塞窗口就增加一个报文段(cwnd以字节为单位，但是慢启动以报文段大小为单位进行增加)，但是有一个上限sshthresh，当cwnd&gt;=ssthresh时，就会进入“拥塞避免算法”。慢启动算法初始设置cwnd为1个报文段，此后每收到一个确认就加1，这样会使窗口按指数方式增长，而拥塞避免算法要求每次收到一个确认时将cwnd增加1/cwnd。与慢启动的指数增加相比起来，这是一种加性增长。<br>所以，拥塞窗口是发送方使用的流量控制，而通告窗口则是接收方使用的流量控制。拥塞避免算法和慢启动算法需要对每个链接维持两个变量：一个拥塞窗口cwnd和一个慢启动门限ssthresh。这样，算法可以描述如下：<br>1）对于一个连接，初始化cwnd为1个报文段，ssthresh为65535个字节。<br>2）TCP输出例程的输出不能超过cwnd和接收方通告窗口的大小。前者是发送方感受到的网络拥塞的估计，而后者则与接收方在该连接上的可用缓存大小有关。<br>3）当拥塞发生时（超时或收到重复确认），ssthresh被设置为当前窗口（cwnd和接收方通告窗口大小的最小值，但最小为2个报文段）大小的一半。此外，如果是超时引起了拥塞，则cwnd被设置为1个报文段（相当于慢启动）。<br>4）当新的数据被对方确认时，就增加cwnd，但增加的方法依赖于是否正在进行慢启动或拥塞避免。如果cwnd小于或等于ssthresh，则正在进行慢启动，否则正在进行拥塞避免。       </p>
-<h4 id="快速恢复算法"><a href="#快速恢复算法" class="headerlink" title="快速恢复算法"></a>快速恢复算法</h4><p>通常和快速重传算法一起使用，算法流程如下：<br>1）当收到第三个重复的ACK时（前面已述），将ssthresh设置为当前拥塞窗口cwnd的一半。重传丢失的报文段。设置cwnd为ssthresh加上3倍的报文段大小。<br>2）每次收到另一个重复的ACK时，cwnd增加1个报文段大小并发送1个分组。<br>3）当下一个确认新数据的ACK到达时，设置cwnd为ssthresh。这个ACK应该是在进行重传后的一个往返时间内对步骤1中重传的确认。另外，这个ACK也应该对丢失的分组和收到的第1个重复的ACK之间的所有中间报文段的确认。这一步采用的是拥塞避免，因为当分组丢失时将当前速率减半。</p>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>通过这两篇总结，对TCP协议的核心知识点进行了复习和再认识，后面还需要结合具体的实例进一步加深理解，能对网络中的实际问题进行更好的分析和处理。</p>
+        <p>BlockingQueue（阻塞队列）在程序中被大量使用，特别是在多线程程序中，譬如需要提高吞吐量时采用将请求直接扔到阻塞队列中，然后返回，由其他线程从阻塞队列中获取请求再进一步处理。而经典的生产者-消费者模型，正是阻塞队列大放光彩之处。<br><a id="more"></a><br>Java中java.util.concurrent包便提供了BlockingQueue接口和其几种实现方式。muduo中也实现了无大小限制的BlockingQueue和固定大小的BoundedBlockingQueue。下面以BlockingQueue为例进行说明。     </p>
+<h3 id="BlockingQueue的实现"><a href="#BlockingQueue的实现" class="headerlink" title="BlockingQueue的实现"></a>BlockingQueue的实现</h3><p>muduo中BlockingQueue的实现非常简单，队列采用C++标准库中的deque，无大小限制，唯一需要注意的是使用互斥锁和条件变量做好线程同步。<br>BlockingQueue实现时运用了模板。</p>
+<pre><code>template&lt;typename T&gt;
+class BlockingQueue : boost::noncopyable
+{
+    public:
+        BlockingQueue() : mutex_(), notEmpty_(mutex_), queue_() {}
+
+        void put(const T&amp; x)
+        {
+            MutexLockGuard lock(mutex_);
+            queue_.push_back(x);
+            notEmpty_.notift();
+        }    
+
+        T take()
+        {
+            MutexLockGuard lock(mutex_);
+            while(queue_.empty())    
+            {
+                notEmpty_.wait();
+            }
+            assert(!queue_.empty());
+            T front(queue_.front());
+            queue_.pop_front();
+            return front;
+        }
+
+        size_t size() const
+        {
+            MutexLockGuard lock(mutex_);
+            return queue_.size();
+        }
+    private:
+        mutable MutexLock mutex_;
+        Condition notEmpty_;
+        std::deque&lt;T&gt; queue_;
+};
+</code></pre><p>BlockingQueue提供了取元素(take)、放入元素(put)和取得队列大小(size)三个public成员函数完成对阻塞队列的操作。</p>
+<h3 id="线程同步的一些细究"><a href="#线程同步的一些细究" class="headerlink" title="线程同步的一些细究"></a>线程同步的一些细究</h3><p>细究BlockingQueue的实现，可以总结并学习一些问题。</p>
+<h4 id="spurious-wakeup"><a href="#spurious-wakeup" class="headerlink" title="spurious wakeup"></a>spurious wakeup</h4><p>首先是大名鼎鼎的spurious wakeup（虚假唤醒）。即对应代码中<code>while(queue_.empty())</code>循环，可否改为<code>if(queue_.empty())</code>？<br>答案是不能，否则会导致虚假唤醒，因为<code>notEmpty_.wait()</code>封装的<code>pthread_cond_wait()</code>不仅能被<code>pthread_cond_signal()/pthread_cond_broadcast()</code>唤醒，而且还可能会被其他的信号唤醒，后者便是虚假唤醒，这时条件并不满足。所以，不仅要在<code>pthread_cond_wait()</code>前检查条件是否成立，在<code>pthread_cond_wait()</code>之后也要检查。 </p>
+<h4 id="unlock和signal的顺序"><a href="#unlock和signal的顺序" class="headerlink" title="unlock和signal的顺序"></a>unlock和signal的顺序</h4><p>muduo中采用RAII手法封装了互斥器，所以，在进行put操作时，是先notify其他线程，再释放锁。那么反过来呢，先释放锁，再notify其他线程？这二者有什么差别呢？<br>先notify，再释放锁，在某些平台下存在性能问题，原因是，假设线程1阻塞在条件变量上wait，线程2将其唤醒（notify），系统执行上下文切换，但是线程2仍持有锁，导致线程1不能从<code>pthread_cond_wait()</code>(需要持有锁)返回，所以线程1又阻塞在互斥锁上，直到线程2释放锁，线程1才可以运行。<br>福音是，对于此问题，Glibc中使用的线程库NPTL对此进行了优化。<br>另一种情况是先释放锁，再notify，这样可以避免上述问题，但是，这样可能会唤醒其他阻塞在此mutex上的线程，而不是处于wait条件变量的线程，所以，这种情况下，在唤醒之后，最好还得再check下predicate（类似于spurious wakeup）。<br>所以，Pthreads实现平台下，建议使用第一种方法，可以避免一些<a href="http://www.domaigne.com/blog/computing/condvars-signal-with-mutex-locked-or-not/" target="_blank" rel="external">obscure bugs</a>,除非采用第二种有较明显的性能的提升。</p>
+<h4 id="Linux快速同步机制（Futex）"><a href="#Linux快速同步机制（Futex）" class="headerlink" title="Linux快速同步机制（Futex）"></a>Linux快速同步机制（Futex）</h4><p>Futex（Fast Userspace mutexes，快速用户空间互斥体），是在Linux上实现锁定和构建高级抽象锁如信号量和POSIX互斥的基本工具，首先出现在Linux 2.5.7版。<br>在传统的Unix系统中，System V IPC，如消息队列，信号量，socket等进程间同步机制都是对一个内核对象操作来完成的，这个内核对象对于要同步的进程都是可见的，其提供了共享的状态信息和原子操作。当进程间要同步的时候必须要通过系统调用在内核中完成。可是研究发现，很多同步状态是无竞争的，即某个进程进入互斥去，到从互斥区出来这段时间，常常是没有进程进也要进入这个互斥区或者请求同一个同步变量的。而这种情况下，进程也要陷入到内核去看有没有竞争者，退出的时候还要陷入内核去看有没有进程等待在同一变量上。这些不必要的系统调用（陷入内核）造成了大量的性能开销。<br>而Futex就是在这样的背景下被提出的，以减少不必要的系统调用（内核陷入）。Funtex是一种用户态和内核态混合的同步机制。首先，同步的进程间通过mmap共享一段内存，Futex变量就位于这段共享的内存中且操作是原子的，当进程尝试进入互斥区或者退出互斥区的时候，先去查看共享内存中的futex变量，如果没有竞争发生，则只修改futex，而不用再执行系统调用了。当通过访问futex变量告诉进程有竞争发生，再去执行系统调用以完成相应的处理。futex通过这样的机制，大大提高了low-contention时的效率。     </p>
+<h5 id="Futex机制"><a href="#Futex机制" class="headerlink" title="Futex机制"></a>Futex机制</h5><p>所有的Futex同步操作都从用户空间开始，首先创建一个futex同步变量，也就是位于共享内存的一个整型计数器。<br>当进程尝试持有锁或者要进入互斥区的时候，对futex执行”down”操作，即原子性的给futex同步变量减1。如果同步变量变为0，则没有竞争发生，进程照常执行。如果同步变量是个负数，则意味着有竞争发生，需要调用futex系统调用的futex_wait操作休眠当前进程。<br>当进程释放锁或者要离开互斥区的时候，对futex进行”up”操作，即原子性的给futex同步变量加1。如果同步变量由0变成1，则没有竞争发生，进程照常执行。如果加之前同步变量是负数，则意味着有竞争发生，需要调用futex系统调用的futex_wake操作唤醒一个或者多个等待进程。<br>这里的原子性加减通常是用CAS(Compare and Swap)完成的，与平台相关。CAS的基本形式是：CAS(addr,old,new),当addr中存放的值等于old时，用new对其替换。在x86平台上有专门的一条指令来完成它: cmpxchg。    </p>
+<h5 id="Linux下使用glibc开发"><a href="#Linux下使用glibc开发" class="headerlink" title="Linux下使用glibc开发"></a>Linux下使用glibc开发</h5><p>上面讲了很多关于Futex的机制，重点是弄清楚其中的原理和思想，我们在实际的多线程程序开发中却没有必要去实现自己的futex同步原语。<br>因为NPTL库实现了POSIX标准定义的线程同步机制，他们都构造与futex之上，而glibc又使用NPTL作为自己的线程库。所以，在日常程序开发中，只需要正确地使用glibc所提供的同步方式，并在使用它们的过程中，意识到它们是利用futex机制和linux配合完成同步操作，重点是思想。</p>
 
       
     </div>
@@ -328,7 +351,9 @@
       
         <div class="post-tags">
           
-            <a href="/tags/network-linux/" rel="tag">#network/linux</a>
+            <a href="/tags/muduo/" rel="tag">#muduo</a>
+          
+            <a href="/tags/多线程/" rel="tag">#多线程</a>
           
         </div>
       
@@ -337,17 +362,13 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/06/13/tcp-1/" rel="next" title="TCP协议总结（一）">
-                <i class="fa fa-chevron-left"></i> TCP协议总结（一）
+              <a href="/2016/08/21/Singleton/" rel="next" title="单例模式">
+                <i class="fa fa-chevron-left"></i> 单例模式
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/07/08/muduo-5/" rel="prev" title="muduo源码阅读之线程同步">
-                muduo源码阅读之线程同步 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -373,8 +394,8 @@
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/06/25/tcp-2/"
-           data-title="TCP协议总结（二）" data-url="http://blog.dujiong.net/2016/06/25/tcp-2/">
+      <div class="ds-thread" data-thread-key="2016/08/26/muduo-7/"
+           data-title="从BlockingQueue再探线程同步" data-url="http://blog.dujiong.net/2016/08/26/muduo-7/">
       </div>
     
   </div>
@@ -488,7 +509,7 @@
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP重传机制"><span class="nav-number">1.</span> <span class="nav-text">TCP重传机制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#超时重传机制"><span class="nav-number">1.1.</span> <span class="nav-text">超时重传机制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#快速重传机制"><span class="nav-number">1.2.</span> <span class="nav-text">快速重传机制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SACK方法"><span class="nav-number">1.3.</span> <span class="nav-text">SACK方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Timeout与RTT"><span class="nav-number">1.4.</span> <span class="nav-text">Timeout与RTT</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP滑动窗口"><span class="nav-number">2.</span> <span class="nav-text">TCP滑动窗口</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Silly-Window-Syndrome和Nagle算法"><span class="nav-number">2.1.</span> <span class="nav-text">Silly Window Syndrome和Nagle算法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP的拥塞处理"><span class="nav-number">3.</span> <span class="nav-text">TCP的拥塞处理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#慢启动、拥塞避免和拥塞发生"><span class="nav-number">3.1.</span> <span class="nav-text">慢启动、拥塞避免和拥塞发生</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#快速恢复算法"><span class="nav-number">3.2.</span> <span class="nav-text">快速恢复算法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#BlockingQueue的实现"><span class="nav-number">1.</span> <span class="nav-text">BlockingQueue的实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#线程同步的一些细究"><span class="nav-number">2.</span> <span class="nav-text">线程同步的一些细究</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#spurious-wakeup"><span class="nav-number">2.1.</span> <span class="nav-text">spurious wakeup</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#unlock和signal的顺序"><span class="nav-number">2.2.</span> <span class="nav-text">unlock和signal的顺序</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Linux快速同步机制（Futex）"><span class="nav-number">2.3.</span> <span class="nav-text">Linux快速同步机制（Futex）</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Futex机制"><span class="nav-number">2.3.1.</span> <span class="nav-text">Futex机制</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Linux下使用glibc开发"><span class="nav-number">2.3.2.</span> <span class="nav-text">Linux下使用glibc开发</span></a></li></ol></li></ol></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">
