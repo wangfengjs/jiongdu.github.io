@@ -4,6 +4,23 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/08/21/Singleton/</loc>
+    <lastmod>2016-08-26T08:20:44.176Z</lastmod>
+    <data>
+        <display>
+        <title>单例模式</title>
+        <pubTime>2016-08-21T13:57:13.000Z</pubTime>
+        
+        <tag>设计模式</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/08/26/muduo-7/</loc>
     <lastmod>2016-08-26T07:49:10.062Z</lastmod>
     <data>
@@ -14,23 +31,6 @@
         <tag>muduo</tag>
          
         <tag>多线程</tag>
-         
-         
-           
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
-    <loc>http://blog.dujiong.net/2016/08/21/Singleton/</loc>
-    <lastmod>2016-08-25T14:03:50.483Z</lastmod>
-    <data>
-        <display>
-        <title>单例模式</title>
-        <pubTime>2016-08-21T13:57:13.000Z</pubTime>
-        
-        <tag>设计模式</tag>
          
          
            
