@@ -494,7 +494,128 @@
       
         
           
-            <p>前面在<a href="http://blog.dujiong.net/2016/05/15/cplusplus-sematics/">浅谈C++值语义和对象语义</a>一文中简要的阐述了一下智能指针shared_ptr的作用和用法，作为C++11中最为广泛使用的智能指针，shared_ptr虽然解决了裸指针的诸多问题，但是它并非完美、无懈可击，所以，本文就shared_ptr使用过程中需要注意的一些问题做一下总结。    </p>
+            <p>前面在<a href="http://blog.dujiong.net/2016/05/15/cplusplus-sematics/">浅谈C++值语义和对象语义</a>一文中简要的阐述了一下智能指针shared_ptr的作用和用法，作为C++11中最为广泛使用的智能指针，shared_ptr虽然解决了裸指针的诸多问题，但是它并非完美、无懈可击，所以，本文就shared_ptr使用过程中需要注意的一些问题做一下总结。</p>
+<h3 id="循环引用"><a href="#循环引用" class="headerlink" title="循环引用"></a>循环引用</h3><p>首当其冲的便是shared_ptr造成的循环引用。     </p>
+<pre><code>#include &lt;iostream&gt;
+#include &lt;memory&gt;
+
+using namespace std;
+
+class BaseClass;
+class DerivedClass;
+
+typedef std::shared_ptr&lt;BaseClass&gt; BaseClassPtr;
+typedef std::shared_ptr&lt;DerivedClass&gt; DerivedClassPtr;
+
+class BaseClass
+{
+    public:
+        DerivedClassPtr derivedPtr;
+        ~BaseClass()
+        {
+            cout &lt;&lt; &quot;~BaseClass()&quot; &lt;&lt; endl;
+        }
+};
+
+class DerivedClass
+{
+    public:
+        BaseClassPtr basePtr;
+        ~DerivedClass()
+        {
+            cout &lt;&lt; &quot;~DerivedClass()&quot; &lt;&lt; endl;
+        }
+};
+
+int main()
+{
+    BaseClassPtr base(new BaseClass());
+    DerivedClassPtr derived(new DerivedClass());
+
+    base-&gt;derivedPtr = derived;
+    derived-&gt;basePtr = base;
+
+    cout &lt;&lt; base.use_count() &lt;&lt; endl;
+    cout &lt;&lt; derived.use_count() &lt;&lt; endl;
+}
+</code></pre><p>程序运行结果如下。<br><img src="http://i.imgur.com/dqHRq8F.png" alt=""><br>从结果可以看出，堆上的BaseClass和DerivedClass都没有被析构，因为二者的引用都为1，并形成了循环引用，类似于“放开我的引用”，“你先放开我的我就放你的”的恶性循环，所以，造成了内存泄露。<br>解决方法是使用弱智能指针weak_ptr，让BaseClass和DerivedClass分别持有对方的weak_ptr，而不是shared_ptr，weak_ptr也是一个引用计数型智能指针，但是它不增加对象的引用计数。这样，就可以保证内存正常释放。<br><img src="http://i.imgur.com/cG2fmZx.png" alt="">    </p>
+<h3 id="线程安全"><a href="#线程安全" class="headerlink" title="线程安全"></a>线程安全</h3><p>shared_ptr是引用计数型智能指针，几乎所有的实现都采用在堆上存放计数值的方法。具体来说，shared_ptr<foo>包含两个成员，一个是指向Foo的指针ptr，另一个是ref_count指针（不一定是原始指针），指向堆上的ref_count对象。ref_count对象有多个成员。</foo></p>
+<p><img src="http://i.imgur.com/WZNNAPg.png" alt=""></p>
+<p>所以，如果执行：</p>
+<pre><code>shared_ptr&lt;Foo&gt; x(new Foo);
+shared_ptr&lt;Foo&gt; y = x;
+</code></pre><p>y=x将会涉及两个成员的拷贝,ptr和ref_count指针。这两步不是原子的，所以在多线程中会有race condition，需要加锁保护。     </p>
+<h3 id="内存多次释放"><a href="#内存多次释放" class="headerlink" title="内存多次释放"></a>内存多次释放</h3><p>shared_ptr多次引用同一数据会导致内存多次释放。</p>
+<pre><code>#include &lt;iostream&gt;
+#include &lt;memory&gt;
+
+using namespace std;
+
+int main()
+{
+    int* ptr = new int(100);
+    std::shared_ptr sptr1(ptr);
+    ...
+    std::shared_ptr sptr2(ptr);
+
+    return 0;
+}
+</code></pre><p>只分配了一次内存，却两次释放。</p>
+<h3 id="enable-shared-from-this"><a href="#enable-shared-from-this" class="headerlink" title="enable_shared_from_this"></a>enable_shared_from_this</h3><p>当使用智能指针时，类的某些成员函数需要返回的是管理自身的shared_ptr，这时就需要使A继承自enable_shared_from_this（顾名思义，将this指针变身为shared_ptr），然后通过其成员函数shared_from_this()返回指向自身的shared_ptr。      </p>
+<p>首先看没有使用它会发生什么？</p>
+<pre><code>#include &lt;iostream&gt;
+#include &lt;memory&gt;
+
+using namespace std;
+
+class A
+{
+    public:
+        ~A()
+        {
+            cout &lt;&lt; &quot;~A()&quot; &lt;&lt; endl;
+        }
+        shared_ptr&lt;A&gt; get_sptr()
+        {
+            return shared_ptr&lt;A&gt;(this);
+        }
+};
+
+int main()
+{
+    shared_ptr&lt;A&gt; a(new A());
+    shared_ptr&lt;A&gt; b = a-&gt;get_sptr();
+
+    return 0;
+}  
+</code></pre><p>运行结果为：<br><img src="http://i.imgur.com/21rnuTE.png" alt=""><br>可以看出，只new了一个A对象，但是却调用了两次析构函数。产生这个错误的原因get_sptr()成员函数中将shared_ptr中的引用计数器的值加了1。所以，需要解决的是，怎样通过一个类的成员函数获取当前对象的shared_ptr？<br>方法就是使类继承enable_shared_from_this，然后在需要shared_ptr的地方调用其成员函数shared_from_this()即可。</p>
+<pre><code>#include &lt;iostream&gt;
+#include &lt;memory&gt;
+
+using namespace std;
+
+class A : public enable_shared_from_this&lt;A&gt;
+{
+    public:
+        ~A()
+        {
+            cout &lt;&lt; &quot;~A()&quot; &lt;&lt; endl;
+        }
+        shared_ptr&lt;A&gt; get_sptr()
+        {
+            return shared_from_this();
+        }
+};
+
+int main()
+{
+    shared_ptr&lt;A&gt; a(new A());
+    shared_ptr&lt;A&gt; b = a-&gt;get_sptr();
+
+    return 0;
+}  
+</code></pre><p>运行结果为：<br><img src="http://i.imgur.com/ZuA23y9.png" alt=""><br>需要注意的是，不能在构造函数中使用<code>shared_from_this()</code>，因为虽然对象的基类<code>enable_shared_from_this</code>的构造函数已经调用，但是<code>shared_ptr</code>的构造函数并没有调用，所以这个时候调用<code>shared_from_this()</code>是错的。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>智能指针虽好，但也并非完美，在使用的过程中还是得注意。</p>
 
           
         
