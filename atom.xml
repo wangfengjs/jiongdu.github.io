@@ -170,9 +170,9 @@ class BlockingQueue : boost::noncopyable
     <link href="http://blog.dujiong.net/2016/08/08/shared-ptr/"/>
     <id>http://blog.dujiong.net/2016/08/08/shared-ptr/</id>
     <published>2016-08-08T13:38:44.000Z</published>
-    <updated>2016-08-27T13:13:54.807Z</updated>
+    <updated>2016-08-27T13:24:49.329Z</updated>
     
-    <content type="html">&lt;p&gt;前面在&lt;a href=&quot;http://blog.dujiong.net/2016/05/15/cplusplus-sematics/&quot;&gt;浅谈C++值语义和对象语义&lt;/a&gt;一文中简要的阐述了一下智能指针shared_ptr的作用和用法，作为C++11中最为广泛使用的智能指针，shared_ptr虽然解决了裸指针的诸多问题，但是它并非完美、无懈可击，所以，本文就shared_ptr使用过程中需要注意的一些问题做一下总结。&lt;/p&gt;
+    <content type="html">&lt;p&gt;前面在&lt;a href=&quot;http://blog.dujiong.net/2016/05/15/cplusplus-sematics/&quot;&gt;浅谈C++值语义和对象语义&lt;/a&gt;一文中简要的阐述了一下智能指针shared_ptr的作用和用法，作为C++11中最为广泛使用的智能指针，shared_ptr虽然解决了裸指针的诸多问题，但是它并非完美、无懈可击，所以，本文就shared_ptr使用过程中需要注意的一些问题做一下总结。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;  &lt;/p&gt;
 &lt;h3 id=&quot;循环引用&quot;&gt;&lt;a href=&quot;#循环引用&quot; class=&quot;headerlink&quot; title=&quot;循环引用&quot;&gt;&lt;/a&gt;循环引用&lt;/h3&gt;&lt;p&gt;首当其冲的便是shared_ptr造成的循环引用。     &lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;#include &amp;lt;iostream&amp;gt;
 #include &amp;lt;memory&amp;gt;
@@ -293,12 +293,12 @@ int main()
     return 0;
 }  
 &lt;/code&gt;&lt;/pre&gt;&lt;p&gt;运行结果为：&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/ZuA23y9.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;需要注意的是，不能在构造函数中使用&lt;code&gt;shared_from_this()&lt;/code&gt;，因为虽然对象的基类&lt;code&gt;enable_shared_from_this&lt;/code&gt;的构造函数已经调用，但是&lt;code&gt;shared_ptr&lt;/code&gt;的构造函数并没有调用，所以这个时候调用&lt;code&gt;shared_from_this()&lt;/code&gt;是错的。&lt;/p&gt;
-&lt;h3 id=&quot;总结&quot;&gt;&lt;a href=&quot;#总结&quot; class=&quot;headerlink&quot; title=&quot;总结&quot;&gt;&lt;/a&gt;总结&lt;/h3&gt;&lt;p&gt;智能指针虽好，但也并非完美，在使用的过程中还是得注意。&lt;/p&gt;
+&lt;h3 id=&quot;总结&quot;&gt;&lt;a href=&quot;#总结&quot; class=&quot;headerlink&quot; title=&quot;总结&quot;&gt;&lt;/a&gt;总结&lt;/h3&gt;&lt;p&gt;智能指针虽好，但也并非完美，在使用的过程中还是需要注意。&lt;/p&gt;
 </content>
     
     <summary type="html">
     
-      &lt;p&gt;前面在&lt;a href=&quot;http://blog.dujiong.net/2016/05/15/cplusplus-sematics/&quot;&gt;浅谈C++值语义和对象语义&lt;/a&gt;一文中简要的阐述了一下智能指针shared_ptr的作用和用法，作为C++11中最为广泛使用的智能指针，
+      &lt;p&gt;前面在&lt;a href=&quot;http://blog.dujiong.net/2016/05/15/cplusplus-sematics/&quot;&gt;浅谈C++值语义和对象语义&lt;/a&gt;一文中简要的阐述了一下智能指针shared_ptr的作用和用法，作为C++11中最为广泛使用的智能指针，shared_ptr虽然解决了裸指针的诸多问题，但是它并非完美、无懈可击，所以，本文就shared_ptr使用过程中需要注意的一些问题做一下总结。&lt;br&gt;
     
     </summary>
     
