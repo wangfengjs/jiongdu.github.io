@@ -385,11 +385,11 @@ struct epoll_event{
     <link href="http://blog.dujiong.net/2016/07/17/muduo-6/"/>
     <id>http://blog.dujiong.net/2016/07/17/muduo-6/</id>
     <published>2016-07-17T11:14:12.000Z</published>
-    <updated>2016-08-30T12:02:52.492Z</updated>
+    <updated>2016-08-30T12:14:05.124Z</updated>
     
     <content type="html">&lt;p&gt;在muduo的one loop per thread + thread pool模型中，线程和线程池应该是其中最基础也是最重要的两个组件了。所以，本文深入代码，学习Thread和ThreadPool两个类的结构和实现。&lt;/p&gt;
 &lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
-&lt;h3 id=&quot;Thread类&quot;&gt;&lt;a href=&quot;#Thread类&quot; class=&quot;headerlink&quot; title=&quot;Thread类&quot;&gt;&lt;/a&gt;Thread类&lt;/h3&gt;&lt;h4 id=&quot;thread关键字&quot;&gt;&lt;a href=&quot;#thread关键字&quot; class=&quot;headerlink&quot; title=&quot;__thread关键字&quot;&gt;&lt;/a&gt;__thread关键字&lt;/h4&gt;&lt;p&gt;学习Thread class之前，先了解一个关键字的用法：_&lt;em&gt;thread。&lt;br&gt;\&lt;/em&gt;_thread是GCC内置的线程局部存储设施。它的实现非常高效，比Pthread库中的pthread_key_t（muduo中ThreadLocal）快很多。__thread变量是表示每个线程有一份独立实体，各个线程的变量值互不干扰。__thread只能修饰POD类型，不能修饰class类型，因为无法自动调用构造函数和析构函数。&lt;br&gt;Thread类的封装用到了命名空间CurrentThread，这个空间中定义了和线程相关的一些独立属性。   &lt;/p&gt;
+&lt;h3 id=&quot;Thread类&quot;&gt;&lt;a href=&quot;#Thread类&quot; class=&quot;headerlink&quot; title=&quot;Thread类&quot;&gt;&lt;/a&gt;Thread类&lt;/h3&gt;&lt;h4 id=&quot;thread关键字&quot;&gt;&lt;a href=&quot;#thread关键字&quot; class=&quot;headerlink&quot; title=&quot;__thread关键字&quot;&gt;&lt;/a&gt;__thread关键字&lt;/h4&gt;&lt;p&gt;学习Thread class之前，先了解一个关键字的用法：__thread。&lt;br&gt;__thread是GCC内置的线程局部存储设施。它的实现非常高效，比Pthread库中的pthread_key_t（muduo中ThreadLocal）快很多。__thread变量是表示每个线程有一份独立实体，各个线程的变量值互不干扰。__thread只能修饰POD类型，不能修饰class类型，因为无法自动调用构造函数和析构函数。&lt;br&gt;Thread类的封装用到了命名空间CurrentThread，这个空间中定义了和线程相关的一些独立属性。   &lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;namespace CurrentThread
 {
     __thread int t_cachedTid = 0;
@@ -398,8 +398,7 @@ struct epoll_event{
     __thread const char* t_threadName = &amp;quot;unknown&amp;quot;;
 }
 &lt;/code&gt;&lt;/pre&gt;&lt;p&gt;其中，t_cachedTid表示线程的真实id，Pthread库中提供了pthread_self()获取当前线程的标识，类型为pthread_t。但是，pthread_t不一定是数值类型，也可能是一个结构体，这带来了一些问题。&lt;br&gt;（1）无法打印输出pthread_t，因为不知道其确切类型。&lt;br&gt;（2）无法比较pthread_t大小或计算hash值。&lt;br&gt;（3）pthread_t值只在进程内有意义，与操作系统的任务调度之间无法建立有效关系，Pthread库只能保证在同一进程之内，同一时刻的各个线程的id不同。&lt;br&gt;所以，muduo采用gettid()系统调用的返回值作为线程id，muduo中将操作封装为gettid()函数。但是，我们知道，调用系统调用开销比较大，所以，muduo中采用__thread变量t_cachedTid来存储，在线程第一次使用tid时通过系统调用获得，存储在t_cachedTid中，以后使用时不再需要系统调用了。&lt;br&gt;t_tidString[32]：用string类型表示tid，以便输出日志。&lt;br&gt;t_tidStringLength：string类型tid的长度。&lt;br&gt;t_threadName：线程的名字。     &lt;/p&gt;
-&lt;h4 id=&quot;相关的数据结构&quot;&gt;&lt;a href=&quot;#相关的数据结构&quot; class=&quot;headerlink&quot; title=&quot;相关的数据结构&quot;&gt;&lt;/a&gt;相关的数据结构&lt;/h4&gt;&lt;p&gt;在Thread的实现中，还用到了两个数据结构，一个位ThreadData，用来辅助调用线程执行的函数。另一个为ThreadNameInitializer，为线程的创建做环境准备。其中用到了&lt;code&gt;pthread_atfork(NULL,NULL,&amp;amp;afterfork)&lt;/code&gt;。该函数的原型为&lt;br&gt;    &lt;code&gt;int pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*child)(void));&lt;/code&gt;&lt;/p&gt;
-&lt;p&gt;这是一个跟进程创建有关的函数，为fork的调用做准备和调用后子进程父进程的初始化。prepare函数在调用fork前执行，parent在调用fork后的父进程中执行，child在调用fork后的子进程中执行。&lt;br&gt;当然，在实际应用中，多线程不要调用fork()，否则会出现一些问题。因为fork智能克隆当前线程的thread of control，却不克隆其他线程。fork()之后，除了当前线程之外，其他线程都消失了。这样，会出现很多问题。比如，如果复制了一个lock的mutex，却没有复制unlock的线程，那么在给mutex加锁时就会出现死锁。&lt;/p&gt;
+&lt;h4 id=&quot;相关的数据结构&quot;&gt;&lt;a href=&quot;#相关的数据结构&quot; class=&quot;headerlink&quot; title=&quot;相关的数据结构&quot;&gt;&lt;/a&gt;相关的数据结构&lt;/h4&gt;&lt;p&gt;在Thread的实现中，还用到了两个数据结构，一个位ThreadData，用来辅助调用线程执行的函数。另一个为ThreadNameInitializer，为线程的创建做环境准备。其中用到了&lt;code&gt;pthread_atfork(NULL,NULL,&amp;amp;afterfork)&lt;/code&gt;。该函数的原型为&lt;br&gt;    &lt;code&gt;int pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*child)(void));&lt;/code&gt;&lt;br&gt;这是一个跟进程创建有关的函数，为fork的调用做准备和调用后子进程父进程的初始化。prepare函数在调用fork前执行，parent在调用fork后的父进程中执行，child在调用fork后的子进程中执行。&lt;br&gt;当然，在实际应用中，多线程不要调用fork()，否则会出现一些问题。因为fork智能克隆当前线程的thread of control，却不克隆其他线程。fork()之后，除了当前线程之外，其他线程都消失了。这样，会出现很多问题。比如，如果复制了一个lock的mutex，却没有复制unlock的线程，那么在给mutex加锁时就会出现死锁。&lt;/p&gt;
 &lt;h4 id=&quot;Thread类分析&quot;&gt;&lt;a href=&quot;#Thread类分析&quot; class=&quot;headerlink&quot; title=&quot;Thread类分析&quot;&gt;&lt;/a&gt;Thread类分析&lt;/h4&gt;&lt;p&gt;首先来看Thread类的数据成员和构造函数。&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;class Thread : boost::noncopyable
 {
@@ -425,7 +424,7 @@ Thread::Thread(ThreadFunc&amp;amp;&amp;amp; func, const string&amp;amp; n)
 {
       setDefaultName();
 }
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;其中有两处需要说明一下，首先是&lt;code&gt;boost::shared_ptr&amp;lt;pid&amp;gt; tid_&lt;/code&gt;，可能有人会有疑问：为什么这里要用shared_ptr包装pid？&lt;br&gt;原因是tid_所属的对象Thread在主线程（A）中创建，而tid_需要在新创建的线程B中进行赋值操作，如果tid使用裸指针的方式传递给线程（B），那么线程A中Thread对象析构（下文）销毁后，线程B持有的就是一个野指针，所以，在Thread对象中将以shared_ptr包装。&lt;br&gt;然后是numCreated_，是一个静态变量，类型为AtomicInt32，原子类型，用来表示第几次创建线程实例，在记录日志时可用记录为：“线程名+numCreated_”。&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;其中有两处需要说明一下，首先是&lt;code&gt;shared_ptr&amp;lt;pid&amp;gt; tid_&lt;/code&gt;，可能有人会有疑问：为什么这里要用shared_ptr包装pid？&lt;br&gt;原因是tid_所属的对象Thread在主线程（A）中创建，而tid_需要在新创建的线程B中进行赋值操作，如果tid使用裸指针的方式传递给线程（B），那么线程A中Thread对象析构（下文）销毁后，线程B持有的就是一个野指针，所以，在Thread对象中将以shared_ptr包装。&lt;br&gt;然后是numCreated_，是一个静态变量，类型为AtomicInt32，原子类型，用来表示第几次创建线程实例，在记录日志时可用记录为：“线程名+numCreated_”。&lt;/p&gt;
 &lt;p&gt;接下来看Thread的一些接口函数。       &lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;void Thread::start()
 {
