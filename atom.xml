@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-09-07T13:09:06.113Z</updated>
+  <updated>2016-09-07T14:10:22.431Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -20,11 +20,15 @@
     <link href="http://blog.dujiong.net/2016/09/07/LinearSort/"/>
     <id>http://blog.dujiong.net/2016/09/07/LinearSort/</id>
     <published>2016-09-07T12:43:51.000Z</published>
-    <updated>2016-09-07T13:09:06.113Z</updated>
+    <updated>2016-09-07T14:10:22.431Z</updated>
     
-    <content type="html"></content>
+    <content type="html">&lt;p&gt;在计算机科学中，排序是一个非常基础的算法。不同的排序算法有不同的时间和空间开销。在这么多的排序算法中，根据在排序的最终结果中，各元素的次序是否依赖于它们之间的比较，可以将排序算法分为两大类：基于比较的排序和非基于比较的排序。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;br&gt;基于比较的排序需要对序列中的数据进行比较，如我们最常用的快速排序、堆排序和归并排序。根据决策树模型可以证明：基于比较的排序算法的时间复杂度是不能突破O(NlogN)的。（《算法导论》8.1）&lt;br&gt;而非基于比较的排序，如本文将要介绍的计数排序、基数排序和桶排序，则可以突破O(NlogN)的时间下限。当然，这样的非比较的排序的使用会有一些条件的限制，比如元素的大小，所以，在一般在特定场合下，非基于比较的排序算法能够巧妙地解决一些问题。     &lt;/p&gt;
+&lt;h3 id=&quot;计数排序&quot;&gt;&lt;a href=&quot;#计数排序&quot; class=&quot;headerlink&quot; title=&quot;计数排序&quot;&gt;&lt;/a&gt;计数排序&lt;/h3&gt;&lt;p&gt;首先介绍计数排序。&lt;br&gt;计数排序假设n个输入元素的每一个都是在0到K区间内的一个整数，其中K为某个正整数。计数排序的基本思想是，对每一个输入元素x，确定小于x的元素个数。利用这一信息，就可以直接把x放到它在输出数组的位置上了。比如，如果有17个元素小于x，则x就应该放在第18个输出位置上。&lt;/p&gt;
+</content>
     
     <summary type="html">
+    
+      &lt;p&gt;在计算机科学中，排序是一个非常基础的算法。不同的排序算法有不同的时间和空间开销。在这么多的排序算法中，根据在排序的最终结果中，各元素的次序是否依赖于它们之间的比较，可以将排序算法分为两大类：基于比较的排序和非基于比较的排序。&lt;br&gt;
     
     </summary>
     
