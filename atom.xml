@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-09-07T13:03:28.594Z</updated>
+  <updated>2016-09-07T13:09:06.113Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -16,11 +16,11 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>计数排序和基数排序</title>
-    <link href="http://blog.dujiong.net/2016/09/07/CountingSort/"/>
-    <id>http://blog.dujiong.net/2016/09/07/CountingSort/</id>
+    <title>线性排序算法：计数排序、基数排序和桶排序</title>
+    <link href="http://blog.dujiong.net/2016/09/07/LinearSort/"/>
+    <id>http://blog.dujiong.net/2016/09/07/LinearSort/</id>
     <published>2016-09-07T12:43:51.000Z</published>
-    <updated>2016-09-07T13:03:28.594Z</updated>
+    <updated>2016-09-07T13:09:06.113Z</updated>
     
     <content type="html"></content>
     
