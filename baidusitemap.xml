@@ -4,8 +4,25 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/09/14/cplusplusReference/</loc>
+    <lastmod>2016-09-14T15:17:56.403Z</lastmod>
+    <data>
+        <display>
+        <title>C++引用剖析</title>
+        <pubTime>2016-09-14T11:58:41.000Z</pubTime>
+        
+        <tag>C++</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/09/07/LinearSort/</loc>
-    <lastmod>2016-09-12T09:21:19.062Z</lastmod>
+    <lastmod>2016-09-12T11:53:32.084Z</lastmod>
     <data>
         <display>
         <title>线性排序算法：计数排序、基数排序和桶排序</title>
