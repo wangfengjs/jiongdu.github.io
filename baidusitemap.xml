@@ -4,6 +4,40 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/09/23/SegmentTree/</loc>
+    <lastmod>2016-09-17T02:46:29.535Z</lastmod>
+    <data>
+        <display>
+        <title>数据结构之线段树</title>
+        <pubTime>2016-09-23T13:28:16.000Z</pubTime>
+        
+        <tag>数据结构与算法</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://blog.dujiong.net/2016/09/18/spinlock-vs-mutex/</loc>
+    <lastmod>2016-09-16T13:26:29.859Z</lastmod>
+    <data>
+        <display>
+        <title>Spin lock与Mutex</title>
+        <pubTime>2016-09-18T13:34:32.000Z</pubTime>
+        
+        <tag>多线程</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/07/21/internetcompany/</loc>
     <lastmod>2016-09-16T11:48:26.246Z</lastmod>
     <data>
@@ -46,23 +80,6 @@
         <pubTime>2016-03-25T07:05:10.000Z</pubTime>
         
         <tag>数据结构与算法</tag>
-         
-         
-           
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
-    <loc>http://blog.dujiong.net/2016/09/16/spinlock-vs-mutex/</loc>
-    <lastmod>2016-09-16T11:45:03.057Z</lastmod>
-    <data>
-        <display>
-        <title>Spin lock与Mutex</title>
-        <pubTime>2016-09-16T13:34:32.000Z</pubTime>
-        
-        <tag>多线程</tag>
          
          
            
