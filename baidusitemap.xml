@@ -4,6 +4,40 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/09/28/tcp-backlog/</loc>
+    <lastmod>2016-09-20T15:36:08.834Z</lastmod>
+    <data>
+        <display>
+        <title>浅谈tcp backlog</title>
+        <pubTime>2016-09-28T13:42:51.000Z</pubTime>
+        
+        <tag>network/linux</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://blog.dujiong.net/2016/06/13/tcp-1/</loc>
+    <lastmod>2016-09-20T13:41:36.933Z</lastmod>
+    <data>
+        <display>
+        <title>TCP协议总结（一）</title>
+        <pubTime>2016-06-13T05:07:19.000Z</pubTime>
+        
+        <tag>network/linux</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/07/21/internetcompany/</loc>
     <lastmod>2016-09-19T15:38:36.004Z</lastmod>
     <data>
@@ -216,23 +250,6 @@
         <display>
         <title>TCP协议总结（二）</title>
         <pubTime>2016-06-25T12:06:14.000Z</pubTime>
-        
-        <tag>network/linux</tag>
-         
-         
-           
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
-    <loc>http://blog.dujiong.net/2016/06/13/tcp-1/</loc>
-    <lastmod>2016-08-07T08:17:13.754Z</lastmod>
-    <data>
-        <display>
-        <title>TCP协议总结（一）</title>
-        <pubTime>2016-06-13T05:07:19.000Z</pubTime>
         
         <tag>network/linux</tag>
          

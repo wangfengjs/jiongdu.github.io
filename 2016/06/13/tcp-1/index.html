@@ -68,7 +68,7 @@
 <meta property="og:image" content="http://i.imgur.com/p9FVemz.jpg">
 <meta property="og:image" content="http://i.imgur.com/lP4JfiN.jpg">
 <meta property="og:image" content="http://i.imgur.com/m6HYlnp.png">
-<meta property="og:updated_time" content="2016-08-07T08:17:13.754Z">
+<meta property="og:updated_time" content="2016-09-20T13:41:36.933Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="TCP协议总结（一）">
 <meta name="twitter:description" content="最近，在学习和科研中，越来越发现自己对于TCP协议的掌握不够，作为一个成天和网络打交道的人，TCP/IP简直是我们最核心的知识之一，所以，准备利用接下来准备考试的间隙时间，结合《TCP/IP详解 卷一：协议》再重新学习和巩固一下TCP。">
@@ -305,7 +305,7 @@
 <p><img src="http://i.imgur.com/lP4JfiN.jpg" alt="">  </p>
 <h4 id="三次握手建立连接"><a href="#三次握手建立连接" class="headerlink" title="三次握手建立连接"></a>三次握手建立连接</h4><p>1）请求端（C/S模型中的Client）发送一个SYN字段指明客户打算连接的服务器的端口，以及初始序号x。<br>2）服务器发挥包含服务器初始序号y的SYN报文段作为应答。同时，将确认序号设置为客户的序号加1以对客户的SYN报文段进行确认。一个SYN将占用一个序号。<br>3）客户必须将确认序号设置为服务器的序号加1以对服务器的SYN报文段进行确认。</p>
 <h4 id="四次挥手终止连接"><a href="#四次挥手终止连接" class="headerlink" title="四次挥手终止连接"></a>四次挥手终止连接</h4><p>这是由TCP的半关闭造成的。因为TCP连接是全双工，因此每个方向都必须单独的关闭，都需要FIN和ACK。收到一个FIN只意味着在这一方向上没有数据流动，一个TCP连接在收到一个FIN后仍能发送数据。<br>如上图，客户执行主动关闭，发送序列号(seq)为x+1的FIN，服务器收到这个FIN，发回ACK(seq=x+3)。接着服务器关闭它的连接，导致它的TCP端发送一个FIN(seq=y+1)，客户端必须发回一个确认，即ACK(seq=y+2)。</p>
-<h4 id="连接建立的超时"><a href="#连接建立的超时" class="headerlink" title="连接建立的超时"></a>连接建立的超时</h4><p>实际中，有很多情况导致无法建立连接。比如，当Server收到Client的SYN并发回SYN-ACK后Client掉线了，Server端没有收到Client发回的ACK。这种情况下，Server端会重法SYN-ACK。在Linux下，默认重法次数为5此，重试的间隔时间从1s开始每次都翻倍，如果5此后仍旧没有收到，才会断开这个连接。               </p>
+<h4 id="连接建立的超时"><a href="#连接建立的超时" class="headerlink" title="连接建立的超时"></a>连接建立的超时</h4><p>实际中，有很多情况导致无法建立连接。比如，当Server收到Client的SYN并发回SYN-ACK后Client掉线了，Server端没有收到Client发回的ACK。这种情况下，Server端会重法SYN-ACK。在Linux下，默认重法次数为5次，重试的间隔时间从1s开始每次都翻倍，如果5次后仍旧没有收到，才会断开这个连接。               </p>
 <h3 id="TCP状态机"><a href="#TCP状态机" class="headerlink" title="TCP状态机"></a>TCP状态机</h3><p>下面这个图非常重要，TCP状态机和状态之间的转换是分析网络状态、故障、优化等的重中之重。</p>
 <p><img src="http://i.imgur.com/m6HYlnp.png" alt=""></p>
 <p>需要重点关注的：<br>（1）MSL和TIME_WAIT状态。据说，这是90%的互联网后台岗位面试都会考的内容。<br>每个具体TCP实现必须选择一个报文段最大生存时间MSL（Maximum Segment Lifetime），它是任何报文段被丢弃前在网络内的最长时间。这个时间是有限的，因为TCP报文段封装在IP数据包在网络内传输，而IP数据包有限制其生存时间的TTL字段。<br>当TCP执行一个主动关闭，并发回最后一个ACK（收到对端的FIN，并发送ACK），该连接必须在TIME_WAIT状态停留的时间为2MSL。这样做可以确保有足够的时间让对端收到ACK，如果被动关闭的那方没有收到ACK，就会触发被动端重发最后的FIN。一来一去正好2MSL。此外，这样做的另一个结果是标识这个TCP连接的四元组在2MSL期间不能再被使用，只能再2MSL结束后才能再被使用。<br>（2）TIME_WAIT过多<br>出现问题了，在高并发短连接的TCP服务器上，当服务器处理完请求后立刻主动关闭连接，这样，就会有很多连接处在TIME_WAIT状态，会消耗许多系统资源。如果客户端的并发量持续很高，部分客户端就会显示连接不上。这时，可以通过设置tcp_tw_reuse和tcp_tw_recycle两个参数，前者表示开启重用，允许将处于TIME_WAIT的Socket重新用于新的TCP连接，后者表示开启TCP连接中TIME_WAIT socket的快速回收。<br>其实，个人觉得最好的办法就是想方设法让Client来关闭连接，这样Server作为被动关闭的一方，就不存在上述问题了。<br>（3）SYN Flood攻击<br>了解TCP三次握手后，很容易明白SYN Flood攻击的来源了，在客户端给服务器发了建立连接的SYN后，就下线了，于是服务器需要默认等待63s才会断开连接，这样，攻击者就可以把服务器的SYN连接队列耗尽，让正常的连接请求不能处理。于是，Linux下有一个tcp_syncookies的参数来应对攻击，当SYN队列满之后，TCP会根据源地址端口、目标地址端口和时间戳打造一个特别的Sequence Number（SYN Cookie）发回客户端，如果是攻击者则不会有相应，如果是正常连接，则会把这个SYN Cookie发回，然后服务端通过cookie建立连接。</p>
@@ -417,7 +417,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">26</span>
+              <span class="site-state-item-count">27</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>

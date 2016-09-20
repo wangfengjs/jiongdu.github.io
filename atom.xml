@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-09-17T02:46:29.535Z</updated>
+  <updated>2016-09-20T15:36:08.834Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -14,6 +14,34 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>浅谈tcp backlog</title>
+    <link href="http://blog.dujiong.net/2016/09/28/tcp-backlog/"/>
+    <id>http://blog.dujiong.net/2016/09/28/tcp-backlog/</id>
+    <published>2016-09-28T13:42:51.000Z</published>
+    <updated>2016-09-20T15:36:08.834Z</updated>
+    
+    <content type="html">&lt;p&gt;熟悉Linux网络(socket)编程的同学应该都记得，在服务端建立监听套接字的API &lt;code&gt;int listen(int sockfd, int backlog)；&lt;/code&gt;中有一个参数backlog，通常称之为积压值。积压值用来描述一个固定长度的连接队列的大小，该队列用于TCP连接建立的过程中。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&quot;backlog的两种实现&quot;&gt;&lt;a href=&quot;#backlog的两种实现&quot; class=&quot;headerlink&quot; title=&quot;backlog的两种实现&quot;&gt;&lt;/a&gt;backlog的两种实现&lt;/h3&gt;&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/Ymk1keA.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;首先通过上图回顾一下TCP建立连接时的状态变化。由于TCP建立连接时使用三次握手，所以监听的服务端在回给客户端SYN+ACK之后，会进入SYN RECEIVED状态，这称之为半连接状态，而只有当收到客户端回送的ACK之后，才完成连接，进入ESTABLISHED状态，等待应用层处理。所以，TCP/IP协议栈有两种方式来实现这个连接队列：&lt;br&gt;（1）第一种是使用一个单一的队列，队列的大小由应用层listen函数的backlog参数确定，当收到一个SYN请求，服务端就回发给客户端SYN+ACK，并且将该连接加入到队列中。当客户端最后的ACK到来时，该连接的状态变为ESTABLISHED，并等待应用层处理。所以，这种实现方式下，队列中包含了两种状态的连接：SYN RECEIVED和ESTABLISHED。只有后一种状态的连接才可以从acception中返回，被应用层处理。&lt;br&gt;（2）另一种实现方式是使用两个队列，一个SYN队列（即半连接队列）和一个全连接队列（ACCEPT队列）。处于SYN RECEIVED状态的连接被加入到SYN队列中，当最后一个ACK到来时，改变状态并移动到全连接队列。所以，accept系统调用直接从全连接队列中取已完成的连接交给应用层处理。这时，listen函数中的backlog值决定了全连接队列的大小。&lt;br&gt;传统的基于BSD的TCP实现采用的是第一种方式，这种实现方式意味着，当队列满的时候，系统再收到SYN，将不会回发SYN+ACK。通常，TCP实现采用的是简单地丢弃SYN，让客户端重传，而不是回发RST。&lt;br&gt;在Linux系统中，backlog的实现形式分为两个阶段，在Linux2.2之前，内核采用的也是上述的方式，队列满之后，服务端再收到SYN时，将不会返回SYN/ACK，也不返回RST，让客户端重试。而在Linux2.2之后，内核选择第二种方式实现，SYN_RECEIVED队列的大小由/proc/sys/net/ipv4/tcp_max_syn_backlog系统参数指定，ESTABLISHED队列由backlog和/proc/sys/net/core/somaxconn中较小的指定。    &lt;/p&gt;
+&lt;h3 id=&quot;SYN队列和ACCEPT队列&quot;&gt;&lt;a href=&quot;#SYN队列和ACCEPT队列&quot; class=&quot;headerlink&quot; title=&quot;SYN队列和ACCEPT队列&quot;&gt;&lt;/a&gt;SYN队列和ACCEPT队列&lt;/h3&gt;&lt;p&gt;以下是操作系统维护两种队列处理TCP连接的示意图。 &lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/sGEPFN7.jpg&quot; alt=&quot;&quot;&gt;&lt;br&gt;SYN队列和已完成队列是内核实现的，当服务器绑定、监听了某个端口后，这个端口的SYN队列和ACCEPT队列就建立好了。客户端使用connect向服务器发起TCP连接时，当SYN包到达服务器之后，内核会把这一报文放入SYN队列，同时回发一个SYN+ACK包给客户端。一段时间后，当三次握手最后的ACK到达服务器，内核会把连接从SYN队列中取出，再把这个连接放入ACCEPT队列（已完成队列）中。所以，服务器调用accept，其实就是直接从ACCEPT队列中取出已经建立成功的连接套接字。&lt;br&gt;当然，随之也产生了一些问题。因为SYN和ACCEPT队列都是有大小限制的，所以，二者都会存在队列满的时候。上图中，如果第一步执行的速度大于第二步执行的速度，SYN队列就会不断增大直到队列满；如果第二步执行的速度大于第三步执行的速度，ACCEPT队列同样会满。&lt;br&gt;当ACCEPT队列已满，这时SYN队列中的一个连接收到最后的ACK，需要移动到ACCEPT队列，会发生什么呢？&lt;br&gt;通过查看内核源码(net/ipv4/tcp_ipv4.c)可知，如果/proc/sys/net/ipv4/tcp_abort_on_overflow被置为1，内核将会回送RST包，否则，将会丢弃ACK，什么都不做。进一步地，当一定时间服务端还没有收到ACK（包括丢弃掉的ACK），将会重发SYN+ACK包（“指数退避”算法）。当客户端收到重发的SYN+ACK时，它便知道ACK包丢失了，需要重传。另一方面，当ACCEPT队列已满的时候，内核将会限制SYN队列的处理速度，如果收到太多的SYN队列，将会丢弃一些。这样，丢弃的SYN对应的客户端将会重发SYN包。&lt;br&gt;另一种情况，当SYN队列满的时候，会发生什么呢？上面已经阐述了，服务器端将会直接丢弃请求，即丢弃SYN网络包。       &lt;/p&gt;
+&lt;h3 id=&quot;TCP连接的一些异常情况&quot;&gt;&lt;a href=&quot;#TCP连接的一些异常情况&quot; class=&quot;headerlink&quot; title=&quot;TCP连接的一些异常情况&quot;&gt;&lt;/a&gt;TCP连接的一些异常情况&lt;/h3&gt;&lt;p&gt;针对上述的两个连接队列，有一些常见的连接异常情况。下面做一个简单总结。     &lt;/p&gt;
+&lt;h4 id=&quot;服务端SYN超时&quot;&gt;&lt;a href=&quot;#服务端SYN超时&quot; class=&quot;headerlink&quot; title=&quot;服务端SYN超时&quot;&gt;&lt;/a&gt;服务端SYN超时&lt;/h4&gt;&lt;p&gt;当客户端给服务端发送SYN报文时，如果服务端没有返回SYN+ACK报文，那么客户端会重发SYN报文给服务端，重发的次数由参数tcp_syn_retries参数设置，该值默认是5，超过5次服务端还是不返回SYN+ACK报文，那么本次连接失败。服务端没有返回SYN+ACK主要有两种情况，一种是由于网络问题SYN包丢失；另一种是服务端SYN队列满，导致SYN包被丢弃。                &lt;/p&gt;
+&lt;h4 id=&quot;客户端ACK超时&quot;&gt;&lt;a href=&quot;#客户端ACK超时&quot; class=&quot;headerlink&quot; title=&quot;客户端ACK超时&quot;&gt;&lt;/a&gt;客户端ACK超时&lt;/h4&gt;&lt;p&gt;如果服务端接到了客户端发的SYN并回发SYN+ACK后，客户端掉线了，这时，服务端没有收到客户端回来的ACK，那么，这个连接处于一个中间状态，既没成功也没失败。于是，服务端端如果在一定时间内没有收到客户端端的ACK，那么服务端端会重发SYN+ACK。在Linux下，默认重试次数为5次，重发的间隔时间从1s开始每次都翻番（指数退避），5次的重发的时间间隔分别1s, 2s, 4s, 8s, 16s，总共31s，第5次发出后还要等32s都知道第5次也超时了，所以，总共需要 1s+2s+4s+8s+16s+32s = 2^6-1 = 63s，TCP才会把断开这个连接。              &lt;/p&gt;
+&lt;h4 id=&quot;SYN-Flood&quot;&gt;&lt;a href=&quot;#SYN-Flood&quot; class=&quot;headerlink&quot; title=&quot;SYN Flood&quot;&gt;&lt;/a&gt;SYN Flood&lt;/h4&gt;&lt;p&gt;这时一种恶意攻击。客户端给服务器发一个SYN后就下线，这样服务器需要默认等待63s才会断开连接，这样攻击者就可以把服务器的SYN连接队列耗尽，让正常的连接请求不能处理。为了应对SYN Flood攻击，Linux实现了一种称为SYN cookie的机制，通过net.ipv4.tcp_syncookies来设置。当SYN队列满了后，TCP会通过源地址端口、目标地址端口和时间戳打造出一个特别的Sequence Number发回去（又叫cookie），如果是攻击者则不会有响应，如果是正常连接，则会把这个 SYN Cookie发回来，然后服务端可以通过cookie建连接（即使不在SYN队列中）。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;熟悉Linux网络(socket)编程的同学应该都记得，在服务端建立监听套接字的API &lt;code&gt;int listen(int sockfd, int backlog)；&lt;/code&gt;中有一个参数backlog，通常称之为积压值。积压值用来描述一个固定长度的连接队列的大小，该队列用于TCP连接建立的过程中。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="network/linux" scheme="http://blog.dujiong.net/tags/network-linux/"/>
+    
+  </entry>
   
   <entry>
     <title>数据结构之线段树</title>
@@ -1269,7 +1297,7 @@ void enqueue(int x)
     <link href="http://blog.dujiong.net/2016/06/13/tcp-1/"/>
     <id>http://blog.dujiong.net/2016/06/13/tcp-1/</id>
     <published>2016-06-13T05:07:19.000Z</published>
-    <updated>2016-08-07T08:17:13.754Z</updated>
+    <updated>2016-09-20T13:41:36.933Z</updated>
     
     <content type="html">&lt;p&gt;最近，在学习和科研中，越来越发现自己对于TCP协议的掌握不够，作为一个成天和网络打交道的人，TCP/IP简直是我们最核心的知识之一，所以，准备利用接下来准备考试的间隙时间，结合《TCP/IP详解 卷一：协议》再重新学习和巩固一下TCP。          &lt;/p&gt;
 &lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
@@ -1280,7 +1308,7 @@ void enqueue(int x)
 &lt;p&gt;&lt;img src=&quot;http://i.imgur.com/lP4JfiN.jpg&quot; alt=&quot;&quot;&gt;  &lt;/p&gt;
 &lt;h4 id=&quot;三次握手建立连接&quot;&gt;&lt;a href=&quot;#三次握手建立连接&quot; class=&quot;headerlink&quot; title=&quot;三次握手建立连接&quot;&gt;&lt;/a&gt;三次握手建立连接&lt;/h4&gt;&lt;p&gt;1）请求端（C/S模型中的Client）发送一个SYN字段指明客户打算连接的服务器的端口，以及初始序号x。&lt;br&gt;2）服务器发挥包含服务器初始序号y的SYN报文段作为应答。同时，将确认序号设置为客户的序号加1以对客户的SYN报文段进行确认。一个SYN将占用一个序号。&lt;br&gt;3）客户必须将确认序号设置为服务器的序号加1以对服务器的SYN报文段进行确认。&lt;/p&gt;
 &lt;h4 id=&quot;四次挥手终止连接&quot;&gt;&lt;a href=&quot;#四次挥手终止连接&quot; class=&quot;headerlink&quot; title=&quot;四次挥手终止连接&quot;&gt;&lt;/a&gt;四次挥手终止连接&lt;/h4&gt;&lt;p&gt;这是由TCP的半关闭造成的。因为TCP连接是全双工，因此每个方向都必须单独的关闭，都需要FIN和ACK。收到一个FIN只意味着在这一方向上没有数据流动，一个TCP连接在收到一个FIN后仍能发送数据。&lt;br&gt;如上图，客户执行主动关闭，发送序列号(seq)为x+1的FIN，服务器收到这个FIN，发回ACK(seq=x+3)。接着服务器关闭它的连接，导致它的TCP端发送一个FIN(seq=y+1)，客户端必须发回一个确认，即ACK(seq=y+2)。&lt;/p&gt;
-&lt;h4 id=&quot;连接建立的超时&quot;&gt;&lt;a href=&quot;#连接建立的超时&quot; class=&quot;headerlink&quot; title=&quot;连接建立的超时&quot;&gt;&lt;/a&gt;连接建立的超时&lt;/h4&gt;&lt;p&gt;实际中，有很多情况导致无法建立连接。比如，当Server收到Client的SYN并发回SYN-ACK后Client掉线了，Server端没有收到Client发回的ACK。这种情况下，Server端会重法SYN-ACK。在Linux下，默认重法次数为5此，重试的间隔时间从1s开始每次都翻倍，如果5此后仍旧没有收到，才会断开这个连接。               &lt;/p&gt;
+&lt;h4 id=&quot;连接建立的超时&quot;&gt;&lt;a href=&quot;#连接建立的超时&quot; class=&quot;headerlink&quot; title=&quot;连接建立的超时&quot;&gt;&lt;/a&gt;连接建立的超时&lt;/h4&gt;&lt;p&gt;实际中，有很多情况导致无法建立连接。比如，当Server收到Client的SYN并发回SYN-ACK后Client掉线了，Server端没有收到Client发回的ACK。这种情况下，Server端会重法SYN-ACK。在Linux下，默认重法次数为5次，重试的间隔时间从1s开始每次都翻倍，如果5次后仍旧没有收到，才会断开这个连接。               &lt;/p&gt;
 &lt;h3 id=&quot;TCP状态机&quot;&gt;&lt;a href=&quot;#TCP状态机&quot; class=&quot;headerlink&quot; title=&quot;TCP状态机&quot;&gt;&lt;/a&gt;TCP状态机&lt;/h3&gt;&lt;p&gt;下面这个图非常重要，TCP状态机和状态之间的转换是分析网络状态、故障、优化等的重中之重。&lt;/p&gt;
 &lt;p&gt;&lt;img src=&quot;http://i.imgur.com/m6HYlnp.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
 &lt;p&gt;需要重点关注的：&lt;br&gt;（1）MSL和TIME_WAIT状态。据说，这是90%的互联网后台岗位面试都会考的内容。&lt;br&gt;每个具体TCP实现必须选择一个报文段最大生存时间MSL（Maximum Segment Lifetime），它是任何报文段被丢弃前在网络内的最长时间。这个时间是有限的，因为TCP报文段封装在IP数据包在网络内传输，而IP数据包有限制其生存时间的TTL字段。&lt;br&gt;当TCP执行一个主动关闭，并发回最后一个ACK（收到对端的FIN，并发送ACK），该连接必须在TIME_WAIT状态停留的时间为2MSL。这样做可以确保有足够的时间让对端收到ACK，如果被动关闭的那方没有收到ACK，就会触发被动端重发最后的FIN。一来一去正好2MSL。此外，这样做的另一个结果是标识这个TCP连接的四元组在2MSL期间不能再被使用，只能再2MSL结束后才能再被使用。&lt;br&gt;（2）TIME_WAIT过多&lt;br&gt;出现问题了，在高并发短连接的TCP服务器上，当服务器处理完请求后立刻主动关闭连接，这样，就会有很多连接处在TIME_WAIT状态，会消耗许多系统资源。如果客户端的并发量持续很高，部分客户端就会显示连接不上。这时，可以通过设置tcp_tw_reuse和tcp_tw_recycle两个参数，前者表示开启重用，允许将处于TIME_WAIT的Socket重新用于新的TCP连接，后者表示开启TCP连接中TIME_WAIT socket的快速回收。&lt;br&gt;其实，个人觉得最好的办法就是想方设法让Client来关闭连接，这样Server作为被动关闭的一方，就不存在上述问题了。&lt;br&gt;（3）SYN Flood攻击&lt;br&gt;了解TCP三次握手后，很容易明白SYN Flood攻击的来源了，在客户端给服务器发了建立连接的SYN后，就下线了，于是服务器需要默认等待63s才会断开连接，这样，攻击者就可以把服务器的SYN连接队列耗尽，让正常的连接请求不能处理。于是，Linux下有一个tcp_syncookies的参数来应对攻击，当SYN队列满之后，TCP会根据源地址端口、目标地址端口和时间戳打造一个特别的Sequence Number（SYN Cookie）发回客户端，如果是攻击者则不会有相应，如果是正常连接，则会把这个SYN Cookie发回，然后服务端通过cookie建立连接。&lt;/p&gt;
@@ -1900,40 +1928,6 @@ int main()
     <summary type="html">
     
       &lt;p&gt;回调是指将一段可执行的代码作为变量传给另外一部分代码，以供同步或异步调用。在Reactor模式中，在事件到来时调用相应的处理函数就是一种异步回调的过程。回调函数的实现可以由各种各样的方式。&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="muduo" scheme="http://blog.dujiong.net/tags/muduo/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>muduo源码阅读之Reactor模式和muduo</title>
-    <link href="http://blog.dujiong.net/2016/04/25/muduo-1/"/>
-    <id>http://blog.dujiong.net/2016/04/25/muduo-1/</id>
-    <published>2016-04-25T10:56:03.000Z</published>
-    <updated>2016-06-28T12:17:55.078Z</updated>
-    
-    <content type="html">&lt;p&gt;muduo是一个基于Reactor模式的非阻塞网络库，常见的使用Reactor模式的网络库（框架）还有libevent,Java Netty等，所以，首先需要弄清楚Reactor模式。&lt;/p&gt;
-&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
-&lt;h3 id=&quot;Reactor的事件处理机制&quot;&gt;&lt;a href=&quot;#Reactor的事件处理机制&quot; class=&quot;headerlink&quot; title=&quot;Reactor的事件处理机制&quot;&gt;&lt;/a&gt;Reactor的事件处理机制&lt;/h3&gt;&lt;p&gt;首先回忆一下普通函数调用的机制：程序调用某函数执行，程序等待，函数将结果和控制权返回给程序，程序继续处理。这是一种顺序的处理方式。&lt;br&gt;Reactor常释义“反应堆”，是一种事件驱动机制，和普通函数调用的不同之处在于：应用程度不是主动的调用某个接口API完成处理，恰恰相反，Reactor逆置了事件处理流程，应用程序需要提供相应的接口并注册到Reactor上，如果关注的事件发生，Reactor将主动调用应用程序注册的接口，这些接口有一个熟悉的名字：“回调函数”。所以，用户使用Reactor模式的网络库向其注册相应的事件和回调函数，当事件发生时，就会调用回调函数处理事件（I/O读写，定时器和信号等）。Reactor模式一般与非阻塞I/O结合，在处理一个事件时不用等待事件的完成，而是转去处理其他的任务，当事件处理完毕后再去通知Reactor。&lt;br&gt;所以，Reactor模式具有很多优点：&lt;br&gt;1）响应快，不必为单个同步时间所阻塞，虽然Reactor本身依然是同步的；&lt;br&gt;2）编程相对简单，可以最大程度的避免复杂的多线程及同步问题，并且避免了多线程/进程的切换开销；&lt;br&gt;3）可扩展性，可以方便的通过增加Reactor实例个数来充分利用CPU资源；&lt;br&gt;4）可复用性，Reactor框架本身与具体事件处理逻辑无关，具有很高的复用性；&lt;/p&gt;
-&lt;h3 id=&quot;Reactor模式的结构&quot;&gt;&lt;a href=&quot;#Reactor模式的结构&quot; class=&quot;headerlink&quot; title=&quot;Reactor模式的结构&quot;&gt;&lt;/a&gt;Reactor模式的结构&lt;/h3&gt;&lt;p&gt;Reactor模式包括四个部分的组件:&lt;br&gt;1）事件源（Handle）&lt;br&gt;用于表示通过操作系统管理的各种资源，包括套接字，打开文件，定时器等，在Unix系统中是文件描述符，在Windows系统中是句柄。当关心的事件在其上面发生时，可以通过多路复用器(select/epoll等)得到。&lt;br&gt;2）Synchronous Event Demultiplexer&lt;br&gt;事件多路分发机制。由操作系统提供的I/O多路复用机制，如select/epoll等。程序首先将关心的事件源注册到event demultiplexer上，当有事件到达时，event demultiplexer会发出通知“在已经注册的句柄集中，一个或多个句柄已经就绪”。&lt;br&gt;3）Initiation Dispatcher&lt;br&gt;事件管理的接口，实现事件的注册，删除，分发的接口，并运行事件循环，是用于驱动的主模块。Synchronous Event Demultiplexer也是它的一个组件，用于等待新事件的发生。当有事件发生时，Demultiplexer通知dispatcher，dispatcher再根据事件的类型使用相应的Event Hander完成事件的处理。&lt;br&gt;3）Event Handler&lt;br&gt;事件处理程序。一般来说会根据事件类型的不同实现各种类型的回调函数。&lt;/p&gt;
-&lt;p&gt;下图可详细表达各个模块和它们之间的关系：&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/052r16x.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
-&lt;h3 id=&quot;muduo中的Reactor模式&quot;&gt;&lt;a href=&quot;#muduo中的Reactor模式&quot; class=&quot;headerlink&quot; title=&quot;muduo中的Reactor模式&quot;&gt;&lt;/a&gt;muduo中的Reactor模式&lt;/h3&gt;&lt;p&gt;Reactor模式的各个组件在muduo中都有对应的部分，虽然在具体的实现和逻辑上有其自身的特点和不同，但其内在的组织结构是高度符合Reactor模式的。&lt;br&gt;muduo的类图如下：                                                                                    &lt;/p&gt;
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/M4uVBf1.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;各个模块与Reactor模式各组件的对应关系（功能上）是    &lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;Initialization dispatcher —— EventLoop    &lt;/li&gt;
-&lt;li&gt;Synchronous Event Demultiplexer —— Poller     &lt;/li&gt;
-&lt;li&gt;Handles —— FileDescriptor、Channel    &lt;/li&gt;
-&lt;li&gt;Event Handler —— TcpConnection、Acceptor、Connector&lt;/li&gt;
-&lt;/ol&gt;
-&lt;h3 id=&quot;muduo中的思想&quot;&gt;&lt;a href=&quot;#muduo中的思想&quot; class=&quot;headerlink&quot; title=&quot;muduo中的思想&quot;&gt;&lt;/a&gt;muduo中的思想&lt;/h3&gt;&lt;p&gt;有一个main Reactor，这个main Reactor只管接收新的连接，一旦创建好连接，就从EventLoopThreadPool（线程池）中选择一个合适的EventLoop来托管这个连接套接字。这个EventLoop就是一个sub Reactor。&lt;br&gt;muduo的线程模型是one loop per thread + thread pool模型。每个线程最多有一个EventLoop，每个TcpConnection必须归某个EventLoop管理，所有的I/O会转移到这个线程。即，一个句柄只能由一个线程读写。&lt;br&gt;TcpServer直接支持支持多线程，有两种模式：&lt;br&gt;1）单线程，accept()与TcpConnection用同一个线程做IO；&lt;br&gt;2）多线程，accept()与EventLoop在同一个线程，另外创建一个EventLoopThreadPool，新的连接会分配到线程池中。&lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;muduo是一个基于Reactor模式的非阻塞网络库，常见的使用Reactor模式的网络库（框架）还有libevent,Java Netty等，所以，首先需要弄清楚Reactor模式。&lt;/p&gt;
     
     </summary>
     
