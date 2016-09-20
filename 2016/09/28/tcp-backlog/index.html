@@ -67,7 +67,7 @@
 <meta property="og:description" content="熟悉Linux网络(socket)编程的同学应该都记得，在服务端建立监听套接字的API int listen(int sockfd, int backlog)；中有一个参数backlog，通常称之为积压值。积压值用来描述一个固定长度的连接队列的大小，该队列用于TCP连接建立的过程中。">
 <meta property="og:image" content="http://i.imgur.com/Ymk1keA.png">
 <meta property="og:image" content="http://i.imgur.com/sGEPFN7.jpg">
-<meta property="og:updated_time" content="2016-09-20T15:36:08.834Z">
+<meta property="og:updated_time" content="2016-09-20T15:49:44.450Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="浅谈tcp backlog">
 <meta name="twitter:description" content="熟悉Linux网络(socket)编程的同学应该都记得，在服务端建立监听套接字的API int listen(int sockfd, int backlog)；中有一个参数backlog，通常称之为积压值。积压值用来描述一个固定长度的连接队列的大小，该队列用于TCP连接建立的过程中。">
@@ -303,6 +303,12 @@
 <h4 id="服务端SYN超时"><a href="#服务端SYN超时" class="headerlink" title="服务端SYN超时"></a>服务端SYN超时</h4><p>当客户端给服务端发送SYN报文时，如果服务端没有返回SYN+ACK报文，那么客户端会重发SYN报文给服务端，重发的次数由参数tcp_syn_retries参数设置，该值默认是5，超过5次服务端还是不返回SYN+ACK报文，那么本次连接失败。服务端没有返回SYN+ACK主要有两种情况，一种是由于网络问题SYN包丢失；另一种是服务端SYN队列满，导致SYN包被丢弃。                </p>
 <h4 id="客户端ACK超时"><a href="#客户端ACK超时" class="headerlink" title="客户端ACK超时"></a>客户端ACK超时</h4><p>如果服务端接到了客户端发的SYN并回发SYN+ACK后，客户端掉线了，这时，服务端没有收到客户端回来的ACK，那么，这个连接处于一个中间状态，既没成功也没失败。于是，服务端端如果在一定时间内没有收到客户端端的ACK，那么服务端端会重发SYN+ACK。在Linux下，默认重试次数为5次，重发的间隔时间从1s开始每次都翻番（指数退避），5次的重发的时间间隔分别1s, 2s, 4s, 8s, 16s，总共31s，第5次发出后还要等32s都知道第5次也超时了，所以，总共需要 1s+2s+4s+8s+16s+32s = 2^6-1 = 63s，TCP才会把断开这个连接。              </p>
 <h4 id="SYN-Flood"><a href="#SYN-Flood" class="headerlink" title="SYN Flood"></a>SYN Flood</h4><p>这时一种恶意攻击。客户端给服务器发一个SYN后就下线，这样服务器需要默认等待63s才会断开连接，这样攻击者就可以把服务器的SYN连接队列耗尽，让正常的连接请求不能处理。为了应对SYN Flood攻击，Linux实现了一种称为SYN cookie的机制，通过net.ipv4.tcp_syncookies来设置。当SYN队列满了后，TCP会通过源地址端口、目标地址端口和时间戳打造出一个特别的Sequence Number发回去（又叫cookie），如果是攻击者则不会有响应，如果是正常连接，则会把这个 SYN Cookie发回来，然后服务端可以通过cookie建连接（即使不在SYN队列中）。</p>
+<h3 id="TCP连接过程参数调优"><a href="#TCP连接过程参数调优" class="headerlink" title="TCP连接过程参数调优"></a>TCP连接过程参数调优</h3><p>下面罗列一些常用于TCP连接过程优化的参数。</p>
+<h4 id="tcp-max-syn-backlog"><a href="#tcp-max-syn-backlog" class="headerlink" title="tcp_max_syn_backlog"></a>tcp_max_syn_backlog</h4><p>SYN队列长度。如果服务器经常出现过载，可以尝试增加这个数字。   </p>
+<h4 id="tcp-synack-retries"><a href="#tcp-synack-retries" class="headerlink" title="tcp_synack_retries"></a>tcp_synack_retries</h4><p>连接被动打开方的确认连接的应答最大重试次数。对于一个新建连接，内核要发送多少SYN连接请求才决定放弃。</p>
+<h4 id="tcp-syn-retries"><a href="#tcp-syn-retries" class="headerlink" title="tcp_syn_retries"></a>tcp_syn_retries</h4><p>连接主动打开方的syn尝试次数。</p>
+<h4 id="tcp-syncookies"><a href="#tcp-syncookies" class="headerlink" title="tcp_syncookies"></a>tcp_syncookies</h4><p>防止SYN Flood攻击。    </p>
+<h4 id="tcp-abort-on-overflos"><a href="#tcp-abort-on-overflos" class="headerlink" title="tcp_abort_on_overflos"></a>tcp_abort_on_overflos</h4><p>ACCEPT队列满，处理不过来的时候，如果设置了该参数，内核将会回发RST包。</p>
 
       
     </div>
@@ -473,7 +479,7 @@
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#backlog的两种实现"><span class="nav-number">1.</span> <span class="nav-text">backlog的两种实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SYN队列和ACCEPT队列"><span class="nav-number">2.</span> <span class="nav-text">SYN队列和ACCEPT队列</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP连接的一些异常情况"><span class="nav-number">3.</span> <span class="nav-text">TCP连接的一些异常情况</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#服务端SYN超时"><span class="nav-number">3.1.</span> <span class="nav-text">服务端SYN超时</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#客户端ACK超时"><span class="nav-number">3.2.</span> <span class="nav-text">客户端ACK超时</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SYN-Flood"><span class="nav-number">3.3.</span> <span class="nav-text">SYN Flood</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#backlog的两种实现"><span class="nav-number">1.</span> <span class="nav-text">backlog的两种实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SYN队列和ACCEPT队列"><span class="nav-number">2.</span> <span class="nav-text">SYN队列和ACCEPT队列</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP连接的一些异常情况"><span class="nav-number">3.</span> <span class="nav-text">TCP连接的一些异常情况</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#服务端SYN超时"><span class="nav-number">3.1.</span> <span class="nav-text">服务端SYN超时</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#客户端ACK超时"><span class="nav-number">3.2.</span> <span class="nav-text">客户端ACK超时</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SYN-Flood"><span class="nav-number">3.3.</span> <span class="nav-text">SYN Flood</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP连接过程参数调优"><span class="nav-number">4.</span> <span class="nav-text">TCP连接过程参数调优</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#tcp-max-syn-backlog"><span class="nav-number">4.1.</span> <span class="nav-text">tcp_max_syn_backlog</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#tcp-synack-retries"><span class="nav-number">4.2.</span> <span class="nav-text">tcp_synack_retries</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#tcp-syn-retries"><span class="nav-number">4.3.</span> <span class="nav-text">tcp_syn_retries</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#tcp-syncookies"><span class="nav-number">4.4.</span> <span class="nav-text">tcp_syncookies</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#tcp-abort-on-overflos"><span class="nav-number">4.5.</span> <span class="nav-text">tcp_abort_on_overflos</span></a></li></ol></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">
