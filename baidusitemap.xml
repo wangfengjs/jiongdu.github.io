@@ -4,6 +4,23 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/10/09/STL-allocator/</loc>
+    <lastmod>2016-10-13T11:18:08.167Z</lastmod>
+    <data>
+        <display>
+        <title>C++ STL空间配置器</title>
+        <pubTime>2016-10-09T05:54:15.000Z</pubTime>
+        
+        <tag>C++</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/09/28/tcp-backlog/</loc>
     <lastmod>2016-09-20T15:49:44.450Z</lastmod>
     <data>

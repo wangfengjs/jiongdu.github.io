@@ -41,7 +41,7 @@
 <link href="/css/main.css?v=0.5.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="network/linux,muduo," />
+  <meta name="keywords" content="C++," />
 
 
 
@@ -59,20 +59,21 @@
 
 
 
-<meta name="description" content="《Unix网络编程(第三版)》(以下简称[UNP])中第三十章”客户/服务器程序设计范式”总结了一些常见的并发网络服务程序设计方案，而随着互联网、大数据等浪潮的兴起，业界对服务器程序的高并发能力、稳定性等提出了更高的要求，客户/服务器程序设计范式也在随着时代的需求而不断改进和提升，下面就对常见的并发网络服务程序设计方案作简单总结。">
+<meta name="description" content="最近准备结合《STL源码剖析》把学习的STL知识整理一遍，加深自己的理解的同时，也方便以后需要的时候查看。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="常见并发网络服务程序设计方案">
-<meta property="og:url" content="http://blog.dujiong.net/2016/05/28/concurrent-server-conclusion/index.html">
+<meta property="og:title" content="C++ STL空间配置器">
+<meta property="og:url" content="http://blog.dujiong.net/2016/10/09/STL-allocator/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="《Unix网络编程(第三版)》(以下简称[UNP])中第三十章”客户/服务器程序设计范式”总结了一些常见的并发网络服务程序设计方案，而随着互联网、大数据等浪潮的兴起，业界对服务器程序的高并发能力、稳定性等提出了更高的要求，客户/服务器程序设计范式也在随着时代的需求而不断改进和提升，下面就对常见的并发网络服务程序设计方案作简单总结。">
-<meta property="og:image" content="http://i.imgur.com/kccnUkP.png">
-<meta property="og:image" content="http://i.imgur.com/2bBaThf.png">
-<meta property="og:image" content="http://i.imgur.com/n4bAxFY.png">
-<meta property="og:updated_time" content="2016-08-06T07:52:10.237Z">
+<meta property="og:description" content="最近准备结合《STL源码剖析》把学习的STL知识整理一遍，加深自己的理解的同时，也方便以后需要的时候查看。">
+<meta property="og:image" content="http://i.imgur.com/IE7fZAU.png">
+<meta property="og:image" content="http://i.imgur.com/VrO5VMA.png">
+<meta property="og:image" content="http://i.imgur.com/um5jnaS.png">
+<meta property="og:image" content="http://i.imgur.com/SCDG2Gu.png">
+<meta property="og:updated_time" content="2016-10-13T11:18:08.167Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="常见并发网络服务程序设计方案">
-<meta name="twitter:description" content="《Unix网络编程(第三版)》(以下简称[UNP])中第三十章”客户/服务器程序设计范式”总结了一些常见的并发网络服务程序设计方案，而随着互联网、大数据等浪潮的兴起，业界对服务器程序的高并发能力、稳定性等提出了更高的要求，客户/服务器程序设计范式也在随着时代的需求而不断改进和提升，下面就对常见的并发网络服务程序设计方案作简单总结。">
-<meta name="twitter:image" content="http://i.imgur.com/kccnUkP.png">
+<meta name="twitter:title" content="C++ STL空间配置器">
+<meta name="twitter:description" content="最近准备结合《STL源码剖析》把学习的STL知识整理一遍，加深自己的理解的同时，也方便以后需要的时候查看。">
+<meta name="twitter:image" content="http://i.imgur.com/IE7fZAU.png">
 
 
 
@@ -90,7 +91,7 @@
   };
 </script>
 
-  <title> 常见并发网络服务程序设计方案 | 一期一会 </title>
+  <title> C++ STL空间配置器 | 一期一会 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -250,7 +251,7 @@
             
             
               
-                常见并发网络服务程序设计方案
+                C++ STL空间配置器
               
             
           </h1>
@@ -262,8 +263,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-05-28T10:14:00+08:00" content="2016-05-28">
-              2016-05-28
+            <time itemprop="dateCreated" datetime="2016-10-09T13:54:15+08:00" content="2016-10-09">
+              2016-10-09
             </time>
           </span>
 
@@ -273,8 +274,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/05/28/concurrent-server-conclusion/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/05/28/concurrent-server-conclusion/" itemprop="commentsCount"></span>
+                <a href="/2016/10/09/STL-allocator/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/10/09/STL-allocator/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -296,24 +297,198 @@
       
 
       
-        <p>《Unix网络编程(第三版)》(以下简称[UNP])中第三十章”客户/服务器程序设计范式”总结了一些常见的并发网络服务程序设计方案，而随着互联网、大数据等浪潮的兴起，业界对服务器程序的高并发能力、稳定性等提出了更高的要求，客户/服务器程序设计范式也在随着时代的需求而不断改进和提升，下面就对常见的并发网络服务程序设计方案作简单总结。</p>
-<a id="more"></a>
-<h3 id="《Unix网络编程》传统方案"><a href="#《Unix网络编程》传统方案" class="headerlink" title="《Unix网络编程》传统方案"></a>《Unix网络编程》传统方案</h3><h4 id="方案0"><a href="#方案0" class="headerlink" title="方案0"></a>方案0</h4><p>这并不是并发服务器，正如在[UNP]第一章入门的时间获取客户/服务器程序中所看到的，一次只能服务一个客户。服务器通过循环监听套接字等待连接，在连接建立以后处理所需的逻辑。对应到程序中，服务器和客户端都只是简单的调用socket API，完成连接和处理工作。</p>
-<h4 id="方案1"><a href="#方案1" class="headerlink" title="方案1"></a>方案1</h4><p>这是传统的并发网络编程方案，也是[UNP]中第一个阐述的并发方案，称之为fork()-per-client或process-per-connection，即为每一个客户连接新建一个子进程(fork())，在子进程调用handler()处理客户业务，从而同时服务多个客户端。<br>这种方案适合并发连接数不大、计算响应的工作量远大于fork()的开销等情况，考虑到操作系统对运行服务器的用户能够同时拥有多少子进程的限制和为每个客户现场fork()一个子进程的开销。</p>
-<h4 id="方案2"><a href="#方案2" class="headerlink" title="方案2"></a>方案2</h4><p>对方案1的优化，采用进程池，即在启动阶段预先派生一定数量的子进程，当各个客户连接到达时，这些子进程立即就能为它们服务。<br>这种技术的优点在于无须引入父进程执行fork()的开销就能处理新到的客户。缺点则是父进程必须在服务器启动阶段猜测需要预先派生多少子进程。[UNP]中详细的说明了该方案以及对该方案的一些修订，个人觉得最后一个修订版本是一个较好且实用的方案，即只让父进程调用accept()，然后把所接受的已连接套接字”传递给”（描述符传递）某个子进程，父进程随后关闭这个套接字，由子进程处理，父子进程之间通过管道通信。</p>
-<h4 id="方案3"><a href="#方案3" class="headerlink" title="方案3"></a>方案3</h4><p>传统Java网络编程方案thread-per-connection，即为每个客户连接新建一个线程，由子线程调用handler()处理客户业务，从而同时服务多个客户端。<br>这种方案使用线程来取代子进程，所以开销要比方案1小。</p>
-<h4 id="方案4"><a href="#方案4" class="headerlink" title="方案4"></a>方案4</h4><p>类似于方案2，对方案3中预先创建线程池，就不再赘述。</p>
-<h3 id="《Unix网络编程》传统方案总结"><a href="#《Unix网络编程》传统方案总结" class="headerlink" title="《Unix网络编程》传统方案总结"></a>《Unix网络编程》传统方案总结</h3><p>上述几种方案都是阻塞式网络编程，程序通常会阻塞在系统调用上。比如，当一个进程/线程阻塞在读网络流的时候，但同时程序又想处理键盘输入，就麻烦了。<br>所以，一种常见的方法是使用IO多路复用，使用select/poll/epoll这类的多路选择器（本质是事件驱动），让一个线程能处理多个连接。IO复用其实复用的不是IO连接，而是复用线程。使用IO复用几乎肯定要配合非阻塞IO，而使用非阻塞IO肯定要使用应用层buffer。这样，就诞生了现代网络编程中以事件驱动为核心的Reactor模式，继而出现了一些通用的Reactor库/框架，比如libevent、muduo、Netty等。</p>
-<h3 id="Reactor方案"><a href="#Reactor方案" class="headerlink" title="Reactor方案"></a>Reactor方案</h3><h4 id="方案5"><a href="#方案5" class="headerlink" title="方案5"></a>方案5</h4><p>基本的单线程Reactor方案，使用IO复用，可以同时服务多个连接，但是由于它是单线程的，比较适合IO密集的应用，不太适合CPU密集型的应用，不能发挥多核硬件的能力。</p>
-<h4 id="方案6"><a href="#方案6" class="headerlink" title="方案6"></a>方案6</h4><p>类似于[UNP]中的解决方案，建立客户连接后，不在Reactor线程中计算，而是创建一个新线程来计算，可以充分利用多核CPU的优势。这个方案需要考虑的是线程执行的不确定性，即同时创建多个线程去处理同一个连接上收到的多个请求，那么算出结果的次序是不确定的。此外，还有一个连接到来创建线程的开销，可以通过下述方案7中的线程池避免。</p>
-<h4 id="方案7"><a href="#方案7" class="headerlink" title="方案7"></a>方案7</h4><p>为弥补为每个请求创建线程的缺陷，使用固定大小的线程池解决。全部的IO工作都在一个Reator线程完成，而计算任务交给线程池。这种模型适用于计算任务彼此独立，并且IO压力不大的情况。当IO的压力较大时，一个Reactor线程很可能处理不过来了，就可以考虑下方案8。</p>
-<h4 id="方案8"><a href="#方案8" class="headerlink" title="方案8"></a>方案8</h4><p>该方案的特点是one loop per thread，如下图所示，有一个main Reactor负责accept()连接，然后把连接挂在某个sub Reactor中，这样该连接的所有操作都在sub Reactor所处的线程中完成。这是muduo和Netty内置的多线程方案。<br><img src="http://i.imgur.com/kccnUkP.png" alt=""><br>Reactor pool的大小(线程数)通常根据CPU数目确定，这样程序的总体处理能力不会随着连接数增加而下降。此外， 由于一个连接完全由一个线程管理，请求的顺序就有了保证。<br>与前面的Reactor+thread pool相比，该方案减少了进出thread pool的两次上下文切换，在把多个连接分散到多个Reactor线程之后，小规模计算可以在当前IO线程完成并返回结果，从而降低响应的延迟。</p>
-<h4 id="方案9"><a href="#方案9" class="headerlink" title="方案9"></a>方案9</h4><p>将上述两种方案结合，既使用多个Reactor来处理IO，又使用线程池来处理计算，如下图所示。这种方案适合既有突发IO（利用多线程处理多个连接上的IO），又有突发计算的应用(利用线程池把一个连接上的计算任务分配给多个线程去做)。<br><img src="http://i.imgur.com/2bBaThf.png" alt=""></p>
-<h4 id="方案10"><a href="#方案10" class="headerlink" title="方案10"></a>方案10</h4><p>Reactor in processes,采用多进程实现。这是Nginx的内置方案，待后续研究Nginx的时候再详述。</p>
-<h3 id="Reactor方案总结"><a href="#Reactor方案总结" class="headerlink" title="Reactor方案总结"></a>Reactor方案总结</h3><p>对上述Reactor模型的方案进行了简单总结，如下图所示。</p>
-<p><img src="http://i.imgur.com/n4bAxFY.png" alt=""></p>
-<p>其中,C1和C2是根据实际情况设置的常数，与CPU数目、用户业务有关。</p>
-<p>参考: 《Linux多线程服务端编程》</p>
+        <p>最近准备结合《STL源码剖析》把学习的STL知识整理一遍，加深自己的理解的同时，也方便以后需要的时候查看。<br><a id="more"></a><br>首先总结的是STL中的内存分配—空间配置器，从STL的运用角度而言，空间配置器是最不需要介绍的东西，因为用户使用过程中不会直接与其打交道，但是，从STL的实现角度看，空间配置器又是最重要的知识点之一，因为整个STL的操作对象都存放在容器之内，而容器一定需要配置空间以放置数据。<br>C++ STL配置器分为两层配置器，当请求的内存大于128bytes时，视为“足够大”，用第一层配置器分配内存，当请求的内存小于128bytes时，视为“过小”，调用第二级配置器，第二级配置器采用复杂的内存池整理方式，而不再求助于第一级配置器。</p>
+<h3 id="第一级配置器"><a href="#第一级配置器" class="headerlink" title="第一级配置器"></a>第一级配置器</h3><p>首先来看下主要的源代码：     </p>
+<pre><code>template &lt;int inst&gt;
+class __malloc_alloc_template{
+private:
+    static void *oom_malloc(size_t);    //malloc调用内存不足
+    static void *oom_realloc(void*, size_t);    //realloc调用内存不足
+    static void (*__malloc_alloc_oom_handler)();    //错误处理函数
+public:
+    static void* allocate(size_t){
+        void *result = malloc(n);        //第一级配置器直接调用malloc()
+        if(0 == result) result = oom_malloc(n);
+        return result;
+    }
+    static void* deallocate(void *p, size_t){
+        free(p);            
+    }
+    static void *reallocate(void *p, size_t/* old_sz */, size_t new_sz){
+        void *result = realloc(p, new_sz);    //第一级配置器直接调用realloc()
+        if(0 == result) result = oom_realloc(p, new_sz);
+        return result;    
+    }
+    static void (*set_malloc_handler(void (*f)()))(){    //设置错误处理函数
+        void (* old)() = __malloc_alloc_oom_handler;
+        __malloc_alloc_oom_handler = f;
+        return(old);    
+    }
+};
+
+template &lt;int inst&gt;
+void* __malloc_alloc_template&lt;inst&gt;::oom_alloc(size_t n){
+    void (* my_alloc_handler)();     //声明函数指针
+    void *result;                     //返回的内存指针
+    for(;;){                          //循环，直到成功
+        my_alloc_handler = __malloc_alloc_oom_handler;    
+        if(0 == my_alloc_handler){ __THROW_BAD_ALLOC; }        //抛出异常
+        (*my_alloc_handler)();
+        result = malloc(n);            //再重新分配内存
+        if(result) return(result);        
+    }
+}
+</code></pre><p>第一级配置器相对简单，其使用malloc(), free(), realloc()等C函数执行实际的内存分配，释放，重新配置等操作。此外，这个配置器提供了当内存配置错误时的处理函数oom<em>malloc，这个函数会调用\</em>_malloc_alloc_oom_handler()这个错误处理函数，去企图释放内存，然后重新调用malloc分配内存。如此循环，直到分配成功，返回指针。</p>
+<h3 id="第二级配置器"><a href="#第二级配置器" class="headerlink" title="第二级配置器"></a>第二级配置器</h3><p>STL第二级配置器的做法是，如果区块够大，超过128bytes时，就移交第一级配置器处理。当区块小于128bytes时，则以内存池管理，即每次配置一大块内存，并维护对应之自由链表，下次若再有相同大小的内存需求，就直接从free lists中拔出，而如果客户端释还小额区块，就由配置器回收到free lists中。<br>为了方便管理，SGI第二级配置器会主动将任何小额区块的内存需求量上调至8的倍数（例如客端要求30bytes，就会自动调整为32bytes），并维护16个free lists，各自管理大小分别为8,16,24,32,40,48,56,64,72,80,88,96,104,112,120,128的小额区块。<br>free-lists的节点结构定义如下：</p>
+<pre><code>union obj {
+    union obj *free_list_link;     //指向下一个内存的地址
+    char client_data[1];           //内存的首地址 
+};
+</code></pre><p>根据union的特性，obj的内存布局应该如下所示：<br><img src="http://i.imgur.com/IE7fZAU.png" alt=""><br>从起第一字段观之，obj被视为一个指针，指向相同形式的另一个obj，从其第二字段观之，obj可被视为一个指针，指向实际区块。这样一物二用的结果是，不会为了维护链表所必须的指针而造成内存的另一种浪费。<br>下面来看一下相关的源代码。   </p>
+<pre><code>enum {__ALIGN = 8}；
+enum {__MAX_BYTES = 128};
+enum {__NFREELISTS = __MAX_BYTES/__ALIGN};
+
+template &lt;bool threads, int inst&gt;
+class __default_alloc_template{
+    ...
+    static size_t ROUND_UP(size_t bytes){        //将bytes上调至8的倍数
+        return (((bytes)+__ALIGN-1) &amp; ~(__ALIGN-1));
+    }
+    static obj* volatile free_list[__NFREELISTS];    //内存池链表
+    static size_t FREELIST_INDEX(size_t bytes){    
+        return (((bytes)+__ALIGN-1)/__ALIGN-1);        //根据区块大小，决定使用第n号free-list
+    }
+    ...    
+};
+
+static void* allocate(size_t n){
+    obj * volatile * my_free_list;
+    obj * result;
+    if(n &gt; (size_t)__MAX_BYTES){
+        return (malloc_alloc::allocate(n));
+    }
+    my_free_list = free_list + FREELIST_INDEX(n);    //寻找合适的那个free_list
+    result = *my_free_list;
+    if(result == 0){        //没找到可用的free_list,准备重新填充free_list
+        void* r = refill(ROUND_UP(n));
+        return r;
+    }
+    *my_free_list = result-&gt;free_list_link;        //调整free_list
+    return (result);
+}
+</code></pre><p>具体操作如下图所示（摘自《STL源码剖析》）。当有内存请求到达时（第二级配置器），先找到负责这个内存大小的数据元素指向的内存链表，取出第一块内存，然后把数据元素(obj指针)指向第二块内存的首地址。<br><img src="http://i.imgur.com/VrO5VMA.png" alt=""><br>此外，当程序释放这块内存时，第二级配置器还负责回收这块内存，等下次有请求时，可以直接使用这块内存。示意图（摘自《STL源码剖析》）如下：<br><img src="http://i.imgur.com/um5jnaS.png" alt=""><br>先计算这块内存属于哪个数组元素负责，然后将这块回收的内存放置链表的第一个位置，这块内存的下一块内存为这个链表原先的第一块内存。源代码如下；</p>
+<pre><code>static void deallocate(void *p, size_t n){
+    obj *q = (obj *)p;
+    obj * volatile * my_free_list;
+
+    if(n &gt; (size_t)__MAX_BYTES) {    //大于128bytes,调用第一级配置器回收
+        malloc_alloc::deallocate(p, n);
+        return;
+    }
+    my_free_list = free_list + FREELIST_INDEX(n);    //找到负责这块内存的数据元素
+    q -&gt;free_list_link = *my_free_list;         
+    *my_free_list = q;
+}
+</code></pre><h3 id="重新填充free-lists"><a href="#重新填充free-lists" class="headerlink" title="重新填充free lists"></a>重新填充free lists</h3><p>在上面的allocate()中，当发现free list中没有可用区块了时，就调用refill()，准备为free list重现填充空间。新的空间将取自内存池（经由chunk_alloc()完成）。缺省取得20个新节点（新区块），但万一内存池空间不足，获得的区块数可能小于20。例如，如果请求内存为32bytes，此时内存链表中没有足够的内存了，那么refill会分配20块32bytes的内存块，然后把第一块返回给程序，其他19块由数组相应链表管理。相应的源代码为：</p>
+<pre><code>template &lt;bool threads, int inst&gt;
+void* __default_alloc_template&lt;threads, inst&gt;::refill(size_t n){
+    int nobjs = 20;
+    char *chunk = chunk_alloc(n, nobjs);   //nobjs: pass by reference
+    obj * volatile * my_free_list;
+    obj * result;
+    obj * current_obj, next_obj;
+    int i;
+
+    if(1 == nodejs) return chunk;    //如果只返回一块内存，直接返回
+    my_free_list = free_list + FREELIST_INDEX(n);
+
+    result = (obj*)chunk;        //不止一块内存，取出第一块内存
+    *my_free_list = next_obj = (obj *)(chunk + n );   //数组元素链表指针指向第二块内存
+    for(i=1; ;i++){
+        curent_obj = next_obj;
+        next_obj = (*obj)((char*)next_obj+n);
+        if(nobjs - 1 ==i){
+            current_obj-&gt;free_list_link = 0;
+            break;
+        }else{
+            current_obj-&gt;free_list_link = next_obj;
+        }
+    }
+    return(result);
+}            
+</code></pre><p>接下来分析真正从内存池获取内存的函数chunk_alloc。</p>
+<pre><code>template &lt;bool threads, int inst&gt;
+char* __default_alloc_template&lt;threads, inst&gt;::chunk_alloc(size_t size, int&amp; nobjs){
+    char* result;
+    size_t total_bytes = size * nobjs;
+    size_t bytes_left = end_free - start_free;        //内存池剩余的内存
+
+    if(bytes_left &gt;= total_bytes){        //当内存持内存足够时
+        result = start_free;
+        start_free += total_free;
+        return(result);
+    }else if(bytes_left &gt;= size){        //内存池不能满足total，但是可以满足一块以上
+        nobjs = bytes_left/size;
+        total_bytes = size * nobjs;
+        result = start_free;
+        start_free += total_bytes;
+        return(result);
+    }else{                //试着让内存池的残余零头还有利用价值
+        size_t bytes_to_get = 2*total_bytes + ROUND_UP(heap_size &gt;&gt; 4);
+        if(bytes_left &gt; 0){
+            obj * volatile * my_free_list = free_list + FREELIST_INDEX(bytes_left);
+            ((obj *)start_free) -&gt; free_list_link = *my_free_list;    //调整free list，将内存池中的残余空间编入
+            *my_free_list = (*obj)start_free;
+        }
+        //调用malloc从内存分配
+        start_free = (char*)malloc(bytes_to_get);
+        if(0 == start_free){                //当系统内存不足时
+            int i;
+            obj * volatile * my_free_list, *p;
+            for(i=size;i&lt;=__MAX_BYTES;i+=__ALIGN){
+                my_free_list = free_list + FREELIST_INDEX(i);
+                p = *my_free_list;
+                if(0 != p){
+                    *my_free_list = p-&gt;free_list_link;
+                    start_free = (char*)p;
+                    end_free = start_free + i;
+                    return(chunk_alloc(size, nobjs));
+                }
+            }
+            end_free = 0;        //从其他链表也没获取到内存，到处都没内存可用了
+            start_free = (char*)malloc_alloc::allocate(byte_to_get);        //调用第一级配置器，因为有错误处理函数，最后的补救办法了
+        }
+        heap_size += bytes_to_get;
+        end_free = start_free + bytes_to_get;
+        return(chunk_alloc(size, nobjs));
+    }
+}
+</code></pre><p>chunk_alloc()函数以end_free-start_free来判断内存池的水量，如果水量充足，就直接调出20个区块返回给free list，如果水量不足以提供20个区块，但还足够供应一个以上的区块，就拨出这不足20个区块的空间出去，这时候pass by reference的nobjs参数被修改为实际能够供应的区块数。如果内存池连一个区块空间都无法供应，此时便利用malloc()从heap中配置内存，为内存注入源头活水以应付需求。其过程如下图所示：<br><img src="http://i.imgur.com/SCDG2Gu.png" alt=""></p>
+<h3 id="对象内容的构造与析构"><a href="#对象内容的构造与析构" class="headerlink" title="对象内容的构造与析构"></a>对象内容的构造与析构</h3><p>我们知道，C++中的new操作符包含两阶段的操作：（1）调用::operator new配置内存；（2）调用构造函数构造对象内容，所以，为了精密分工，STL allocator决定将这两阶段 操作区分开来，内存配置操作由alloc::allocate()负责，对象构造函数由::construct()负责。同理，对象的析构与内存释放也是由两部分操作组成。</p>
+<h3 id="使用配置器"><a href="#使用配置器" class="headerlink" title="使用配置器"></a>使用配置器</h3><p>最后，来看下配置器是如何使用的。      </p>
+<pre><code>template&lt;class T, class Alloc&gt;
+class simple_alloc {
+public:
+    static T *allocate(size_t n)
+        { return 0 == n ? 0 : (T*)Alloc::allocate(n * sizeof(T)); }
+    static T *allocate(void)
+        { return 0 == n ? 0 : (T*)Alloc::allocate(sizeof(T)); }
+    static void deallocate(T* p, size_t n)
+        { if(0 != n) Alloc::deallocate(p, n * sizeof(T)); }
+    static void deallocate(T* p)
+        { Alloc::deallocate(p, sizeof(T)); }
+};        
+</code></pre><p>simple_alloc类封装了Alloc的分配和回收内存函数，并提供了四个用于内存操作的函数接口。</p>
+<pre><code>template &lt;class T, class Alloc = alloc&gt;        //alloc被默认为第二级配置器
+class vector{
+public:
+    typedef T value_type;
+    ...
+protected:
+    typedef simple_alloc&lt;value_type, Alloc&gt; data_allocator;    
+}
+</code></pre><p>可以看出，vector内嵌了data_allocator类型，当需要分配内存时，调用simple_alloc的成员方法即可。</p>
 
       
     </div>
@@ -328,9 +503,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/network-linux/" rel="tag">#network/linux</a>
-          
-            <a href="/tags/muduo/" rel="tag">#muduo</a>
+            <a href="/tags/C/" rel="tag">#C++</a>
           
         </div>
       
@@ -339,17 +512,13 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/05/15/cplusplus-sematics/" rel="next" title="浅谈C++值语义和对象语义">
-                <i class="fa fa-chevron-left"></i> 浅谈C++值语义和对象语义
+              <a href="/2016/09/28/tcp-backlog/" rel="next" title="浅谈tcp backlog">
+                <i class="fa fa-chevron-left"></i> 浅谈tcp backlog
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/06/05/cpp-constructor/" rel="prev" title="C++构造函数一些常见问题分析">
-                C++构造函数一些常见问题分析 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -375,8 +544,8 @@
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/05/28/concurrent-server-conclusion/"
-           data-title="常见并发网络服务程序设计方案" data-url="http://blog.dujiong.net/2016/05/28/concurrent-server-conclusion/">
+      <div class="ds-thread" data-thread-key="2016/10/09/STL-allocator/"
+           data-title="C++ STL空间配置器" data-url="http://blog.dujiong.net/2016/10/09/STL-allocator/">
       </div>
     
   </div>
@@ -490,7 +659,7 @@
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#《Unix网络编程》传统方案"><span class="nav-number">1.</span> <span class="nav-text">《Unix网络编程》传统方案</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#方案0"><span class="nav-number">1.1.</span> <span class="nav-text">方案0</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#方案1"><span class="nav-number">1.2.</span> <span class="nav-text">方案1</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#方案2"><span class="nav-number">1.3.</span> <span class="nav-text">方案2</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#方案3"><span class="nav-number">1.4.</span> <span class="nav-text">方案3</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#方案4"><span class="nav-number">1.5.</span> <span class="nav-text">方案4</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#《Unix网络编程》传统方案总结"><span class="nav-number">2.</span> <span class="nav-text">《Unix网络编程》传统方案总结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reactor方案"><span class="nav-number">3.</span> <span class="nav-text">Reactor方案</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#方案5"><span class="nav-number">3.1.</span> <span class="nav-text">方案5</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#方案6"><span class="nav-number">3.2.</span> <span class="nav-text">方案6</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#方案7"><span class="nav-number">3.3.</span> <span class="nav-text">方案7</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#方案8"><span class="nav-number">3.4.</span> <span class="nav-text">方案8</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#方案9"><span class="nav-number">3.5.</span> <span class="nav-text">方案9</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#方案10"><span class="nav-number">3.6.</span> <span class="nav-text">方案10</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reactor方案总结"><span class="nav-number">4.</span> <span class="nav-text">Reactor方案总结</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#第一级配置器"><span class="nav-number">1.</span> <span class="nav-text">第一级配置器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#第二级配置器"><span class="nav-number">2.</span> <span class="nav-text">第二级配置器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#重新填充free-lists"><span class="nav-number">3.</span> <span class="nav-text">重新填充free lists</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#对象内容的构造与析构"><span class="nav-number">4.</span> <span class="nav-text">对象内容的构造与析构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用配置器"><span class="nav-number">5.</span> <span class="nav-text">使用配置器</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">
