@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-10-17T13:22:46.367Z</updated>
+  <updated>2016-10-17T13:31:20.941Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -20,9 +20,9 @@
     <link href="http://blog.dujiong.net/2016/10/14/STL-iterator/"/>
     <id>http://blog.dujiong.net/2016/10/14/STL-iterator/</id>
     <published>2016-10-14T09:49:12.000Z</published>
-    <updated>2016-10-17T13:22:46.367Z</updated>
+    <updated>2016-10-17T13:31:20.941Z</updated>
     
-    <content type="html">&lt;p&gt;我们知道，STL的中心思想在于：将数据容器和算法分开，彼此独立设计，最后再以一帖胶着剂将他们撮合在一起。容器和算法的泛型化，可分别通过C++的class templates和function templates达成目标，而如何设计出两者之间的良好胶着剂，是一个值得深究的问题。本文所要学习的迭代器（iterator）就是在STL中扮演粘胶的角色。&lt;/p&gt;
+    <content type="html">&lt;p&gt;我们知道，STL的中心思想在于：将数据容器和算法分开，彼此独立设计，最后再以一帖胶着剂将他们撮合在一起。容器和算法的泛型化，可分别通过C++的class templates和function templates达成目标，而如何设计出两者之间的良好胶着剂，是一个值得深究的问题。本文所要学习的迭代器（iterator）就是在STL中扮演粘胶的角色。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h3 id=&quot;Traits编程手法&quot;&gt;&lt;a href=&quot;#Traits编程手法&quot; class=&quot;headerlink&quot; title=&quot;Traits编程手法&quot;&gt;&lt;/a&gt;Traits编程手法&lt;/h3&gt;&lt;p&gt;在迭代器的实现中，经常需要访问迭代器所指对象的类型，称之为该迭代器的value type。利用内嵌类型声明typedef可以轻松实现隐藏所指对象类型。如下迭代器的实现：&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;template &amp;lt;class T&amp;gt;
 struct Iterator{
@@ -133,7 +133,7 @@ struct iterator_traits&amp;lt;T*&amp;gt;{
     
     <summary type="html">
     
-      &lt;p&gt;我们知道，STL的中心思想在于：将数据容器和算法分开，彼此独立设计，最后再以一帖胶着剂将他们撮合在一起。容器和算法的泛型化，可分别通过C++的class templates和function templates达成目标，而如何设计出两者之间的良好胶着剂，是一个值得深究的问题
+      &lt;p&gt;我们知道，STL的中心思想在于：将数据容器和算法分开，彼此独立设计，最后再以一帖胶着剂将他们撮合在一起。容器和算法的泛型化，可分别通过C++的class templates和function templates达成目标，而如何设计出两者之间的良好胶着剂，是一个值得深究的问题。本文所要学习的迭代器（iterator）就是在STL中扮演粘胶的角色。&lt;br&gt;
     
     </summary>
     

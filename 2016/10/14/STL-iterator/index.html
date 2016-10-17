@@ -59,20 +59,17 @@
 
 
 
-<meta name="description" content="我们知道，STL的中心思想在于：将数据容器和算法分开，彼此独立设计，最后再以一帖胶着剂将他们撮合在一起。容器和算法的泛型化，可分别通过C++的class templates和function templates达成目标，而如何设计出两者之间的良好胶着剂，是一个值得深究的问题。本文所要学习的迭代器（iterator）就是在STL中扮演粘胶的角色。
-Traits编程手法在迭代器的实现中，经常需要访问迭">
+<meta name="description" content="我们知道，STL的中心思想在于：将数据容器和算法分开，彼此独立设计，最后再以一帖胶着剂将他们撮合在一起。容器和算法的泛型化，可分别通过C++的class templates和function templates达成目标，而如何设计出两者之间的良好胶着剂，是一个值得深究的问题。本文所要学习的迭代器（iterator）就是在STL中扮演粘胶的角色。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="C++ STL迭代器">
 <meta property="og:url" content="http://blog.dujiong.net/2016/10/14/STL-iterator/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="我们知道，STL的中心思想在于：将数据容器和算法分开，彼此独立设计，最后再以一帖胶着剂将他们撮合在一起。容器和算法的泛型化，可分别通过C++的class templates和function templates达成目标，而如何设计出两者之间的良好胶着剂，是一个值得深究的问题。本文所要学习的迭代器（iterator）就是在STL中扮演粘胶的角色。
-Traits编程手法在迭代器的实现中，经常需要访问迭">
+<meta property="og:description" content="我们知道，STL的中心思想在于：将数据容器和算法分开，彼此独立设计，最后再以一帖胶着剂将他们撮合在一起。容器和算法的泛型化，可分别通过C++的class templates和function templates达成目标，而如何设计出两者之间的良好胶着剂，是一个值得深究的问题。本文所要学习的迭代器（iterator）就是在STL中扮演粘胶的角色。">
 <meta property="og:image" content="http://i.imgur.com/WSUJIqE.jpg">
-<meta property="og:updated_time" content="2016-10-17T13:22:46.367Z">
+<meta property="og:updated_time" content="2016-10-17T13:31:20.941Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="C++ STL迭代器">
-<meta name="twitter:description" content="我们知道，STL的中心思想在于：将数据容器和算法分开，彼此独立设计，最后再以一帖胶着剂将他们撮合在一起。容器和算法的泛型化，可分别通过C++的class templates和function templates达成目标，而如何设计出两者之间的良好胶着剂，是一个值得深究的问题。本文所要学习的迭代器（iterator）就是在STL中扮演粘胶的角色。
-Traits编程手法在迭代器的实现中，经常需要访问迭">
+<meta name="twitter:description" content="我们知道，STL的中心思想在于：将数据容器和算法分开，彼此独立设计，最后再以一帖胶着剂将他们撮合在一起。容器和算法的泛型化，可分别通过C++的class templates和function templates达成目标，而如何设计出两者之间的良好胶着剂，是一个值得深究的问题。本文所要学习的迭代器（iterator）就是在STL中扮演粘胶的角色。">
 <meta name="twitter:image" content="http://i.imgur.com/WSUJIqE.jpg">
 
 
@@ -297,7 +294,7 @@ Traits编程手法在迭代器的实现中，经常需要访问迭">
       
 
       
-        <p>我们知道，STL的中心思想在于：将数据容器和算法分开，彼此独立设计，最后再以一帖胶着剂将他们撮合在一起。容器和算法的泛型化，可分别通过C++的class templates和function templates达成目标，而如何设计出两者之间的良好胶着剂，是一个值得深究的问题。本文所要学习的迭代器（iterator）就是在STL中扮演粘胶的角色。</p>
+        <p>我们知道，STL的中心思想在于：将数据容器和算法分开，彼此独立设计，最后再以一帖胶着剂将他们撮合在一起。容器和算法的泛型化，可分别通过C++的class templates和function templates达成目标，而如何设计出两者之间的良好胶着剂，是一个值得深究的问题。本文所要学习的迭代器（iterator）就是在STL中扮演粘胶的角色。<br><a id="more"></a></p>
 <h3 id="Traits编程手法"><a href="#Traits编程手法" class="headerlink" title="Traits编程手法"></a>Traits编程手法</h3><p>在迭代器的实现中，经常需要访问迭代器所指对象的类型，称之为该迭代器的value type。利用内嵌类型声明typedef可以轻松实现隐藏所指对象类型。如下迭代器的实现：</p>
 <pre><code>template &lt;class T&gt;
 struct Iterator{
