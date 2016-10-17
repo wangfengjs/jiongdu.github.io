@@ -4,6 +4,23 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/10/14/STL-iterator/</loc>
+    <lastmod>2016-10-17T13:22:46.367Z</lastmod>
+    <data>
+        <display>
+        <title>C++ STL迭代器</title>
+        <pubTime>2016-10-14T09:49:12.000Z</pubTime>
+        
+        <tag>C++</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/10/09/STL-allocator/</loc>
     <lastmod>2016-10-13T11:18:08.167Z</lastmod>
     <data>

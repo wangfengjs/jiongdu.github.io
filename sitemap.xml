@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://blog.dujiong.net/2016/10/14/STL-iterator/</loc>
+    
+    <lastmod>2016-10-17T13:22:46.367Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://blog.dujiong.net/2016/10/09/STL-allocator/</loc>
     
     <lastmod>2016-10-13T11:18:08.167Z</lastmod>
