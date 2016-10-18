@@ -41,7 +41,7 @@
 <link href="/css/main.css?v=0.5.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="network/linux," />
+  <meta name="keywords" content="C++," />
 
 
 
@@ -59,20 +59,16 @@
 
 
 
-<meta name="description" content="首先，纪念一下，如果不出意外的话（没过or狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。">
+<meta name="description" content="仿函数，又称为函数对象，即一种具有函数特质的对象，指的是那些可以被传入其他函数或是从其他函数返回的函数。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="TCP协议总结（二）">
-<meta property="og:url" content="http://blog.dujiong.net/2016/06/25/tcp-2/index.html">
+<meta property="og:title" content="C++ STL仿函数">
+<meta property="og:url" content="http://blog.dujiong.net/2016/10/21/STL-functor/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="首先，纪念一下，如果不出意外的话（没过or狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。">
-<meta property="og:image" content="http://i.imgur.com/56fKXLt.png">
-<meta property="og:image" content="http://i.imgur.com/2oZwECU.jpg">
-<meta property="og:image" content="http://i.imgur.com/8afv8ge.jpg">
-<meta property="og:updated_time" content="2016-08-07T13:00:43.518Z">
+<meta property="og:description" content="仿函数，又称为函数对象，即一种具有函数特质的对象，指的是那些可以被传入其他函数或是从其他函数返回的函数。">
+<meta property="og:updated_time" content="2016-10-18T12:10:54.242Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="TCP协议总结（二）">
-<meta name="twitter:description" content="首先，纪念一下，如果不出意外的话（没过or狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。">
-<meta name="twitter:image" content="http://i.imgur.com/56fKXLt.png">
+<meta name="twitter:title" content="C++ STL仿函数">
+<meta name="twitter:description" content="仿函数，又称为函数对象，即一种具有函数特质的对象，指的是那些可以被传入其他函数或是从其他函数返回的函数。">
 
 
 
@@ -90,7 +86,7 @@
   };
 </script>
 
-  <title> TCP协议总结（二） | 一期一会 </title>
+  <title> C++ STL仿函数 | 一期一会 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -250,7 +246,7 @@
             
             
               
-                TCP协议总结（二）
+                C++ STL仿函数
               
             
           </h1>
@@ -262,8 +258,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-06-25T20:06:14+08:00" content="2016-06-25">
-              2016-06-25
+            <time itemprop="dateCreated" datetime="2016-10-21T20:10:17+08:00" content="2016-10-21">
+              2016-10-21
             </time>
           </span>
 
@@ -273,8 +269,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/06/25/tcp-2/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/06/25/tcp-2/" itemprop="commentsCount"></span>
+                <a href="/2016/10/21/STL-functor/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/10/21/STL-functor/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -296,24 +292,145 @@
       
 
       
-        <p>首先，纪念一下，如果不出意外的话（没过or狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…<br>好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。</p>
-<a id="more"></a>
-<h3 id="TCP重传机制"><a href="#TCP重传机制" class="headerlink" title="TCP重传机制"></a>TCP重传机制</h3><p>TCP是可靠的、面向连接的协议，要保证所有的数据包都可以到达，所以，重传机制是必须的。<br>由于接收端给发送端的ACK只会确认最后一个连续的包，比如，发送端发了1、2、3、4、5一共5份数据，接收端收到了1、2，于是回ACK 3，然后收到了4，此时3没收到，怎么办？</p>
-<h4 id="超时重传机制"><a href="#超时重传机制" class="headerlink" title="超时重传机制"></a>超时重传机制</h4><p>一种方法是不回ACK，一直等3，当发送方发现收不到3的ACK，超时后会重传3.一旦接收方收到3后吗，会A回CK 4，表示3和4都收到了。<br>但是，问题来了，因为一直等3，可能会导致4和5即便已经收到了，发送方因为没有收到ACK，悲观地认为4和5也丢了，所以可能导致4和5的重传。对此有两种选择：一种是仅重传timeout的包。也就是第3份数据，另一种是重传timeout后所有的数据，也就是第3，4，5这三份数据。这两种方式有好也有不好。第一种会节省带宽，但是慢，第二种会快一点，但是会浪费带宽，很可能会有无用功。但总体来说都不好。因为都在等timeout，timeout可能会很长（下面会说TCP怎么动态计算timeout）。</p>
-<h4 id="快速重传机制"><a href="#快速重传机制" class="headerlink" title="快速重传机制"></a>快速重传机制</h4><p>快速重传机制不以时间驱动，而以数据驱动重传。也就是说，如果包没有连续到达，就回复ACK最后那个可能被丢了的包，如果发送方连续收到3次相同的ACK，就重传。这样，好处是不用等timeout了再重传。<br>比如：如果发送方发出了1、2、3、4、5共5份数据，第一份先到了，于是接收方回复ACK 2，结果2因为某些原因没到、3到了，于是还是ACK 2，后面的4和5都到了，但是还是ACK 2，因为2还没有到，于是发送端收到了三个ACK 2的确认，就马上重传2。然后，接收端收到了2，此时3、4、5都已经收到了，于是ACK 6。其图示如下。<br><img src="http://i.imgur.com/56fKXLt.png" alt=""></p>
-<p>但是，这样还是没有解决重传之前的一个还是重传所有的问题。就上面例子来说，发送端并不清楚这三个ACK 2是接收端收到哪些数据后传回来的。</p>
-<h4 id="SACK方法"><a href="#SACK方法" class="headerlink" title="SACK方法"></a>SACK方法</h4><p>另外一种更好的方式是：Selective ACK，需要在TCP头里加一个SACK的东西，ACK还是上面快速重传机制中的ACK。</p>
-<p><img src="http://i.imgur.com/2oZwECU.jpg" alt=""></p>
-<p>这样，在发送端就可以根据回传的SACK来知道哪些数据到了，哪些数据没有到。在Linux下，可以通过tcp_sack这个参数打开这个功能。      </p>
-<h4 id="Timeout与RTT"><a href="#Timeout与RTT" class="headerlink" title="Timeout与RTT"></a>Timeout与RTT</h4><p>从上述的TCP重传机制中可以看出，Timeout对于TCP重传的性能非常重要。如果设置长了，重发就慢，丢了很久才重发，效率低、性能差。而如果设置短了，导致并没有丢包就重发，这样重发加快，会增加网络拥塞，导致更多的超时，更多的超时又引起更多的重法，这样恶性循环。<br>所以，根据不同时间、网络情况，Timeout这个值需要设置，所以，TCP引入了RTT（往返时间，也就是一个数据包从发出去到回来的时间），这样就可以方便、有效的设置Timeout。<br>具体的RTT测量算法这里就不详述，细节可以参考《TCP/IP详解 卷一：协议》。</p>
-<h3 id="TCP滑动窗口"><a href="#TCP滑动窗口" class="headerlink" title="TCP滑动窗口"></a>TCP滑动窗口</h3><p>在上一篇中提到了TCP头部里有一个字段Window，即滑动窗口，这个字段是接收端告诉发送端自己还有多少缓冲区可以接收数据。从而发送端可以根据这个接收端的处理能力来发送数据，而不会导致接收端处理不过来。为了说明滑动窗口，首先来看一下TCP缓冲区的结构：</p>
-<p>  <img src="http://i.imgur.com/8afv8ge.jpg" alt="">            </p>
-<p>从上图可以得到，接收端LastByteRead指向了TCP缓冲区中读到的位置，NextByteExpected指向的地方是收到的连续数据包的最后一个位置，LastByteRcved指向的是收到的包的最后一个位置，可以看到，中间有些数据还没有到达，所有有数据空白区。<br>而发送端的LastByteAcked指向了被接收端ACK了的位置（表示成功发送确认），LastByteSent表示发出去了，但还没有成功确认的地方，LastByteWritten指向的是上层应用正在写的地方。<br>所以，接收端会在给发送端返回的ACK中汇报自己的滑动窗口大小=MaxRcvBuffer-LastByteRcvd-1；而发送端会根据这个窗口大小来控制发送数据的大小，以保证接收方可以处理。要解决这个问题，就是要避免对小的window size做出响应，直到有足够大的window size再响应。     </p>
-<h4 id="Silly-Window-Syndrome和Nagle算法"><a href="#Silly-Window-Syndrome和Nagle算法" class="headerlink" title="Silly Window Syndrome和Nagle算法"></a>Silly Window Syndrome和Nagle算法</h4><p>网络上有个参数叫MTU，对于以太网来说，MTU是1500字节，除去TCP+IP头的40个字节，真正的数据传输可以有1460，这就是MSS（Max Segment Size），TCP的RFC中定义这个MSS的默认值是536。<br>那么，如果网络包可以塞满MTU，那么就可以用满整个带宽，如果不能，那么就会浪费带宽。这时，可以将其想象成一架飞机，如果飞机里满载的话，带宽最高，如果一个飞机只运一个人的话，无疑成本增加了。所以，Silly Window Syndrome这个现象就像是本来可以坐200人的飞机里只坐了一两人。<br>要解决这个问题，就要避免对小的窗口大小做出响应，直到有足够大的窗口大小再响应，这就是著名的Nagle算法。<br>Nagle算法要求一个TCP连接上最多只能有一个未被确认的未完成的小分组，在该分组的确认到达之前不能发送其他的小分组。TCP将手机这些少量的分组，并在确认到来时以一个分组的方式发出去。<br>该算法主要用于避免过多小分组在网络中传输，降低网络容量利用率。比如：一个20字节的TCP首部+20字节的IP首部+1个字节的数据组成的TCP数据报，有效传输利用率只有近1/40，这些小分组在广域网上会增加拥塞出现的可能。<br>但是，有时我们又需要关闭Nagle算法，比如说一些需要快速响应、对时延敏感的应用，如窗口程序，可以通过套接字选项TCP_NODELAY来关闭该算法。</p>
-<h3 id="TCP的拥塞处理"><a href="#TCP的拥塞处理" class="headerlink" title="TCP的拥塞处理"></a>TCP的拥塞处理</h3><p>如前面所描述的，TCP通过滑动窗口来做流控，但是这样还不够，因为滑动窗口只是依赖于连接的发送端和接收端，并不知道网络中间发生了什么。想象一下，网络上的延时突然增加，如果TCP对此作出的应对只有重传数据，但是，大量的重传会导致网络的负担更重，于是会导致更大的延迟以及更多的丢包，这样就产生了恶性循环，最终会拖垮整个网络。<br>所以，TCP不能一个劲地只是重发数据，所以，TCP的理念是，当拥塞发生的时候，要做自我牺牲，就像交通阻塞一样，每个车都应该把路让出来，而不要再去抢路了。<br>拥塞控制主要是四个算法：慢启动、拥塞避免、拥塞发生和快速恢复。       </p>
-<h4 id="慢启动、拥塞避免和拥塞发生"><a href="#慢启动、拥塞避免和拥塞发生" class="headerlink" title="慢启动、拥塞避免和拥塞发生"></a>慢启动、拥塞避免和拥塞发生</h4><p>慢启动的意思是，刚加入网络的连接，一点一点地提速。慢启动为发送方的TCP增加了另一个窗口：拥塞窗口（cwnd）。当与接收方建立TCP连接时，拥塞窗口被初始化为一个报文段，每收到一个ACK，拥塞窗口就增加一个报文段(cwnd以字节为单位，但是慢启动以报文段大小为单位进行增加)，但是有一个上限sshthresh，当cwnd&gt;=ssthresh时，就会进入“拥塞避免算法”。慢启动算法初始设置cwnd为1个报文段，此后每收到一个确认就加1，这样会使窗口按指数方式增长，而拥塞避免算法要求每次收到一个确认时将cwnd增加1/cwnd。与慢启动的指数增加相比起来，这是一种加性增长。<br>所以，拥塞窗口是发送方使用的流量控制，而通告窗口则是接收方使用的流量控制。拥塞避免算法和慢启动算法需要对每个链接维持两个变量：一个拥塞窗口cwnd和一个慢启动门限ssthresh。这样，算法可以描述如下：<br>1）对于一个连接，初始化cwnd为1个报文段，ssthresh为65535个字节。<br>2）TCP输出例程的输出不能超过cwnd和接收方通告窗口的大小。前者是发送方感受到的网络拥塞的估计，而后者则与接收方在该连接上的可用缓存大小有关。<br>3）当拥塞发生时（超时或收到重复确认），ssthresh被设置为当前窗口（cwnd和接收方通告窗口大小的最小值，但最小为2个报文段）大小的一半。此外，如果是超时引起了拥塞，则cwnd被设置为1个报文段（相当于慢启动）。<br>4）当新的数据被对方确认时，就增加cwnd，但增加的方法依赖于是否正在进行慢启动或拥塞避免。如果cwnd小于或等于ssthresh，则正在进行慢启动，否则正在进行拥塞避免。       </p>
-<h4 id="快速恢复算法"><a href="#快速恢复算法" class="headerlink" title="快速恢复算法"></a>快速恢复算法</h4><p>通常和快速重传算法一起使用，算法流程如下：<br>1）当收到第三个重复的ACK时（前面已述），将ssthresh设置为当前拥塞窗口cwnd的一半。重传丢失的报文段。设置cwnd为ssthresh加上3倍的报文段大小。<br>2）每次收到另一个重复的ACK时，cwnd增加1个报文段大小并发送1个分组。<br>3）当下一个确认新数据的ACK到达时，设置cwnd为ssthresh。这个ACK应该是在进行重传后的一个往返时间内对步骤1中重传的确认。另外，这个ACK也应该对丢失的分组和收到的第1个重复的ACK之间的所有中间报文段的确认。这一步采用的是拥塞避免，因为当分组丢失时将当前速率减半。</p>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>通过这两篇总结，对TCP协议的核心知识点进行了复习和再认识，后面还需要结合具体的实例进一步加深理解，能对网络中的实际问题进行更好的分析和处理。</p>
+        <p>仿函数，又称为函数对象，即一种具有函数特质的对象，指的是那些可以被传入其他函数或是从其他函数返回的函数。<br><a id="more"></a></p>
+<h3 id="函数指针与函数对象"><a href="#函数指针与函数对象" class="headerlink" title="函数指针与函数对象"></a>函数指针与函数对象</h3><p>我们知道，STL所提供的各种算法，往往有两个版本，其中一个版本表现出最常用（或最直观）的某种运算，第二个版本则表现出最泛化的演算流程，允许用户“以template参数来指定所要采取的策略”。以accumulate()为例，其第一版本是将指定范围内的所有元素相加，第二版本则允许你指定某种“操作”，取代第一版本的“相加”行为。所以，要将某种“操作”当做算法的参数，首先想到的办法就是先将该“操作”设计为一个函数，再将函数指针当做算法的一个参数；或者将该“操作”设计为一个仿函数（语言层面而言是个class），再以该仿函数产生一个对象，并以此对象作为算法的一个参数。      下面通过一个实际的例子说明这两种方法。   </p>
+<pre><code>#include &lt;iostream&gt;
+
+using namespace std;
+
+int add_func(int a, int b){
+    return a+b;
+}
+
+class AddClass{
+public:
+       int operator()(int a, int b) { return a+b; }
+};
+
+typedef int (*AddFunction)(int a, int b);
+
+int main()
+{
+    {
+        AddClass addClass;
+        int sum = addClass(1,2);
+        cout &lt;&lt; &quot;addClass: &quot; &lt;&lt; sum &lt;&lt; endl;
+    }
+
+    {
+        AddFunction addFunction = &amp;add_func;
+        int sum = addFunction(1,2);
+        cout &lt;&lt; &quot;addFunction: &quot; &lt;&lt; sum &lt;&lt; endl;
+    }
+    return 0;
+}
+</code></pre><p>可以看出，函数对象实际上就是一个重载了operator()操作符的类，这就是函数对象与普通类的差别。另外，函数对象和函数指针在定义的方式不一样，但是调用的方式是一样的。那既然已经有了函数指针这个东西，为什么还要发明函数对象呢？其实很简单，函数对象可以将附加数据保存在成员变量中，从而实现携带附加数据，而函数指针就不行了。考虑下面一个应用场景，我们需要使用std::for_ecah将一个std::vector中的每一个值加上某个值然后输出，如果使用普通函数，则其声明应该为<code>void add_num(int value, int num);</code>，其中value为容器中的元素，num为要加上的数。但是由于std::for_each函数的第三个参数要求传入接受一个参数的函数或函数对象，所以将add_num函数传入std::for_each是错误的，然而函数对象可以携带附加数据解决这个问题。   </p>
+<pre><code>#include &lt;iostream&gt;
+#include &lt;vector&gt;
+#include &lt;algorithm&gt;
+
+using namespace std;
+
+class Add
+{
+    public:
+        void operator()(int value){
+            cout &lt;&lt; value + num_ &lt;&lt; endl;
+        }
+    private:
+        int num_;
+}；
+
+int main()
+{
+    vector&lt;int&gt; ivec;
+    ivec.push_back(1);
+    ivec.push_back(2);
+    ivec.push_back(3);
+
+    Add add(2);
+    std::for_each(ivec.begin(), ivec.end(), add);
+    return 0;
+}
+</code></pre><h3 id="仿函数的型别"><a href="#仿函数的型别" class="headerlink" title="仿函数的型别"></a>仿函数的型别</h3><p>仿函数的相应型别主要用来表现函数参数型别和传回值型别。为了方便起见，<stl\_function.h>定义了两个classes，分别代表一元仿函数和二元仿函数（STL不支持三元仿函数），其中没有任何data members或member functions，唯有一些型别定义，任何仿函数，只要依个人需求选择继承其中一个class，便自动拥有了那些相应型别，也就自动拥有了配接能力。<br>unary_function和binary_function分别用来呈现一元和二元函数的参数型别和返回值型别。用户可以继承它们，从而定义自己的仿函数。   </stl\_function.h></p>
+<pre><code>template &lt;class T&gt;
+struct negate : public unary_function&lt;T,T&gt; {
+    T operator() (const T&amp; x) const { return -x; }
+}
+
+template &lt;class T&gt;
+struct plus : public binary_function&lt;T,T,T&gt; {
+    T operator() (const T&amp; x, const T&amp; y) const { return x + y; }
+}
+</code></pre><p>STL仿函数的分类，若以操作数的个数划分，可分为一元和二元仿函数，若以功能划分，可分为算术运算、关系运算和逻辑运算三大类。     </p>
+<h3 id="lambda"><a href="#lambda" class="headerlink" title="lambda"></a>lambda</h3><p>lambda是C++11中引入的新特性，使程序员能定义匿名对象，而不必定义独立的函数和函数对象，这样使代码更容易编写和理解，又能防止别人的访问(调用)。简而言之，一个lambda函数是一个可以内联在代码中的函数，且通常也会传递给另外的函数（类似于仿函数）。<br>下面用lambda来重写上面的for_each例子。  </p>
+<pre><code>#include &lt;iostream&gt;
+#include &lt;vector&gt;
+#include &lt;algorithm&gt;
+
+using namespace std;    
+
+int main()
+{
+    vector&lt;int&gt; ivec;
+    ivec.push_back(1);
+    ivec.push_back(2);
+    ivec.push_back(3);
+
+    std::for_each(ivec.begin(), ivec.end(),
+                  [](int x) { cout &lt;&lt; x + x &lt;&lt; endl; });
+    return 0;
+}  
+</code></pre><p>lambda表达式<code>[] (int x) { cout &lt;&lt; x + 2 &lt;&lt; endl; }</code>会让编译器产生一个类似前面例子中Add的未命名函数对象类。相比于函数对象类，lambda表达式具有如下优点：（1）简洁，不需要自己去实现函数对象类；（2）不会为临时的使用而引入新的名字，所以不会导致名字污染；（3）函数对象类名不如它的实际代码表达能力强，把代码放在更靠近它的地方将提高代码的清晰度。    </p>
+<h3 id="std-function"><a href="#std-function" class="headerlink" title="std::function"></a>std::function</h3><p>lambda产生的闭包类型可以转换成std::function。std::function对象是对C++中现有的可调用实体的一种类型安全的包裹。  </p>
+<pre><code>#include &lt;iostream&gt;
+#include &lt;functional&gt;
+#include &lt;algorithm?
+#include &lt;vector&gt;
+
+using namespace std;
+
+int main()
+{
+    vector&lt;int&gt; ivec;
+    ivec.push_back(1);
+    ivec.push_back(2);
+    ivec.push_back(3);
+
+    std::function&lt;void(int)&gt; func = [](int val) { std::cout &lt;&lt; val+2 &lt;&lt; endl; }
+    std::for_each(ivec.begin(), ivec.end(), func);
+
+    return 0;
+}
+</code></pre><p>std::function是个类模板，可以对函数（普通函数、成员函数）、lambda表达式、std::bind的绑定表达式、函数对象等进行封装。std::function的实例可以对这些封装的目标进行存储、复制和调用等操作。  </p>
+<h3 id="std-bind"><a href="#std-bind" class="headerlink" title="std::bind"></a>std::bind</h3><p>函数模板std::bind能对普通函数、成员函数、静态成员函数、公共成员变量、公共静态成员变量等进行包装，调用std::bind的包装相当与将函数名和参数绑定在函数内部。std::bind函数模板返回的函数对象的类型是不确定的，但是可以存储在std::function内。std::bind绑定的参数是通过传值的方式传递的，如果需要通过引用传递则参数先需要用std::ref、std::cref进行引用，然后在传递给std::bind 将std::bind函数模板的返回值保存在std::function后，调用时需要传递的参数个数由std::bind中的占位符（std::placeholders::1、std::placeholders::2、std::placeholders::_3等）个数决定，即有几个占位符调用时就需要几个参数。     </p>
+<pre><code>#include &lt;iostream&gt;
+#include &lt;functional&gt;
+
+using namespace std;
+
+int testFunc(int a, char c, float f){
+    cout &lt;&lt; a &lt;&lt; endl;
+    cout &lt;&lt; c &lt;&lt; endl;
+    cout &lt;&lt; f &lt;&lt; endl;
+
+    return a;
+}
+
+int main()
+{
+    auto bindFunc1 = std::bind(testFunc, std::placeholders::_1, &apos;A&apos;, 100.1);
+    bindFunc1(10);
+
+    auto bindFunc2 = std::bind(testFunc, std::placeholders::_1, std::placeholders::_1, 100.1);
+    bindFunc2(&apos;B&apos;, 10);
+
+    auto bindFunc3 = bind(TestFunc, std::placeholders::_2, std::placeholders::_3, std::placeholders::_1);
+    bindFunc3(100.1, 30, &apos;C&apos;);
+
+    return 0;
+}
+</code></pre><h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>本文从STL functor开始，研究了那些可以被传入其他函数或是从其他函数返回的函数，包括函数指针、函数对象、lambda、function和bind。</p>
 
       
     </div>
@@ -328,7 +445,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/network-linux/" rel="tag">#network/linux</a>
+            <a href="/tags/C/" rel="tag">#C++</a>
           
         </div>
       
@@ -337,17 +454,13 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/06/13/tcp-1/" rel="next" title="TCP协议总结（一）">
-                <i class="fa fa-chevron-left"></i> TCP协议总结（一）
+              <a href="/2016/10/18/DataCenterBridging/" rel="next" title="Data Center Bridging">
+                <i class="fa fa-chevron-left"></i> Data Center Bridging
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/07/08/muduo-5/" rel="prev" title="muduo源码阅读之线程同步">
-                muduo源码阅读之线程同步 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -373,8 +486,8 @@
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/06/25/tcp-2/"
-           data-title="TCP协议总结（二）" data-url="http://blog.dujiong.net/2016/06/25/tcp-2/">
+      <div class="ds-thread" data-thread-key="2016/10/21/STL-functor/"
+           data-title="C++ STL仿函数" data-url="http://blog.dujiong.net/2016/10/21/STL-functor/">
       </div>
     
   </div>
@@ -488,7 +601,7 @@
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP重传机制"><span class="nav-number">1.</span> <span class="nav-text">TCP重传机制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#超时重传机制"><span class="nav-number">1.1.</span> <span class="nav-text">超时重传机制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#快速重传机制"><span class="nav-number">1.2.</span> <span class="nav-text">快速重传机制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SACK方法"><span class="nav-number">1.3.</span> <span class="nav-text">SACK方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Timeout与RTT"><span class="nav-number">1.4.</span> <span class="nav-text">Timeout与RTT</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP滑动窗口"><span class="nav-number">2.</span> <span class="nav-text">TCP滑动窗口</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Silly-Window-Syndrome和Nagle算法"><span class="nav-number">2.1.</span> <span class="nav-text">Silly Window Syndrome和Nagle算法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP的拥塞处理"><span class="nav-number">3.</span> <span class="nav-text">TCP的拥塞处理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#慢启动、拥塞避免和拥塞发生"><span class="nav-number">3.1.</span> <span class="nav-text">慢启动、拥塞避免和拥塞发生</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#快速恢复算法"><span class="nav-number">3.2.</span> <span class="nav-text">快速恢复算法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#函数指针与函数对象"><span class="nav-number">1.</span> <span class="nav-text">函数指针与函数对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#仿函数的型别"><span class="nav-number">2.</span> <span class="nav-text">仿函数的型别</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#lambda"><span class="nav-number">3.</span> <span class="nav-text">lambda</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#std-function"><span class="nav-number">4.</span> <span class="nav-text">std::function</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#std-bind"><span class="nav-number">5.</span> <span class="nav-text">std::bind</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">6.</span> <span class="nav-text">总结</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">

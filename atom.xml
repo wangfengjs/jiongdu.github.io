@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-10-18T02:27:46.887Z</updated>
+  <updated>2016-10-18T12:10:54.242Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -16,11 +16,170 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>Data Center Bridge</title>
+    <title>C++ STL仿函数</title>
+    <link href="http://blog.dujiong.net/2016/10/21/STL-functor/"/>
+    <id>http://blog.dujiong.net/2016/10/21/STL-functor/</id>
+    <published>2016-10-21T12:10:17.000Z</published>
+    <updated>2016-10-18T12:10:54.242Z</updated>
+    
+    <content type="html">&lt;p&gt;仿函数，又称为函数对象，即一种具有函数特质的对象，指的是那些可以被传入其他函数或是从其他函数返回的函数。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&quot;函数指针与函数对象&quot;&gt;&lt;a href=&quot;#函数指针与函数对象&quot; class=&quot;headerlink&quot; title=&quot;函数指针与函数对象&quot;&gt;&lt;/a&gt;函数指针与函数对象&lt;/h3&gt;&lt;p&gt;我们知道，STL所提供的各种算法，往往有两个版本，其中一个版本表现出最常用（或最直观）的某种运算，第二个版本则表现出最泛化的演算流程，允许用户“以template参数来指定所要采取的策略”。以accumulate()为例，其第一版本是将指定范围内的所有元素相加，第二版本则允许你指定某种“操作”，取代第一版本的“相加”行为。所以，要将某种“操作”当做算法的参数，首先想到的办法就是先将该“操作”设计为一个函数，再将函数指针当做算法的一个参数；或者将该“操作”设计为一个仿函数（语言层面而言是个class），再以该仿函数产生一个对象，并以此对象作为算法的一个参数。      下面通过一个实际的例子说明这两种方法。   &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;#include &amp;lt;iostream&amp;gt;
+
+using namespace std;
+
+int add_func(int a, int b){
+    return a+b;
+}
+
+class AddClass{
+public:
+       int operator()(int a, int b) { return a+b; }
+};
+
+typedef int (*AddFunction)(int a, int b);
+
+int main()
+{
+    {
+        AddClass addClass;
+        int sum = addClass(1,2);
+        cout &amp;lt;&amp;lt; &amp;quot;addClass: &amp;quot; &amp;lt;&amp;lt; sum &amp;lt;&amp;lt; endl;
+    }
+
+    {
+        AddFunction addFunction = &amp;amp;add_func;
+        int sum = addFunction(1,2);
+        cout &amp;lt;&amp;lt; &amp;quot;addFunction: &amp;quot; &amp;lt;&amp;lt; sum &amp;lt;&amp;lt; endl;
+    }
+    return 0;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;可以看出，函数对象实际上就是一个重载了operator()操作符的类，这就是函数对象与普通类的差别。另外，函数对象和函数指针在定义的方式不一样，但是调用的方式是一样的。那既然已经有了函数指针这个东西，为什么还要发明函数对象呢？其实很简单，函数对象可以将附加数据保存在成员变量中，从而实现携带附加数据，而函数指针就不行了。考虑下面一个应用场景，我们需要使用std::for_ecah将一个std::vector中的每一个值加上某个值然后输出，如果使用普通函数，则其声明应该为&lt;code&gt;void add_num(int value, int num);&lt;/code&gt;，其中value为容器中的元素，num为要加上的数。但是由于std::for_each函数的第三个参数要求传入接受一个参数的函数或函数对象，所以将add_num函数传入std::for_each是错误的，然而函数对象可以携带附加数据解决这个问题。   &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;#include &amp;lt;iostream&amp;gt;
+#include &amp;lt;vector&amp;gt;
+#include &amp;lt;algorithm&amp;gt;
+
+using namespace std;
+
+class Add
+{
+    public:
+        void operator()(int value){
+            cout &amp;lt;&amp;lt; value + num_ &amp;lt;&amp;lt; endl;
+        }
+    private:
+        int num_;
+}；
+
+int main()
+{
+    vector&amp;lt;int&amp;gt; ivec;
+    ivec.push_back(1);
+    ivec.push_back(2);
+    ivec.push_back(3);
+
+    Add add(2);
+    std::for_each(ivec.begin(), ivec.end(), add);
+    return 0;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;仿函数的型别&quot;&gt;&lt;a href=&quot;#仿函数的型别&quot; class=&quot;headerlink&quot; title=&quot;仿函数的型别&quot;&gt;&lt;/a&gt;仿函数的型别&lt;/h3&gt;&lt;p&gt;仿函数的相应型别主要用来表现函数参数型别和传回值型别。为了方便起见，&lt;stl\_function.h&gt;定义了两个classes，分别代表一元仿函数和二元仿函数（STL不支持三元仿函数），其中没有任何data members或member functions，唯有一些型别定义，任何仿函数，只要依个人需求选择继承其中一个class，便自动拥有了那些相应型别，也就自动拥有了配接能力。&lt;br&gt;unary_function和binary_function分别用来呈现一元和二元函数的参数型别和返回值型别。用户可以继承它们，从而定义自己的仿函数。   &lt;/stl\_function.h&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;template &amp;lt;class T&amp;gt;
+struct negate : public unary_function&amp;lt;T,T&amp;gt; {
+    T operator() (const T&amp;amp; x) const { return -x; }
+}
+
+template &amp;lt;class T&amp;gt;
+struct plus : public binary_function&amp;lt;T,T,T&amp;gt; {
+    T operator() (const T&amp;amp; x, const T&amp;amp; y) const { return x + y; }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;STL仿函数的分类，若以操作数的个数划分，可分为一元和二元仿函数，若以功能划分，可分为算术运算、关系运算和逻辑运算三大类。     &lt;/p&gt;
+&lt;h3 id=&quot;lambda&quot;&gt;&lt;a href=&quot;#lambda&quot; class=&quot;headerlink&quot; title=&quot;lambda&quot;&gt;&lt;/a&gt;lambda&lt;/h3&gt;&lt;p&gt;lambda是C++11中引入的新特性，使程序员能定义匿名对象，而不必定义独立的函数和函数对象，这样使代码更容易编写和理解，又能防止别人的访问(调用)。简而言之，一个lambda函数是一个可以内联在代码中的函数，且通常也会传递给另外的函数（类似于仿函数）。&lt;br&gt;下面用lambda来重写上面的for_each例子。  &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;#include &amp;lt;iostream&amp;gt;
+#include &amp;lt;vector&amp;gt;
+#include &amp;lt;algorithm&amp;gt;
+
+using namespace std;    
+
+int main()
+{
+    vector&amp;lt;int&amp;gt; ivec;
+    ivec.push_back(1);
+    ivec.push_back(2);
+    ivec.push_back(3);
+
+    std::for_each(ivec.begin(), ivec.end(),
+                  [](int x) { cout &amp;lt;&amp;lt; x + x &amp;lt;&amp;lt; endl; });
+    return 0;
+}  
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;lambda表达式&lt;code&gt;[] (int x) { cout &amp;lt;&amp;lt; x + 2 &amp;lt;&amp;lt; endl; }&lt;/code&gt;会让编译器产生一个类似前面例子中Add的未命名函数对象类。相比于函数对象类，lambda表达式具有如下优点：（1）简洁，不需要自己去实现函数对象类；（2）不会为临时的使用而引入新的名字，所以不会导致名字污染；（3）函数对象类名不如它的实际代码表达能力强，把代码放在更靠近它的地方将提高代码的清晰度。    &lt;/p&gt;
+&lt;h3 id=&quot;std-function&quot;&gt;&lt;a href=&quot;#std-function&quot; class=&quot;headerlink&quot; title=&quot;std::function&quot;&gt;&lt;/a&gt;std::function&lt;/h3&gt;&lt;p&gt;lambda产生的闭包类型可以转换成std::function。std::function对象是对C++中现有的可调用实体的一种类型安全的包裹。  &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;#include &amp;lt;iostream&amp;gt;
+#include &amp;lt;functional&amp;gt;
+#include &amp;lt;algorithm?
+#include &amp;lt;vector&amp;gt;
+
+using namespace std;
+
+int main()
+{
+    vector&amp;lt;int&amp;gt; ivec;
+    ivec.push_back(1);
+    ivec.push_back(2);
+    ivec.push_back(3);
+
+    std::function&amp;lt;void(int)&amp;gt; func = [](int val) { std::cout &amp;lt;&amp;lt; val+2 &amp;lt;&amp;lt; endl; }
+    std::for_each(ivec.begin(), ivec.end(), func);
+
+    return 0;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;std::function是个类模板，可以对函数（普通函数、成员函数）、lambda表达式、std::bind的绑定表达式、函数对象等进行封装。std::function的实例可以对这些封装的目标进行存储、复制和调用等操作。  &lt;/p&gt;
+&lt;h3 id=&quot;std-bind&quot;&gt;&lt;a href=&quot;#std-bind&quot; class=&quot;headerlink&quot; title=&quot;std::bind&quot;&gt;&lt;/a&gt;std::bind&lt;/h3&gt;&lt;p&gt;函数模板std::bind能对普通函数、成员函数、静态成员函数、公共成员变量、公共静态成员变量等进行包装，调用std::bind的包装相当与将函数名和参数绑定在函数内部。std::bind函数模板返回的函数对象的类型是不确定的，但是可以存储在std::function内。std::bind绑定的参数是通过传值的方式传递的，如果需要通过引用传递则参数先需要用std::ref、std::cref进行引用，然后在传递给std::bind 将std::bind函数模板的返回值保存在std::function后，调用时需要传递的参数个数由std::bind中的占位符（std::placeholders::1、std::placeholders::2、std::placeholders::_3等）个数决定，即有几个占位符调用时就需要几个参数。     &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;#include &amp;lt;iostream&amp;gt;
+#include &amp;lt;functional&amp;gt;
+
+using namespace std;
+
+int testFunc(int a, char c, float f){
+    cout &amp;lt;&amp;lt; a &amp;lt;&amp;lt; endl;
+    cout &amp;lt;&amp;lt; c &amp;lt;&amp;lt; endl;
+    cout &amp;lt;&amp;lt; f &amp;lt;&amp;lt; endl;
+
+    return a;
+}
+
+int main()
+{
+    auto bindFunc1 = std::bind(testFunc, std::placeholders::_1, &amp;apos;A&amp;apos;, 100.1);
+    bindFunc1(10);
+
+    auto bindFunc2 = std::bind(testFunc, std::placeholders::_1, std::placeholders::_1, 100.1);
+    bindFunc2(&amp;apos;B&amp;apos;, 10);
+
+    auto bindFunc3 = bind(TestFunc, std::placeholders::_2, std::placeholders::_3, std::placeholders::_1);
+    bindFunc3(100.1, 30, &amp;apos;C&amp;apos;);
+
+    return 0;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;总结&quot;&gt;&lt;a href=&quot;#总结&quot; class=&quot;headerlink&quot; title=&quot;总结&quot;&gt;&lt;/a&gt;总结&lt;/h3&gt;&lt;p&gt;本文从STL functor开始，研究了那些可以被传入其他函数或是从其他函数返回的函数，包括函数指针、函数对象、lambda、function和bind。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;仿函数，又称为函数对象，即一种具有函数特质的对象，指的是那些可以被传入其他函数或是从其他函数返回的函数。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Data Center Bridging</title>
     <link href="http://blog.dujiong.net/2016/10/18/DataCenterBridging/"/>
     <id>http://blog.dujiong.net/2016/10/18/DataCenterBridging/</id>
     <published>2016-10-18T04:34:17.000Z</published>
-    <updated>2016-10-18T02:27:46.887Z</updated>
+    <updated>2016-10-18T07:14:35.762Z</updated>
     
     <content type="html">&lt;p&gt;最近，在参与一个数据中心-云存储的项目，用到了DCB（Data Center Bridging，数据中心桥接）协议。现将学到的相关知识总结出来，以供同行交流，同时加深自己的理解。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h3 id=&quot;概述&quot;&gt;&lt;a href=&quot;#概述&quot; class=&quot;headerlink&quot; title=&quot;概述&quot;&gt;&lt;/a&gt;概述&lt;/h3&gt;&lt;p&gt;在企业中，传统数据中心通常会使用不同的技术来实现不同数据流量的传输，例如LAN（Local Area Network，以太网）技术用来实现IP流量的传输，SAN（Storage Area Network，存储网络）技术用来实现光纤通道存储流量的传输，除此之外，还会用InifiniBand技术来为高性能集群计算提供支持。此时，虽然通过不同的技术解决了数据中心业务需求，但是以上技术的结合使用也导致了企业将面临如下问题，并且随着数据中心规模的逐步增大，问题的严重性也日益增加；首先存在服务器兼容问题，不同的服务器需要多个专用适配器，同时也需要不同的布线系统；其次是设备统一管理问题，由于多套网络无法统一管理，因此需要不同的维护人员，这将导致设备的部署、配置、管理都会很困难。最后是设备成本问题，以上技术的结合使用导致机房需要支持更多的设备，随之而来的则是服务器的电费预算将上升，并且对于服务器的制冷要求也会增加。&lt;br&gt;以上只是硬件问题，不同的技术在满足QoS（Quality of Service，服务质量）的需求上也存在较大差异。例如，LAN流量允许丢包，只需要设备提供尽力而为的服务，丢包和乱序问题则由两端的主机来处理，不需要网络节点做过多的干预；SAN流量对丢包敏感，且要求报文在传输过程中是有序的；IPC（Inter-Process Communication，进程间通信）则对低延时要求很高。&lt;br&gt;多网融合是解决上述问题的方向，即将采用多种技术的网络整合成统一技术的网络。而随着以太网IP技术的高速发展，使用以太网来统一承载上述各种流量在数据中心得到了广泛应用；此外，为了进一步满足各种流量（尤其是SAN流量）的QoS需求，在传统以太网的基础上产生了DCB协议。&lt;br&gt;DCB协议是一组由IEEE 802.1工作组定义的以太网增强协议，广泛应用于现有的数据中心网络中。DCB协议充分利用了传统以太网的优势，通过增添多种关键扩展功能来为数据中心网络提供无损数据传输、低延时和物理链路带宽共享的功能。DCB协议的主要特性有：PFC（Priority-based Flow Control，基于优先级的流量控制）、ETS（Enhanced Transmission Selection，增强流量选择）、DCBX（Data Center Bridging Capabilities Exchange Protocol，数据中心桥接交换协议）和ECN（Explicit Congestion Notification，显示拥塞通告）。 &lt;/p&gt;
@@ -1829,136 +1988,6 @@ int main()
       <category term="network/linux" scheme="http://blog.dujiong.net/tags/network-linux/"/>
     
       <category term="muduo" scheme="http://blog.dujiong.net/tags/muduo/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>浅谈C++值语义和对象语义</title>
-    <link href="http://blog.dujiong.net/2016/05/15/cplusplus-sematics/"/>
-    <id>http://blog.dujiong.net/2016/05/15/cplusplus-sematics/</id>
-    <published>2016-05-15T11:29:20.000Z</published>
-    <updated>2016-08-02T06:05:27.187Z</updated>
-    
-    <content type="html">&lt;h3 id=&quot;值语义和对象语义&quot;&gt;&lt;a href=&quot;#值语义和对象语义&quot; class=&quot;headerlink&quot; title=&quot;值语义和对象语义&quot;&gt;&lt;/a&gt;值语义和对象语义&lt;/h3&gt;&lt;p&gt;值语义(value sematics)指的是对象的拷贝与原对象无关，拷贝之后就与原对象脱离关系。C++的内置类型都是值语义，如bool/int/double等，标准库里的pair&amp;lt;&amp;gt;,vector&amp;lt;&amp;gt;,map&amp;lt;&amp;gt;，string等类型也都是值语义。Java语言的primitive types(原生数据类型)也是值语义。&lt;br&gt;与值语义(object sematics)对应的是”对象语义”，或者也叫做”引用语义”。对象语义指的是面向对象意义下的对象，对象是禁止拷贝的或拷贝后与原来的对象存在关联。比如，拷贝一个Employee对象是没有意义的，一个雇员不会变成两个雇员。同样，muduo库中的TcpConnection，显然也是不可复制的，因为牵涉到系统的资源。Java里面的class对象都是对象语义/引用语义。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;br&gt;下面举Java和C++几个简单的例子看值语义和对象语义:&lt;/p&gt;
-&lt;h4 id=&quot;Java&quot;&gt;&lt;a href=&quot;#Java&quot; class=&quot;headerlink&quot; title=&quot;Java&quot;&gt;&lt;/a&gt;Java&lt;/h4&gt;&lt;pre&gt;&lt;code&gt;int a = 8;
-int b = a;
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这里的a，b都是int， 属于Java中原生数据类型，他们的特点是复制后二者再无关联。它们表现出来是两个value。&lt;br&gt;与他们形成对比的是用户自定义的class，如下:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;Student a1 = new Student(&amp;quot;dujiong&amp;quot;, 23);
-Student a2 = a1;
-a2.setAge(25);    
-System.out.println(a1.getAge());
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;代码输出为25，因为第二行语句，导致a和b指向的是同一个对象，修改a2也会影响a1，所以表现的行为是一种reference。&lt;/p&gt;
-&lt;h4 id=&quot;C&quot;&gt;&lt;a href=&quot;#C&quot; class=&quot;headerlink&quot; title=&quot;C++&quot;&gt;&lt;/a&gt;C++&lt;/h4&gt;&lt;p&gt;如前所述，C++的内置类型、标准库容器如vector&amp;lt;&amp;gt;，map&amp;lt;&amp;gt;等都是值语义，C++要求凡是可以放入容器的元素都必须具备值语义，即必须具备拷贝的能力，放入标准容器的元素和之前的元素没有任何的关联。&lt;br&gt;而C++的普通类呢?&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;class Book
-{
-    private:
-        string isbn_;
-        double price_;
-        int amount_;
-};
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;如果以下面的代码:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;Book a1;
-Book a2 = a1;
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;那么a1和a2复制后将没有任何关联，他们的表现属于值语义。&lt;/p&gt;
-&lt;h3 id=&quot;值语义与C-语言&quot;&gt;&lt;a href=&quot;#值语义与C-语言&quot; class=&quot;headerlink&quot; title=&quot;值语义与C++语言&quot;&gt;&lt;/a&gt;值语义与C++语言&lt;/h3&gt;&lt;p&gt;C++的class本质上是值语义的。C++的设计初衷是让用户定义的类型(class)能像内置类型一样工作，具有同等的地位。为此，C++做了妥协:&lt;br&gt;(1) class的layout与C struct一样，没有额外的开销，定义一个”只包含一个int成员的class”的对象开销和一个int一样。&lt;br&gt;(2) class可以在stack上创建，也可以在heap上创建。。&lt;br&gt;(3) class的data member默认都是uninitialized。&lt;br&gt;(4) class的数组是一个个class对象挨着，没有额外的indirection。&lt;br&gt;(5) 编译器为class默认生成copy constructor和assignment operator。其他语言没有copy constructor，也不允许重载assignment operator。C++的对象默认是可以拷贝的。&lt;br&gt;(6) 当class类型传入函数时，默认是make a copy(除非参数声明为reference)。&lt;br&gt;(7) 当函数返回一个class type时，只能通过make a copy(C++不得不定义RVO来解决性能问题)。&lt;br&gt;(8) 当class type为成员时，数据成员时嵌入的。&lt;br&gt;C++这样的设计带来了性能上的好处。比如在C++里定义复数类(complex&lt;double&gt;class)和其数组(array)、向量(vector)，它们的layout分别是:&lt;/double&gt;&lt;/p&gt;
-&lt;p&gt;   &lt;img src=&quot;http://i.imgur.com/xN0fihh.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
-&lt;p&gt;而如果在Java中定义同样的结构，就不一样。&lt;/p&gt;
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/ptaBium.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
-&lt;p&gt;Java中每个object都有header。对比Java，C++的对象模型更紧凑。&lt;/p&gt;
-&lt;h3 id=&quot;值语义与生命期&quot;&gt;&lt;a href=&quot;#值语义与生命期&quot; class=&quot;headerlink&quot; title=&quot;值语义与生命期&quot;&gt;&lt;/a&gt;值语义与生命期&lt;/h3&gt;&lt;p&gt;值语义的一个巨大好处是生命期管理很简单，就像你不需要操心基本数据类型的生命期一样。值语义的对象要么是栈上对象，要么作为其他对象的成员(一个成员函数使用自己的数据成员对象)。而，对象语义由于不能拷贝，只能通过指针或引用来使用它。而一旦使用指针或引用来操作对象，那么就要担心所指的对象是否已被释放，而这也是C++ bug的主要来源。此外，C++只能通过指针或引用来获得多态，所以，在C++中进行继承和多态的面向对象编程中，资源管理成为了一大难题。            &lt;/p&gt;
-&lt;h4 id=&quot;模型1&quot;&gt;&lt;a href=&quot;#模型1&quot; class=&quot;headerlink&quot; title=&quot;模型1&quot;&gt;&lt;/a&gt;模型1&lt;/h4&gt;&lt;p&gt;模型1: a Parent has a Child, a Child knows his/her Parent&lt;br&gt;Java中很好些，不用担心内存泄露，也不用担心空悬指针。    &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;public class Parent{
-    private Child myChild;    
-}
-public class Child{
-    private Parent myParent;    
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;只要正确初始化myChild和myParent即可。&lt;br&gt;而在C++里就要为资源管理费一番脑筋:Parent 和 Child 都代表的是真人，肯定是不能拷贝的，因此具有对象语义。Parent 是直接持有 Child 吗？抑或 Parent 和 Child 通过指针互指？Child 的生命期由 Parent 控制吗？&lt;br&gt;直接但是易错的写法:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;class Child;
-class Parent : boost::noncopyable
-{
-    private:
-        Child* myChild;
-};
-
-class Child : boodt::noncopyable
-{
-    private:
-        Parent* myParent;
-};
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;那么，直接使用指针作为成员，那么如何确保指针的有效性？如何防止出现空悬指针？Child 和 Parent 由谁负责释放？在释放某个 Parent 对象的时候，如何确保程序中没有指向它的指针？在释放某个 Child 对象的时候，如何确保程序中没有指向它的指针？&lt;br&gt;这一系列问题都是C++面向对象编程令人头疼的问题。现在可以使用boost智能指针解决(C++11引入,用栈上对象管理堆上对象的生命期），借助于智能指针把对象语义转换为值语义，从而解决对象生命期问题：让Parent持有Child的智能指针，同时让Child持有Parent的智能指针，这样始终引用对方的时候就不用担心出现空悬指针。当然，其中一个智能应该是weak reference，否则会出现循环引用，导致内存泄露。&lt;br&gt;所以，如果Parent拥有Child，Child的生命期由其Parent控制，Child的生命期小于Parent，那么代码：     &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;class Parent;
-class Child : boost::noncopyable
-{
-    public:
-        explicit Child(Parent* myParent) : myParent_(myParent)
-        { }
-    private:
-        Parent* myParent_;
-};
-class Parent : boost::noncopyable
-{
-    public:
-        Parent() : myChild(new Child(this))
-        { }
-    private:
-        boost::scoped_ptr&amp;lt;Child&amp;gt; myChild;
-}; 
-&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&quot;模型2&quot;&gt;&lt;a href=&quot;#模型2&quot; class=&quot;headerlink&quot; title=&quot;模型2&quot;&gt;&lt;/a&gt;模型2&lt;/h4&gt;&lt;p&gt;模型2: a Child has parents:mom and dad; a Parent has one or more Child; a Parent knows his/her spouser&lt;br&gt;Java描述还是很简单，垃圾收集会搞定对象生命期。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;public class Parent{
-    private Parent mySpouser;
-    private ArrayList&amp;lt;Child&amp;gt; myChildren;    
-}
-public class Child{
-    private Parent myMom;
-    private Parent myDad;
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;而如果用C++实现，还是需要借助于智能指针将裸指针转化为值语义。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;class Parent;
-typedef boost::shared_ptr&amp;lt;Parent&amp;gt; ParentPtr;
-
-class Child : boost::noncopyable
-{
-    public:
-        explicit Child(const ParentPtr&amp;amp; myMom, const ParentPtr&amp;amp; myDad)
-        : myMom_(myMom), myDad_(myDad)
-        { }
-    private:
-        boost::weak_ptr&amp;lt;Parent&amp;gt; myMom_;
-        boost::weak_ptr&amp;lt;Parent&amp;gt; myDad_;
-};
-
-typedef boost::shared_ptr&amp;lt;Child&amp;gt; ChildPtr;
-
-class Parent :　boost::noncopyable
-{
-    public:
-        Parent(){}
-        void setSpouser(const ParentPtr&amp;amp; spouser)
-        {
-            mySpouser_ = spouser;
-        }
-        void addChild(const ChildPtr&amp;amp; child)
-        {
-            myChildren_.push_back(child);    
-        }
-    private:
-        boost::weak_ptr&amp;lt;Parent&amp;gt; mySpouser_;
-        std::vector&amp;lt;ChildPtr&amp;gt; myChildren_;
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;可以看出，如果不使用智能指针，使用C++面向对象编程，有效的资源管理将会很困难。&lt;/p&gt;
-&lt;h3 id=&quot;待续&quot;&gt;&lt;a href=&quot;#待续&quot; class=&quot;headerlink&quot; title=&quot;待续&quot;&gt;&lt;/a&gt;待续&lt;/h3&gt;&lt;p&gt;对于智能指针，这里只是有一些简单的介绍，后面还将深入研究。&lt;/p&gt;
-&lt;p&gt;参考: &lt;a href=&quot;http://www.cnblogs.com/Solstice/archive/2011/08/16/2141515.html&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://www.cnblogs.com/Solstice/archive/2011/08/16/2141515.html&lt;/a&gt;&lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;h3 id=&quot;值语义和对象语义&quot;&gt;&lt;a href=&quot;#值语义和对象语义&quot; class=&quot;headerlink&quot; title=&quot;值语义和对象语义&quot;&gt;&lt;/a&gt;值语义和对象语义&lt;/h3&gt;&lt;p&gt;值语义(value sematics)指的是对象的拷贝与原对象无关，拷贝之后就与原对象脱离关系。C++的内置类型都是值语义，如bool/int/double等，标准库里的pair&amp;lt;&amp;gt;,vector&amp;lt;&amp;gt;,map&amp;lt;&amp;gt;，string等类型也都是值语义。Java语言的primitive types(原生数据类型)也是值语义。&lt;br&gt;与值语义(object sematics)对应的是”对象语义”，或者也叫做”引用语义”。对象语义指的是面向对象意义下的对象，对象是禁止拷贝的或拷贝后与原来的对象存在关联。比如，拷贝一个Employee对象是没有意义的，一个雇员不会变成两个雇员。同样，muduo库中的TcpConnection，显然也是不可复制的，因为牵涉到系统的资源。Java里面的class对象都是对象语义/引用语义。&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
     
   </entry>
   

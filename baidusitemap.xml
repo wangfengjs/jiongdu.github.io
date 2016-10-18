@@ -4,11 +4,28 @@
 
     
   <url>
-    <loc>http://blog.dujiong.net/2016/10/18/DataCenterBridging/</loc>
-    <lastmod>2016-10-18T02:27:46.887Z</lastmod>
+    <loc>http://blog.dujiong.net/2016/10/21/STL-functor/</loc>
+    <lastmod>2016-10-18T12:10:54.242Z</lastmod>
     <data>
         <display>
-        <title>Data Center Bridge</title>
+        <title>C++ STL仿函数</title>
+        <pubTime>2016-10-21T12:10:17.000Z</pubTime>
+        
+        <tag>C++</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://blog.dujiong.net/2016/10/18/DataCenterBridging/</loc>
+    <lastmod>2016-10-18T07:14:35.762Z</lastmod>
+    <data>
+        <display>
+        <title>Data Center Bridging</title>
         <pubTime>2016-10-18T04:34:17.000Z</pubTime>
         
         <tag>network/linux</tag>
