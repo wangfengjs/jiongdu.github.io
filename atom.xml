@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-10-17T13:31:20.941Z</updated>
+  <updated>2016-10-18T02:27:46.887Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -14,6 +14,35 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Data Center Bridge</title>
+    <link href="http://blog.dujiong.net/2016/10/18/DataCenterBridging/"/>
+    <id>http://blog.dujiong.net/2016/10/18/DataCenterBridging/</id>
+    <published>2016-10-18T04:34:17.000Z</published>
+    <updated>2016-10-18T02:27:46.887Z</updated>
+    
+    <content type="html">&lt;p&gt;最近，在参与一个数据中心-云存储的项目，用到了DCB（Data Center Bridging，数据中心桥接）协议。现将学到的相关知识总结出来，以供同行交流，同时加深自己的理解。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&quot;概述&quot;&gt;&lt;a href=&quot;#概述&quot; class=&quot;headerlink&quot; title=&quot;概述&quot;&gt;&lt;/a&gt;概述&lt;/h3&gt;&lt;p&gt;在企业中，传统数据中心通常会使用不同的技术来实现不同数据流量的传输，例如LAN（Local Area Network，以太网）技术用来实现IP流量的传输，SAN（Storage Area Network，存储网络）技术用来实现光纤通道存储流量的传输，除此之外，还会用InifiniBand技术来为高性能集群计算提供支持。此时，虽然通过不同的技术解决了数据中心业务需求，但是以上技术的结合使用也导致了企业将面临如下问题，并且随着数据中心规模的逐步增大，问题的严重性也日益增加；首先存在服务器兼容问题，不同的服务器需要多个专用适配器，同时也需要不同的布线系统；其次是设备统一管理问题，由于多套网络无法统一管理，因此需要不同的维护人员，这将导致设备的部署、配置、管理都会很困难。最后是设备成本问题，以上技术的结合使用导致机房需要支持更多的设备，随之而来的则是服务器的电费预算将上升，并且对于服务器的制冷要求也会增加。&lt;br&gt;以上只是硬件问题，不同的技术在满足QoS（Quality of Service，服务质量）的需求上也存在较大差异。例如，LAN流量允许丢包，只需要设备提供尽力而为的服务，丢包和乱序问题则由两端的主机来处理，不需要网络节点做过多的干预；SAN流量对丢包敏感，且要求报文在传输过程中是有序的；IPC（Inter-Process Communication，进程间通信）则对低延时要求很高。&lt;br&gt;多网融合是解决上述问题的方向，即将采用多种技术的网络整合成统一技术的网络。而随着以太网IP技术的高速发展，使用以太网来统一承载上述各种流量在数据中心得到了广泛应用；此外，为了进一步满足各种流量（尤其是SAN流量）的QoS需求，在传统以太网的基础上产生了DCB协议。&lt;br&gt;DCB协议是一组由IEEE 802.1工作组定义的以太网增强协议，广泛应用于现有的数据中心网络中。DCB协议充分利用了传统以太网的优势，通过增添多种关键扩展功能来为数据中心网络提供无损数据传输、低延时和物理链路带宽共享的功能。DCB协议的主要特性有：PFC（Priority-based Flow Control，基于优先级的流量控制）、ETS（Enhanced Transmission Selection，增强流量选择）、DCBX（Data Center Bridging Capabilities Exchange Protocol，数据中心桥接交换协议）和ECN（Explicit Congestion Notification，显示拥塞通告）。 &lt;/p&gt;
+&lt;h3 id=&quot;PFC&quot;&gt;&lt;a href=&quot;#PFC&quot; class=&quot;headerlink&quot; title=&quot;PFC&quot;&gt;&lt;/a&gt;PFC&lt;/h3&gt;&lt;p&gt;PFC是一种对IEEE802.3定义的流控机制的增强技术，主要用于消除链路阻塞而导致的丢包。PFC属于DCB的一部分，适用于DCB网络中点到点的全双工链路。在传统的以太网流控机制中，当下游设备发现接收能力小于上游设备的发送能力时，会主动发一个Pause帧给上游设备，要求暂停流量的发送，上游设备等待一定时间后再继续发送数据。此时虽然能够解决流控问题，但是该机制是将链路上所有的流量都暂停，即流量暂停是针对整个接口，这与数据中心的链路共享机制发生了冲突。因为链路共享机制有两个要求：（1）一种类型的突发流量不能影响其他类型流量的转发；（2）一种类型的流量大量积压在队列中不能抢占其他类型的流量的缓存资源。所以，为了解决现有以太网流控机制和链路共享之间的冲突，产生了PFC机制。&lt;br&gt;PFC是一种基于优先级的流量控制机制。PFC可以在一条以太网物理链路上创建8个独立的虚拟通道，并为每条虚拟通道指定一个优先等级，允许单独暂停和重启其中任意一条虚拟通道，同时不影响其他通道的流量。其工作机制如下图所示。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/1HVTK7q.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;Device A发送接口分成了8个优先级队列，Device B接收接口分成了8个接收缓存，两者一一对应。当Device B的端口上某个接收缓存即将产生拥塞时，向Device A发送一个反压信号“STOP”，Device A收到该信号后停止发送对应优先级队列的报文。“反压信号”实际上就是PFC帧，其具体报文格式如下图所示。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/PKAQ8Df.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;报文中各字段的定义如下表所示。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/yddhfp4.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;由此可见，PFC机制下流量暂停只针对某一个或几个优先级队列，不针对整个端口进行中断。这样将会使得每个队列都能单独进行暂停或重启，而不影响其他队列上的流量，从而实现了多种流量对链路的共享。而对于非PFC控制的优先级队列，系统则不进行反压处理，在发生拥塞时直接丢弃报文。&lt;/p&gt;
+&lt;h3 id=&quot;ETS&quot;&gt;&lt;a href=&quot;#ETS&quot; class=&quot;headerlink&quot; title=&quot;ETS&quot;&gt;&lt;/a&gt;ETS&lt;/h3&gt;&lt;p&gt;ETS是DCB的另一个重要组成部分，它主要是通过灵活的层次化调度来实现对QoS的高需求。ETS提供两级调度，分别为基于PG（Priority Group，优先级组）的调度和基于优先级的调度；ETS的调度流程如下图所示，即：首先，接口对PG进行第一级调度，然后针对PG内的不同优先级队列进行第二级调度。通过采用ETS技术，可以为网络中不同类型的流量提供不同的服务和带宽。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/2KZIJgX.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;在ETS中定义了3个优先级组PG0、PG1和PG15，分别代表LAN流量、SAN流量和IPC流量。ETS协议根据不同流量的QoS需求规定了不同的调度方式。IEEE 802.1Qaz中定义了三种ETS调度算法：WRR（Weighted Round Robin，基于权重的轮询）算法、SP（Strict Priority，严格优先级）算法和CBS（Credit-Based Shaper，令牌整形调度）算法；ETS协议对三个优先级组PG0、PG1、PG15常见的调度方式是SP算法和WRR算法，其中PG15采用的是SP算法，主要是由于PG15承载的是IPC流量，对延时要求很高；PG0和PG1则采用了WRR算法，其主要承载的是LAN流量和SAN流量。同时，用户可以根据自身的实际需求对优先级组PG0、PG1、PG15等划分不同的带宽。&lt;br&gt;下面简要介绍SP算法和WRR算法。&lt;/p&gt;
+&lt;h4 id=&quot;SP算法&quot;&gt;&lt;a href=&quot;#SP算法&quot; class=&quot;headerlink&quot; title=&quot;SP算法&quot;&gt;&lt;/a&gt;SP算法&lt;/h4&gt;&lt;p&gt;如图所示，SP算法要求严格按照优先级来发送队列中的报文，优先发送高优先级队列中的报文，当高优先级队列为空时，再发送低优先级队列中的报文，在图1-4中的8个队列中，队列7优先级最高，队列0优先级最低，所以先发送队列7中的报文，最后发送队列0的报文。根据以上原理，SP算法常用于通过将关键业务报文放入高优先级队列，从而保证这些业务的正常运行的场景。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/24sjzR3.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h4 id=&quot;WRR算法&quot;&gt;&lt;a href=&quot;#WRR算法&quot; class=&quot;headerlink&quot; title=&quot;WRR算法&quot;&gt;&lt;/a&gt;WRR算法&lt;/h4&gt;&lt;p&gt;WRR算法是一种常用的轮询调度算法，该算法先给每个队列分配一定的权重，然后在队列之间进行轮流调度。每个队列的权重决定了调度到该队列时可以发送的数据量。通过轮询，WRR算法保证每个队列都能得到调度，避免出现低优先级队列饿死的情况。WRR算法的工作过程如下图所示。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/TCA7P5g.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h3 id=&quot;DCBX&quot;&gt;&lt;a href=&quot;#DCBX&quot; class=&quot;headerlink&quot; title=&quot;DCBX&quot;&gt;&lt;/a&gt;DCBX&lt;/h3&gt;&lt;p&gt;在数据中心网络融合场景下，为实现上述以太网增强协议，链路两端的PFC和ETS的参数配置需要保持一致，因此对于PFC和ETS的参数需要进行配置。但是如果这些配置单纯依靠管理员手动设置，不仅工作量庞大而且极易出错。因此提出了DCBX协议，DCBX协议是一种链路发现协议，主要是为链路两端的设备发现并交换DCB配置信息提供了通信方式。&lt;br&gt;DCBX协议作为信息的载体，运行在点对点的链路上，用于通告本机的PFC、ETS等参数的配置信息，同时，它也期望接收对端发送的配置的信息用以引导本机配置。DCBX将需要交互的DCB配置信息封装到LLDP（Link Layer Discovery Protocol，链路层发现协议）中的TLV中，借由LLDP来进行链路两端设备的DCB配置交换。下面以DCB的PFC参数为例，简要说明LLDP承载DCBX的实现过程。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/yUXsCiR.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;如上图所示，端口Port A和Port B已经开启了LLDP功能和DCBX功能。主要信息交互流程如下：首先，Port A的LLDP模块根据自己的报文发送周期定期地向Port B发送携带DCBX TLV的LLDP报文；然后，Port B收到LLDP报文后解析出DCBX TLV，将Port A的PFC参数通知给DCBX模块；最后，DCBX模块将Port A参数和本地的PFC参数进行比较，协商一致后生成配置文件，保证两端配置一致。DCBX的TLV结构定义如下图所示。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/j8iw750.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;其中，Type字段固定为127，OUI字段固定为0x0080c2，Subtype字段为DCBX TLV承载的消息类型，包括ETS Configuration TLV、ETS Recommendation TLV和PFC Configuration TLV，其具体内容如下表所示。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/3sEu8Cp.png&quot; alt=&quot;&quot;&gt; &lt;/p&gt;
+&lt;h3 id=&quot;ECN&quot;&gt;&lt;a href=&quot;#ECN&quot; class=&quot;headerlink&quot; title=&quot;ECN&quot;&gt;&lt;/a&gt;ECN&lt;/h3&gt;&lt;p&gt;传统的TCP/IP网络中，网络拥塞控制算法都是用包丢失作为指示信息，通知端系统网络中发生了拥塞，进而通过降低发送方的发送速率来减轻拥塞程度。&lt;br&gt;而ECN则采用了一种完全不同的方法，其核心思想是通过路由器标记IP头部的特定比特位来反映网络拥塞状况。当标记报文到达目的地址后，接收方使用下一个ACK通知发送方有拥塞发生，最后，发送方做出响应，缩小拥塞窗口，降低发送速率。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/LFQRQa7.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;根据上图IP首部信息可知，ECN拥塞控制主要用到了IP首部TOS域中的最后两位，称作为ECN域，其字段定义如下表所示。当一个支持ECN的主机发送数据包时首先将ECN域设置为01或10，如果在该数据包的传输路径上的路由器支持ECN并且监测到拥塞信息，它将会把ECN域设置为11，表示网络出现拥塞。而如果ECN域已经被标记为11，下游路由器不会修改其值。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/90Qe1wt.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;此外，ECN仍然需要传输层协议的支持。TCP使用6位保留位的后两位来支持ECN。其字段定义如下图所示。其中，ECE（ECN-Echo）标志位有两个作用：（1）在TCP三次握手中表明TCP端是否支持ECN；（2）在传输数据时表明接收到的TCP段的IP首部的ECN被设置为11，即出现了拥塞。CWR标志位为发送端缩小拥塞窗口标志，用来通知接收端它已经收到设置了ECE标志的ACK，并减小了发送窗口。当接收端收到CWR标志的包时，停止在接下来的ACK中设置ECE标志。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/2SXhQy4.png&quot; alt=&quot;&quot;&gt;    &lt;/p&gt;
+&lt;h3 id=&quot;总结&quot;&gt;&lt;a href=&quot;#总结&quot; class=&quot;headerlink&quot; title=&quot;总结&quot;&gt;&lt;/a&gt;总结&lt;/h3&gt;&lt;p&gt;DCB协议是一组由IEEE 802.1工作组定义的以太网增强协议，广泛应用于现有的数据中心网络中。DCB协议充分利用了传统以太网的优势，通过增添多种关键扩展功能来为数据中心网络提供无损数据传输、低延时和物理链路带宽共享的功能。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;最近，在参与一个数据中心-云存储的项目，用到了DCB（Data Center Bridging，数据中心桥接）协议。现将学到的相关知识总结出来，以供同行交流，同时加深自己的理解。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="network/linux" scheme="http://blog.dujiong.net/tags/network-linux/"/>
+    
+  </entry>
   
   <entry>
     <title>C++ STL迭代器</title>
@@ -1930,111 +1959,6 @@ class Parent :　boost::noncopyable
     
     
       <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>muduo源码阅读之Channel与Poller</title>
-    <link href="http://blog.dujiong.net/2016/05/06/muduo-4/"/>
-    <id>http://blog.dujiong.net/2016/05/06/muduo-4/</id>
-    <published>2016-05-06T10:39:19.000Z</published>
-    <updated>2016-07-21T12:50:06.928Z</updated>
-    
-    <content type="html">&lt;p&gt;如前所述，Reactor模式包括四个部分的组件:Handle, Synchronous Event Demultiplexer，Initiation Dispatcher和Event Handler。上一篇已经学习了muduo中的Initiation Dispatcher—EventLoop类，接下来分别讲述Handle—Channel类和Synchronous Event Demultiplexer—Poller类。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;           &lt;/p&gt;
-&lt;h3 id=&quot;Channel&quot;&gt;&lt;a href=&quot;#Channel&quot; class=&quot;headerlink&quot; title=&quot;Channel&quot;&gt;&lt;/a&gt;Channel&lt;/h3&gt;&lt;p&gt;Channel类的功能类似于JAVA NIO的SelectableChannel和SelectionKey的组合。每个Channel对象自始至终只属于一个EventLoop，而根据muduo采用的one loop per thread模型，每个Channel对象都只属于某一个IO线程。每个Channel对象只负责一个文件描述符(fd)的IO事件分发，但它不拥有这个fd，也不会在析构的时候关闭这个fd。&lt;br&gt;Channel在Event Handler与Dispatcher之间起到中介的作用。一方面可与Event Handler交互，Event Hanlder设置Channel的：    &lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;与I/O相关的文件描述符，即成员变量fd_；     &lt;/li&gt;
-&lt;li&gt;在当前Channel上感兴趣的事件(events_)，在Event Handler中通过调用Channel的enableReading()、enableWriting()函数设置；   &lt;/li&gt;
-&lt;li&gt;处理各种类型事件的回调函数，相应成员变量包括readCallback_、writeCallback_、errorCallback_等，在Event Handler中通过调用Channel的接口函数setXXXCallback()等完成。&lt;br&gt;相应的代码如下(部分)。&lt;/li&gt;
-&lt;/ol&gt;
-&lt;pre&gt;&lt;code&gt;class Channel : boost::noncopyable
-{
-    public:
-        ...
-        void handleEvent();
-        void setReadCallback(const EventCallback&amp;amp; cb)
-        { readCallback_ = cb; }
-        ...
-        void enableReading() 
-        { events_ |= kReadEvent; update(); }
-        ...
-        int index() { return index_; }
-        EventLoop* ownerLoop() { return loop_; }
-
-    private:    
-        void update();
-        static const int kReadEvent;
-        ...
-        EventLoop* loop_;
-        int fd_;
-        int events_;
-        int revents_;
-        int index_;
-        EventCallback readCallback_;
-        ...
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;另一方面，EventLoop与Channel通信，包括以下内容:      &lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;Channel包含EventLoop类型的成员变量loop_，Channel在成员函数update()函数中调用loop_的成员函数updateChannel()，后者转而调用Poller::updateChannel()。   &lt;/li&gt;
-&lt;li&gt;通知在当前Channel中就绪的事件。EventLoop通过Demultiplexer得到就绪Channel中发生的事件，并将其保存在成员变量revents_中。    &lt;/li&gt;
-&lt;li&gt;Channel事件处理函数handleEvent()的调用。Channel::handleEvent()是Channel的核心，由EventLoop::loop()调用，Channel根据revents_的值调用Event Handler传入的相应回调函数。&lt;br&gt;所以，Channel是Event Handler与Dispatcher之间的桥梁，二者不直接通信，而是分别与Channel交互。&lt;br&gt;Channel::handleEvent()会调用Channel::handleEventWithGuard()，后者完成具体的事件处理过程。&lt;/li&gt;
-&lt;/ol&gt;
-&lt;pre&gt;&lt;code&gt;void Channel::handleEventWithGuard(Timestamp receiveTime)
-{
-    ...
-    if((revents_ &amp;amp; POLLHUP) &amp;amp;&amp;amp; !(revents_ &amp;amp; POLLIN))
-    {
-        if(closeCallback_) closeCallback_();
-    }
-    if(revents_ &amp;amp; (POLLIN | POLLPRI | POLLRDHUP))
-    {
-        if(readCallback_) readCallback_();
-    }
-    if(revents_ &amp;amp; POLLOUT)
-    {
-        if(writeCallback_) writeCallback_();
-    }
-    ...
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;函数中的POLLIN，POLLNVAL，POLLERR都是poll函数的测试条件，handleEventWithGuard()根据这些测试条件调用相应的回调函数。&lt;br&gt;最后来看一下对感兴趣事件的设置，具体来说，设置当前Channel是否关系读、写事件的发生。通过update()函数或者将Channel插入Demultiplexer，或者更新Demultiplexer中相应Channel的状态。     &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;const int Channel::kNoneEvent = 0;
-const int Channel::kReadEvent = POLLIN | POLLPRI;
-const int Chennel::kWriteEvent = POLLOUT;
-void enableReading() { events_ |= kReadEvent; update(); }
-...
-void diableAll() { events_ |= kNoneEvent; update(); }
-&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;Poller&quot;&gt;&lt;a href=&quot;#Poller&quot; class=&quot;headerlink&quot; title=&quot;Poller&quot;&gt;&lt;/a&gt;Poller&lt;/h3&gt;&lt;p&gt;Poller类是IO多路复用的封装，在muduo中是个抽象基类，因为muduo同时支持poll()和epoll()两种IO复用机制，是muduo中少有的使用到继承的模块。Poller是EventLoop的间接成员，只供其owner EventLoop在IO线程调用，其生命期与EventLoop相等。Poller并不拥有Channel，Channel在析构之前必须自己unregister(EventLoop::removeChannel()),避免空悬指针。&lt;br&gt;Poller接口很简单，主要包括三个成员函数：      &lt;/p&gt;
-&lt;p&gt; &lt;code&gt;1. virtual Timestamp poll(int timeoutMs, ChannelList* activeChannels) = 0；&lt;/code&gt; &lt;/p&gt;
-&lt;p&gt;poll()是Poller的核心功能，调用poll(), epoll()获得当前活动的IO事件，然后填充调用方传入的activeChannes，并返回poll()返回的时刻。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;Timestamp EPollPoller::poll(int timeoutMs, ChannelList* activeChannels)
-{
-    int numEvents = ::epoll_wait(epollfd_,
-                           &amp;amp;*events_.begin(),
-                           static_cast&amp;lt;int&amp;gt;(events_.size()),
-                           timeoutMs);
-    ...
-    if(numEvents&amp;gt;0)
-    {
-        fillActiveChannels(numEvents, activeChannels);
-    }
-    ...
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;以epoll()实现为例，fillActiveChannels()遍历找出有活动事件的fd_，把其对应的Channel填入activeChannels。 &lt;/p&gt;
-&lt;p&gt;&lt;code&gt;2. virtual void updateChannel(Channel* channel) = 0；&lt;/code&gt;&lt;/p&gt;
-&lt;p&gt;Poller::updateChannel()的主要功能是负责维护和更新pollfds_数组(以poll()实现为例)。添加新Channel的复杂度是O(logN)，原因是channels&lt;em&gt;对应的数据结构： &lt;code&gt;typedef std::map&amp;lt;int,Channel*&amp;gt; ChannelMap;&lt;/code&gt;，更新已有的Channel的复杂度是O(1)，因为Channel记住了自己在pollfds\&lt;/em&gt;数组中的下标，可以快速定位。  &lt;/p&gt;
-&lt;p&gt;&lt;code&gt;3. virtual void removeChannel(Channel* channel) = 0；&lt;/code&gt; &lt;/p&gt;
-&lt;p&gt;Channel的删除。同样，需要更改pollfds_、channels_数据成员。&lt;/p&gt;
-&lt;h3 id=&quot;总结&quot;&gt;&lt;a href=&quot;#总结&quot; class=&quot;headerlink&quot; title=&quot;总结&quot;&gt;&lt;/a&gt;总结&lt;/h3&gt;&lt;p&gt;至此，Reactor模式中最核心的事件分发机制中的关键结构已讲述完毕，对应muduo中的EventLoop，Channel，Poller三个class。&lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;如前所述，Reactor模式包括四个部分的组件:Handle, Synchronous Event Demultiplexer，Initiation Dispatcher和Event Handler。上一篇已经学习了muduo中的Initiation Dispatcher—EventLoop类，接下来分别讲述Handle—Channel类和Synchronous Event Demultiplexer—Poller类。&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="muduo" scheme="http://blog.dujiong.net/tags/muduo/"/>
     
   </entry>
   
