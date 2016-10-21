@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-10-21T12:54:21.701Z</updated>
+  <updated>2016-10-21T14:09:27.309Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -16,13 +16,13 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>字符串的全排列与组合</title>
+    <title>字符串的排列与组合</title>
     <link href="http://blog.dujiong.net/2016/10/23/permutation/"/>
     <id>http://blog.dujiong.net/2016/10/23/permutation/</id>
     <published>2016-10-23T11:09:33.000Z</published>
-    <updated>2016-10-21T12:54:21.701Z</updated>
+    <updated>2016-10-21T14:09:27.309Z</updated>
     
-    <content type="html">&lt;p&gt;很久没有深入研究数据结构和算法了…&lt;br&gt;这次换个套路，先不说那些干瘪瘪的理论，而是来看一道编程题。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt; &lt;/p&gt;
+    <content type="html">&lt;p&gt;很久没有深入研究数据结构和算法了…&lt;br&gt;这次换个套路，先不说那些干瘪瘪的理论，首先来看一道编程题。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt; &lt;/p&gt;
 &lt;h3 id=&quot;题目描述&quot;&gt;&lt;a href=&quot;#题目描述&quot; class=&quot;headerlink&quot; title=&quot;题目描述&quot;&gt;&lt;/a&gt;题目描述&lt;/h3&gt;&lt;p&gt;编写一个方法，确定某字符串的所有排列组合。&lt;br&gt;给定一个string A[]和一个int n，代表字符串和其长度，请返回所有该字符串字符的排列，保证字符串长度小于等于11且字符串中字符均为大写英文字符，排列中的字符串按字典序从大到小排序。&lt;br&gt;样例： “ABC”&lt;br&gt;返回：[“CBA”,”CAB”,”BCA”,”BAC”,”ACB”,”ABC”]&lt;/p&gt;
 &lt;h3 id=&quot;思考&quot;&gt;&lt;a href=&quot;#思考&quot; class=&quot;headerlink&quot; title=&quot;思考&quot;&gt;&lt;/a&gt;思考&lt;/h3&gt;&lt;p&gt;…&lt;/p&gt;
 &lt;h3 id=&quot;分析&quot;&gt;&lt;a href=&quot;#分析&quot; class=&quot;headerlink&quot; title=&quot;分析&quot;&gt;&lt;/a&gt;分析&lt;/h3&gt;&lt;h4 id=&quot;next-permutation&quot;&gt;&lt;a href=&quot;#next-permutation&quot; class=&quot;headerlink&quot; title=&quot;next_permutation&quot;&gt;&lt;/a&gt;next_permutation&lt;/h4&gt;&lt;p&gt;很容易看出来这是一道排列的问题。由于自己最近对STL甚是着迷，却又没有掌握透彻，故先写出了下面的错误代码。&lt;/p&gt;
@@ -68,7 +68,7 @@
     
     <summary type="html">
     
-      &lt;p&gt;很久没有深入研究数据结构和算法了…&lt;br&gt;这次换个套路，先不说那些干瘪瘪的理论，而是来看一道编程题。&lt;br&gt;
+      &lt;p&gt;很久没有深入研究数据结构和算法了…&lt;br&gt;这次换个套路，先不说那些干瘪瘪的理论，首先来看一道编程题。&lt;br&gt;
     
     </summary>
     
