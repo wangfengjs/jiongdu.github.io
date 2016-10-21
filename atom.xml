@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-10-18T12:10:54.242Z</updated>
+  <updated>2016-10-21T12:54:21.701Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -14,6 +14,68 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>字符串的全排列与组合</title>
+    <link href="http://blog.dujiong.net/2016/10/23/permutation/"/>
+    <id>http://blog.dujiong.net/2016/10/23/permutation/</id>
+    <published>2016-10-23T11:09:33.000Z</published>
+    <updated>2016-10-21T12:54:21.701Z</updated>
+    
+    <content type="html">&lt;p&gt;很久没有深入研究数据结构和算法了…&lt;br&gt;这次换个套路，先不说那些干瘪瘪的理论，而是来看一道编程题。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt; &lt;/p&gt;
+&lt;h3 id=&quot;题目描述&quot;&gt;&lt;a href=&quot;#题目描述&quot; class=&quot;headerlink&quot; title=&quot;题目描述&quot;&gt;&lt;/a&gt;题目描述&lt;/h3&gt;&lt;p&gt;编写一个方法，确定某字符串的所有排列组合。&lt;br&gt;给定一个string A[]和一个int n，代表字符串和其长度，请返回所有该字符串字符的排列，保证字符串长度小于等于11且字符串中字符均为大写英文字符，排列中的字符串按字典序从大到小排序。&lt;br&gt;样例： “ABC”&lt;br&gt;返回：[“CBA”,”CAB”,”BCA”,”BAC”,”ACB”,”ABC”]&lt;/p&gt;
+&lt;h3 id=&quot;思考&quot;&gt;&lt;a href=&quot;#思考&quot; class=&quot;headerlink&quot; title=&quot;思考&quot;&gt;&lt;/a&gt;思考&lt;/h3&gt;&lt;p&gt;…&lt;/p&gt;
+&lt;h3 id=&quot;分析&quot;&gt;&lt;a href=&quot;#分析&quot; class=&quot;headerlink&quot; title=&quot;分析&quot;&gt;&lt;/a&gt;分析&lt;/h3&gt;&lt;h4 id=&quot;next-permutation&quot;&gt;&lt;a href=&quot;#next-permutation&quot; class=&quot;headerlink&quot; title=&quot;next_permutation&quot;&gt;&lt;/a&gt;next_permutation&lt;/h4&gt;&lt;p&gt;很容易看出来这是一道排列的问题。由于自己最近对STL甚是着迷，却又没有掌握透彻，故先写出了下面的错误代码。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;vector&amp;lt;string&amp;gt; getPermutation(string A){
+    std::sort(A.begin(), A.end());
+    vector&amp;lt;string&amp;gt; ret;
+    do{
+        ret.push_back(A);
+    }while(next_permutation(A.begin(), A.end()));
+    std::sort(ret.begin(), ret.end(), greater&amp;lt;string&amp;gt;());
+    return ret;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;当我满怀欣喜地提交代码运行时，却被告知通过率只有13.3%，给出的错误分析表明，当字符串中含有两个及以上的相同字符时，所得结果错误，即原题的意思是字符串中的每一个字符都是独立的，即使它们相同。所以，得出的结果应该有n!个字符串。而算法next_permutation不能处理这样的情况。比如输入”AAB”，使用next_permutation得到的结果如下图所示。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/40N1AVT.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h4 id=&quot;递归&quot;&gt;&lt;a href=&quot;#递归&quot; class=&quot;headerlink&quot; title=&quot;递归&quot;&gt;&lt;/a&gt;递归&lt;/h4&gt;&lt;p&gt;递归方法的思想很容易理解，即从串中依次选出每一个元素，作为排列的第一个元素，然后对剩余的元素递归的进行全排列。&lt;br&gt;以对字符串”abc”进行全排列为例：&lt;br&gt;（1）固定a，求后面bc的排列：abc、acb，求好后，b放在第一位置，得到bac；&lt;br&gt;（2）固定b，求后面ac的排列：bac、bca，求好后，c放在第一位置，得到cba；&lt;br&gt;（3）固定c，求后面ba的排列，cba、cab。&lt;br&gt;其过程如下图所示：&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/iqS7F6D.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;分析了算法思想后，就很容易写出代码了。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;void getPermutation(vector&amp;lt;string&amp;gt;&amp;amp; ret, string A, int start){
+    int end = A.size()-1;
+    if(start == end){
+        ret.push_back(A);
+        return;
+    }else{
+        for(int j=start; j&amp;lt;=end; ++j){
+            std::swap(A[start], A[j]);        //轮流固定在第一个位置
+            getPermutation(ret, A, start+1);
+            std::swap(A[start], A[j]);
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;运行上面的例子，结果如下图所示。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/aVKXDCF.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;所以，其实STL算法next_permutation是去掉了重复的全排列。&lt;/p&gt;
+&lt;h3 id=&quot;组合&quot;&gt;&lt;a href=&quot;#组合&quot; class=&quot;headerlink&quot; title=&quot;组合&quot;&gt;&lt;/a&gt;组合&lt;/h3&gt;&lt;p&gt;如果不是求字符的所有排列，而是求其所有组合呢？比如字符a、b、c，它们的组合有a,b,c,ab,ac,bc,abc。    &lt;/p&gt;
+&lt;h4 id=&quot;基于位图的算法&quot;&gt;&lt;a href=&quot;#基于位图的算法&quot; class=&quot;headerlink&quot; title=&quot;基于位图的算法&quot;&gt;&lt;/a&gt;基于位图的算法&lt;/h4&gt;&lt;p&gt;简单的数学知识：假设原有n个字符，则最终组合结果是2^n-1个。采用位操作：假设有元素a、b、c三个，规定二进制1表示取该元素，0表示不取。故取a的二进制表示为001，ab为001，依次类推，000没有意义。&lt;br&gt;所以，这些结果与位图的对应关系：&lt;br&gt;001, 010, 011, 100, 101, 110, 111&lt;br&gt;a, b, ab, c, ac, bc, abc&lt;br&gt;因此，可以循环1~2^n-1，然后输出对应代表的组合即可。    &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;void Combination(string A){
+    int n=1&amp;lt;&amp;lt;A.size();
+    for(int i=1;i&amp;lt;n;++i){
+        for(int j=0;j&amp;lt;A.size();++j){
+            if((1&amp;gt;&amp;gt;j)&amp;amp;i)        //对应位上为1，则输出对应的字符
+                cout &amp;lt;&amp;lt; A[j];
+        }                        //每一个组合
+        cout &amp;lt;&amp;lt; endl;
+    }
+}  
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;代码运行结果如下图所示：&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/hJmuKDD.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;很久没有深入研究数据结构和算法了…&lt;br&gt;这次换个套路，先不说那些干瘪瘪的理论，而是来看一道编程题。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="数据结构与算法" scheme="http://blog.dujiong.net/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/"/>
+    
+  </entry>
   
   <entry>
     <title>C++ STL仿函数</title>
@@ -1948,46 +2010,6 @@ int main()
     
     
       <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>常见并发网络服务程序设计方案</title>
-    <link href="http://blog.dujiong.net/2016/05/28/concurrent-server-conclusion/"/>
-    <id>http://blog.dujiong.net/2016/05/28/concurrent-server-conclusion/</id>
-    <published>2016-05-28T02:14:00.000Z</published>
-    <updated>2016-08-06T07:52:10.237Z</updated>
-    
-    <content type="html">&lt;p&gt;《Unix网络编程(第三版)》(以下简称[UNP])中第三十章”客户/服务器程序设计范式”总结了一些常见的并发网络服务程序设计方案，而随着互联网、大数据等浪潮的兴起，业界对服务器程序的高并发能力、稳定性等提出了更高的要求，客户/服务器程序设计范式也在随着时代的需求而不断改进和提升，下面就对常见的并发网络服务程序设计方案作简单总结。&lt;/p&gt;
-&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
-&lt;h3 id=&quot;《Unix网络编程》传统方案&quot;&gt;&lt;a href=&quot;#《Unix网络编程》传统方案&quot; class=&quot;headerlink&quot; title=&quot;《Unix网络编程》传统方案&quot;&gt;&lt;/a&gt;《Unix网络编程》传统方案&lt;/h3&gt;&lt;h4 id=&quot;方案0&quot;&gt;&lt;a href=&quot;#方案0&quot; class=&quot;headerlink&quot; title=&quot;方案0&quot;&gt;&lt;/a&gt;方案0&lt;/h4&gt;&lt;p&gt;这并不是并发服务器，正如在[UNP]第一章入门的时间获取客户/服务器程序中所看到的，一次只能服务一个客户。服务器通过循环监听套接字等待连接，在连接建立以后处理所需的逻辑。对应到程序中，服务器和客户端都只是简单的调用socket API，完成连接和处理工作。&lt;/p&gt;
-&lt;h4 id=&quot;方案1&quot;&gt;&lt;a href=&quot;#方案1&quot; class=&quot;headerlink&quot; title=&quot;方案1&quot;&gt;&lt;/a&gt;方案1&lt;/h4&gt;&lt;p&gt;这是传统的并发网络编程方案，也是[UNP]中第一个阐述的并发方案，称之为fork()-per-client或process-per-connection，即为每一个客户连接新建一个子进程(fork())，在子进程调用handler()处理客户业务，从而同时服务多个客户端。&lt;br&gt;这种方案适合并发连接数不大、计算响应的工作量远大于fork()的开销等情况，考虑到操作系统对运行服务器的用户能够同时拥有多少子进程的限制和为每个客户现场fork()一个子进程的开销。&lt;/p&gt;
-&lt;h4 id=&quot;方案2&quot;&gt;&lt;a href=&quot;#方案2&quot; class=&quot;headerlink&quot; title=&quot;方案2&quot;&gt;&lt;/a&gt;方案2&lt;/h4&gt;&lt;p&gt;对方案1的优化，采用进程池，即在启动阶段预先派生一定数量的子进程，当各个客户连接到达时，这些子进程立即就能为它们服务。&lt;br&gt;这种技术的优点在于无须引入父进程执行fork()的开销就能处理新到的客户。缺点则是父进程必须在服务器启动阶段猜测需要预先派生多少子进程。[UNP]中详细的说明了该方案以及对该方案的一些修订，个人觉得最后一个修订版本是一个较好且实用的方案，即只让父进程调用accept()，然后把所接受的已连接套接字”传递给”（描述符传递）某个子进程，父进程随后关闭这个套接字，由子进程处理，父子进程之间通过管道通信。&lt;/p&gt;
-&lt;h4 id=&quot;方案3&quot;&gt;&lt;a href=&quot;#方案3&quot; class=&quot;headerlink&quot; title=&quot;方案3&quot;&gt;&lt;/a&gt;方案3&lt;/h4&gt;&lt;p&gt;传统Java网络编程方案thread-per-connection，即为每个客户连接新建一个线程，由子线程调用handler()处理客户业务，从而同时服务多个客户端。&lt;br&gt;这种方案使用线程来取代子进程，所以开销要比方案1小。&lt;/p&gt;
-&lt;h4 id=&quot;方案4&quot;&gt;&lt;a href=&quot;#方案4&quot; class=&quot;headerlink&quot; title=&quot;方案4&quot;&gt;&lt;/a&gt;方案4&lt;/h4&gt;&lt;p&gt;类似于方案2，对方案3中预先创建线程池，就不再赘述。&lt;/p&gt;
-&lt;h3 id=&quot;《Unix网络编程》传统方案总结&quot;&gt;&lt;a href=&quot;#《Unix网络编程》传统方案总结&quot; class=&quot;headerlink&quot; title=&quot;《Unix网络编程》传统方案总结&quot;&gt;&lt;/a&gt;《Unix网络编程》传统方案总结&lt;/h3&gt;&lt;p&gt;上述几种方案都是阻塞式网络编程，程序通常会阻塞在系统调用上。比如，当一个进程/线程阻塞在读网络流的时候，但同时程序又想处理键盘输入，就麻烦了。&lt;br&gt;所以，一种常见的方法是使用IO多路复用，使用select/poll/epoll这类的多路选择器（本质是事件驱动），让一个线程能处理多个连接。IO复用其实复用的不是IO连接，而是复用线程。使用IO复用几乎肯定要配合非阻塞IO，而使用非阻塞IO肯定要使用应用层buffer。这样，就诞生了现代网络编程中以事件驱动为核心的Reactor模式，继而出现了一些通用的Reactor库/框架，比如libevent、muduo、Netty等。&lt;/p&gt;
-&lt;h3 id=&quot;Reactor方案&quot;&gt;&lt;a href=&quot;#Reactor方案&quot; class=&quot;headerlink&quot; title=&quot;Reactor方案&quot;&gt;&lt;/a&gt;Reactor方案&lt;/h3&gt;&lt;h4 id=&quot;方案5&quot;&gt;&lt;a href=&quot;#方案5&quot; class=&quot;headerlink&quot; title=&quot;方案5&quot;&gt;&lt;/a&gt;方案5&lt;/h4&gt;&lt;p&gt;基本的单线程Reactor方案，使用IO复用，可以同时服务多个连接，但是由于它是单线程的，比较适合IO密集的应用，不太适合CPU密集型的应用，不能发挥多核硬件的能力。&lt;/p&gt;
-&lt;h4 id=&quot;方案6&quot;&gt;&lt;a href=&quot;#方案6&quot; class=&quot;headerlink&quot; title=&quot;方案6&quot;&gt;&lt;/a&gt;方案6&lt;/h4&gt;&lt;p&gt;类似于[UNP]中的解决方案，建立客户连接后，不在Reactor线程中计算，而是创建一个新线程来计算，可以充分利用多核CPU的优势。这个方案需要考虑的是线程执行的不确定性，即同时创建多个线程去处理同一个连接上收到的多个请求，那么算出结果的次序是不确定的。此外，还有一个连接到来创建线程的开销，可以通过下述方案7中的线程池避免。&lt;/p&gt;
-&lt;h4 id=&quot;方案7&quot;&gt;&lt;a href=&quot;#方案7&quot; class=&quot;headerlink&quot; title=&quot;方案7&quot;&gt;&lt;/a&gt;方案7&lt;/h4&gt;&lt;p&gt;为弥补为每个请求创建线程的缺陷，使用固定大小的线程池解决。全部的IO工作都在一个Reator线程完成，而计算任务交给线程池。这种模型适用于计算任务彼此独立，并且IO压力不大的情况。当IO的压力较大时，一个Reactor线程很可能处理不过来了，就可以考虑下方案8。&lt;/p&gt;
-&lt;h4 id=&quot;方案8&quot;&gt;&lt;a href=&quot;#方案8&quot; class=&quot;headerlink&quot; title=&quot;方案8&quot;&gt;&lt;/a&gt;方案8&lt;/h4&gt;&lt;p&gt;该方案的特点是one loop per thread，如下图所示，有一个main Reactor负责accept()连接，然后把连接挂在某个sub Reactor中，这样该连接的所有操作都在sub Reactor所处的线程中完成。这是muduo和Netty内置的多线程方案。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/kccnUkP.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;Reactor pool的大小(线程数)通常根据CPU数目确定，这样程序的总体处理能力不会随着连接数增加而下降。此外， 由于一个连接完全由一个线程管理，请求的顺序就有了保证。&lt;br&gt;与前面的Reactor+thread pool相比，该方案减少了进出thread pool的两次上下文切换，在把多个连接分散到多个Reactor线程之后，小规模计算可以在当前IO线程完成并返回结果，从而降低响应的延迟。&lt;/p&gt;
-&lt;h4 id=&quot;方案9&quot;&gt;&lt;a href=&quot;#方案9&quot; class=&quot;headerlink&quot; title=&quot;方案9&quot;&gt;&lt;/a&gt;方案9&lt;/h4&gt;&lt;p&gt;将上述两种方案结合，既使用多个Reactor来处理IO，又使用线程池来处理计算，如下图所示。这种方案适合既有突发IO（利用多线程处理多个连接上的IO），又有突发计算的应用(利用线程池把一个连接上的计算任务分配给多个线程去做)。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/2bBaThf.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
-&lt;h4 id=&quot;方案10&quot;&gt;&lt;a href=&quot;#方案10&quot; class=&quot;headerlink&quot; title=&quot;方案10&quot;&gt;&lt;/a&gt;方案10&lt;/h4&gt;&lt;p&gt;Reactor in processes,采用多进程实现。这是Nginx的内置方案，待后续研究Nginx的时候再详述。&lt;/p&gt;
-&lt;h3 id=&quot;Reactor方案总结&quot;&gt;&lt;a href=&quot;#Reactor方案总结&quot; class=&quot;headerlink&quot; title=&quot;Reactor方案总结&quot;&gt;&lt;/a&gt;Reactor方案总结&lt;/h3&gt;&lt;p&gt;对上述Reactor模型的方案进行了简单总结，如下图所示。&lt;/p&gt;
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/n4bAxFY.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
-&lt;p&gt;其中,C1和C2是根据实际情况设置的常数，与CPU数目、用户业务有关。&lt;/p&gt;
-&lt;p&gt;参考: 《Linux多线程服务端编程》&lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;《Unix网络编程(第三版)》(以下简称[UNP])中第三十章”客户/服务器程序设计范式”总结了一些常见的并发网络服务程序设计方案，而随着互联网、大数据等浪潮的兴起，业界对服务器程序的高并发能力、稳定性等提出了更高的要求，客户/服务器程序设计范式也在随着时代的需求而不断改进和提升，下面就对常见的并发网络服务程序设计方案作简单总结。&lt;/p&gt;
-    
-    </summary>
-    
-    
-      <category term="network/linux" scheme="http://blog.dujiong.net/tags/network-linux/"/>
-    
-      <category term="muduo" scheme="http://blog.dujiong.net/tags/muduo/"/>
     
   </entry>
   
