@@ -4,6 +4,23 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/04/20/wifi-data-get/</loc>
+    <lastmod>2016-10-25T03:29:26.902Z</lastmod>
+    <data>
+        <display>
+        <title>wifi关键数据提取</title>
+        <pubTime>2016-04-20T01:56:09.000Z</pubTime>
+        
+        <tag>openwrt/wifi</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/10/23/permutation/</loc>
     <lastmod>2016-10-21T14:09:27.309Z</lastmod>
     <data>
@@ -439,23 +456,6 @@
         <display>
         <title>配置OpenWrt路由器为Dumb AP</title>
         <pubTime>2016-03-15T13:21:29.466Z</pubTime>
-        
-        <tag>openwrt/wifi</tag>
-         
-         
-           
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
-    <loc>http://blog.dujiong.net/2016/04/20/wifi-data-get/</loc>
-    <lastmod>2016-07-21T08:44:02.200Z</lastmod>
-    <data>
-        <display>
-        <title>wifi关键指标提取</title>
-        <pubTime>2016-04-20T01:56:09.000Z</pubTime>
         
         <tag>openwrt/wifi</tag>
          

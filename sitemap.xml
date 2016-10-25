@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://blog.dujiong.net/2016/04/20/wifi-data-get/</loc>
+    
+    <lastmod>2016-10-25T03:29:26.902Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://blog.dujiong.net/2016/10/23/permutation/</loc>
     
     <lastmod>2016-10-21T14:09:27.309Z</lastmod>
@@ -180,13 +187,6 @@
     <loc>http://blog.dujiong.net/2016/03/15/dumbap/</loc>
     
     <lastmod>2016-07-21T08:44:05.172Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://blog.dujiong.net/2016/04/20/wifi-data-get/</loc>
-    
-    <lastmod>2016-07-21T08:44:02.200Z</lastmod>
     
   </url>
   
