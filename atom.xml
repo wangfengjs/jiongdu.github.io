@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-10-25T07:29:30.196Z</updated>
+  <updated>2016-10-31T03:26:00.692Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -14,6 +14,172 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>C++ STL之list</title>
+    <link href="http://blog.dujiong.net/2016/10/28/STL-list/"/>
+    <id>http://blog.dujiong.net/2016/10/28/STL-list/</id>
+    <published>2016-10-28T11:33:14.000Z</published>
+    <updated>2016-10-31T03:26:00.692Z</updated>
+    
+    <content type="html">&lt;p&gt;上一篇文章总结了vector的结构和实现原理，今天来看看STL中另一个重要的容器：list。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;br&gt;相比于vector的连续线性空间，list显得复杂得多，它的好处是每次插入或删除一个元素，就配置或释放一个元素空间。因此，list对于空间的运用有绝对的精准，一点都不浪费。    &lt;/p&gt;
+&lt;h3 id=&quot;list的节点&quot;&gt;&lt;a href=&quot;#list的节点&quot; class=&quot;headerlink&quot; title=&quot;list的节点&quot;&gt;&lt;/a&gt;list的节点&lt;/h3&gt;&lt;p&gt;我们知道，list本身和list的节点是不同的结构，需分开设计。以下是STL list的节点结构：    &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;template &amp;lt;class T&amp;gt;
+struct __list_node {
+    typedef void* void_pointer;
+    void_pointer prev;
+    void_pointer next;
+    T data;    
+};
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;可以看出，STL list是一个双向链表，有两个指针，分别指向前向节点和后向节点。  &lt;/p&gt;
+&lt;h3 id=&quot;list的迭代器&quot;&gt;&lt;a href=&quot;#list的迭代器&quot; class=&quot;headerlink&quot; title=&quot;list的迭代器&quot;&gt;&lt;/a&gt;list的迭代器&lt;/h3&gt;&lt;p&gt;list不能够像vector一样以普通指针作为迭代器，因为其节点不保证在存储空间连续存在。并且，由于list提供的是一个双向链表，迭都代器必须具备前移、后移的能力，所以list提供的是Bidirectional Iterators.&lt;br&gt;list有一个重要的性质：插入操作和结合操作都不会造成原有的list迭代器失效。这在vector是不成立的，因为vector的插入操作可能造成记忆体重新配置，导致原有的迭代器全部失效。甚至list的元素删除操作，也只有“指向被删除元素”的那个迭代器失效，其他迭代器不受任何影响。   &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;template&amp;lt;class T, class Ref, class Ptr&amp;gt;
+struct __list_iterator {
+    typedef __list_iterator&amp;lt;T, &amp;amp;T, T*&amp;gt; iterator;
+    typedef __list_iterator&amp;lt;T, Ref, Ptr&amp;gt; self;
+
+    typedef __list_node&amp;lt;T&amp;gt;* link_type;
+    link_type node;                        //list的节点:node 
+
+    //迭代器的构造函数
+    __list_iterator(link_type x) : node(x) {}
+      __list_iterator() {}
+      __list_iterator(const iterator&amp;amp; x) : node(x.node) {}    
+
+    reference operator*() const { return (*node).data; }
+    pointer operator-&amp;gt;() const { return &amp;amp;(operator*()); }
+
+    self&amp;amp; operator++() {                    //先加1，再返回，类似++i
+        node = (link_type)((*node).next);
+        return *this;
+    }
+    self operator++(int) {                    //类似于i++
+        self tmp = *this;
+        ++*this;
+        return tmp;
+    }
+    ...
+};
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;以上是list的迭代器的设计，只实现了迭代器的++，–，取值，成员调用四个基本操作，没有像vector迭代器那样的+n操作，主要是因为地址不连续。       &lt;/p&gt;
+&lt;h3 id=&quot;list的结构&quot;&gt;&lt;a href=&quot;#list的结构&quot; class=&quot;headerlink&quot; title=&quot;list的结构&quot;&gt;&lt;/a&gt;list的结构&lt;/h3&gt;&lt;p&gt;list不仅是一个双向链表，而且还是一个环状双向链表。所以，只需要一个指针，便可以完整表现整个链表：   &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;template &amp;lt;class T, class Alloc = alloc&amp;gt;
+class list {
+protected:
+    typedef __list_node&amp;lt;T&amp;gt; list_node;
+public:
+    typedef list_node* link_type;
+protected:
+    link_type node;        
+};
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;如下图所示，如果让指针node指向刻意置于尾端的一个空白节点，node便能符合STL对于“前闭后开”区间的要求，成为last迭代器。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/rClntKM.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h4 id=&quot;list的构造与内存管理&quot;&gt;&lt;a href=&quot;#list的构造与内存管理&quot; class=&quot;headerlink&quot; title=&quot;list的构造与内存管理&quot;&gt;&lt;/a&gt;list的构造与内存管理&lt;/h4&gt;&lt;p&gt;list提供了多种constructors，主要包括四种：默认构造函数、使用n个值来初始化list、将另一个list的部分数据来初始化以及复制构造函数。&lt;br&gt;以下是默认构造函数，就是创建一个节点，然后前后指向自己。    &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;list() { empty_initialize(); }
+void empty_initialize() {
+    node = get_node();
+    node-&amp;gt;next = node;
+    node-&amp;gt;prev = node;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;list缺省使用alloc作为空间配置器，并据此另外定义了一个list_node_allocator，方便以节点大小为配置单位。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;typedef simple_alloc&amp;lt;list_node, Alloc&amp;gt; list_node_allocator;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;于是，list_node_allocator(n)表示配置n个节点空间，list提供四个函数分别用来配置、释放、构造和销毁一个节点。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;link_type get_node() { return list_node_allocator::allocate(); }
+void put_node(link_type p) { list_node_allocator::deallocate(p); }
+
+link_type create_node(const T&amp;amp; x) {    //配置并构造节点
+    link_type p = get_node;
+    construct(&amp;amp;p-&amp;gt;data, x);
+    return p;
+}  
+void destroy_node(link_type p){        //析构并释放节点
+    destroy(&amp;amp;p-&amp;gt;data);
+    put_node(p);
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;另外，当我们以push_back()将新元素插入于list尾端时，此函数内部调用insert():&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;void push_back(const T&amp;amp; x) { insert(end(), x); }
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;insert()是一个重载函数，有多种形式，其中最简单的一种如下，符合以上所需： 首先配置并构造一个节点，然后进行适当的指针操作，将新节点插入进去：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;iterator insert(iterator position, const T&amp;amp; x){
+    link_type tmp = create_node(x);
+    tmp-&amp;gt;next = position.node;
+    tmp-&amp;gt;prev = position.node-&amp;gt;prev;
+    (link_type(position.node-&amp;gt;prev))-&amp;gt;next = tmp;
+    position.node-&amp;gt;prev = tmp;
+    return tmp;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&quot;list的析构&quot;&gt;&lt;a href=&quot;#list的析构&quot; class=&quot;headerlink&quot; title=&quot;list的析构&quot;&gt;&lt;/a&gt;list的析构&lt;/h4&gt;&lt;pre&gt;&lt;code&gt;~list() {
+    clear();
+    put_node(node);
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;clear()清空链表所有数据，即只剩下node节点，然后put_node将最后的node节点回收。&lt;/p&gt;
+&lt;h3 id=&quot;list常用操作函数&quot;&gt;&lt;a href=&quot;#list常用操作函数&quot; class=&quot;headerlink&quot; title=&quot;list常用操作函数&quot;&gt;&lt;/a&gt;list常用操作函数&lt;/h3&gt;&lt;h4 id=&quot;在链表头尾插入节点&quot;&gt;&lt;a href=&quot;#在链表头尾插入节点&quot; class=&quot;headerlink&quot; title=&quot;在链表头尾插入节点&quot;&gt;&lt;/a&gt;在链表头尾插入节点&lt;/h4&gt;&lt;pre&gt;&lt;code&gt;void push_front(const T&amp;amp; x) { insert(begin(), x); }
+void push_back(const T&amp;amp; x) { insert(end(), x); }
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&quot;erase&quot;&gt;&lt;a href=&quot;#erase&quot; class=&quot;headerlink&quot; title=&quot;erase&quot;&gt;&lt;/a&gt;erase&lt;/h4&gt;&lt;pre&gt;&lt;code&gt;iterator erase(iterator position){
+    link_type next_node = link_type(position.node-&amp;gt;next);
+    link_type prev_node = link_type(position.node-&amp;gt;prev);
+    prev_node-&amp;gt;next = next_node;
+    next_node-&amp;gt;prev = prev_node;
+    destroy_node(position.node);
+    return iterator(next_node);
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;修改前后节点的指针指向，然后销毁position处的节点。&lt;/p&gt;
+&lt;h4 id=&quot;remove&quot;&gt;&lt;a href=&quot;#remove&quot; class=&quot;headerlink&quot; title=&quot;remove&quot;&gt;&lt;/a&gt;remove&lt;/h4&gt;&lt;p&gt;将数值为value的所有元素移除：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;template &amp;lt;class T, class Alloc&amp;gt;
+void list&amp;lt;T, Alloc&amp;gt;::remove(const T&amp;amp; value){
+    iterator first = begin();
+    iterator last = end();
+    while(first != last){
+        iterator next = first;
+        ++next;
+        if(*first == value) erase(first);
+        first = next;
+    }
+}    
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这里的remove是真的移除了元素，而不像vector那样。&lt;/p&gt;
+&lt;h4 id=&quot;transfer&quot;&gt;&lt;a href=&quot;#transfer&quot; class=&quot;headerlink&quot; title=&quot;transfer&quot;&gt;&lt;/a&gt;transfer&lt;/h4&gt;&lt;p&gt;list内部提供一个迁移操作transfer：将某连续范围的元素迁移到某个特定位置之前。技术上很简单，节点间的指针移动。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;void transfer(iterator position, iterator first, iterator last) {
+      if (position != last) {
+        (*(link_type((*last.node).prev))).next = position.node;    　　　　// (1)
+        (*(link_type((*first.node).prev))).next = last.node;           // (2)
+        (*(link_type((*position.node).prev))).next = first.node;         // (3)
+        link_type tmp = link_type((*position.node).prev);               // (4)
+        (*position.node).prev = (*last.node).prev;                       // (5)
+        (*last.node).prev = (*first.node).prev;                        // (6)
+        (*first.node).prev = tmp;                                       // (7)
+      }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;示意图如下所示。&lt;br&gt;    &lt;img src=&quot;http://i.imgur.com/nq2Qm5c.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;transfer并非公开接口。list公开提供的是接合操作splice：将某连续范围的元素从一个list移动到另一个（或同一个）list的某个定点。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;//将x链表的所有元素插入到当前list的position处
+void splice(iterator position, list&amp;amp; x) {
+    if(!x.empty()){
+        transfer(position, x.begin(), x.end());
+    }
+}
+//将i处节点插到position之前，i和position可能来自同一个链表
+void splice(iterator position, list&amp;amp;, iterator i) {
+    iterator j = i;
+    ++j;
+    if(position == i || position == j) return;
+    transfer(position, i, j);
+}
+//将[first, last)内的所有元素结合与position所指位置之前,position不能位于[first,last）之内
+void splice(iterator position, list&amp;amp; iterator first, iterator last) {
+    if(first!=last) {
+        transfer(position, first, last);
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&quot;merge-reverse-sort&quot;&gt;&lt;a href=&quot;#merge-reverse-sort&quot; class=&quot;headerlink&quot; title=&quot;merge(), reverse(), sort()&quot;&gt;&lt;/a&gt;merge(), reverse(), sort()&lt;/h4&gt;&lt;p&gt;基于transfer操作，list提供了三个很有用的函数：&lt;br&gt;merge()：合并两个链表，要求两个链表必须有序，合并之后的链表也是有序的。merge之后，传入的list被清空。&lt;br&gt;reverse()：将链表数据反转。&lt;br&gt;sort()：由于list的迭代器为Bidirectional iterator，而STL的sort算法必须接受RamdonAccessIterator，所以list不能使用STL的sort算法。于是，基于quick sort，list实现了自身的sort。&lt;br&gt;三个函数的具体源码这里就不再详细列出。&lt;/p&gt;
+&lt;h3 id=&quot;总结&quot;&gt;&lt;a href=&quot;#总结&quot; class=&quot;headerlink&quot; title=&quot;总结&quot;&gt;&lt;/a&gt;总结&lt;/h3&gt;&lt;p&gt;list是一种很常用的数据结构，我们不仅要熟练使用它，还要弄清其中的设计与实现。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;上一篇文章总结了vector的结构和实现原理，今天来看看STL中另一个重要的容器：list。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
+    
+  </entry>
   
   <entry>
     <title>C++ STL之vector</title>
@@ -2042,42 +2208,6 @@ void enqueue(int x)
     <summary type="html">
     
       &lt;p&gt;首先，纪念一下，如果不出意外的话（没过or狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…&lt;br&gt;好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。&lt;/p&gt;
-    
-    </summary>
-    
-    
-      <category term="network/linux" scheme="http://blog.dujiong.net/tags/network-linux/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>TCP协议总结（一）</title>
-    <link href="http://blog.dujiong.net/2016/06/13/tcp-1/"/>
-    <id>http://blog.dujiong.net/2016/06/13/tcp-1/</id>
-    <published>2016-06-13T05:07:19.000Z</published>
-    <updated>2016-09-20T13:41:36.933Z</updated>
-    
-    <content type="html">&lt;p&gt;最近，在学习和科研中，越来越发现自己对于TCP协议的掌握不够，作为一个成天和网络打交道的人，TCP/IP简直是我们最核心的知识之一，所以，准备利用接下来准备考试的间隙时间，结合《TCP/IP详解 卷一：协议》再重新学习和巩固一下TCP。          &lt;/p&gt;
-&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
-&lt;h3 id=&quot;TCP首部&quot;&gt;&lt;a href=&quot;#TCP首部&quot; class=&quot;headerlink&quot; title=&quot;TCP首部&quot;&gt;&lt;/a&gt;TCP首部&lt;/h3&gt;&lt;p&gt;首先，来看一下TCP首部的数据格式，如果不计算Option字段，它通常是20个字节。&lt;/p&gt;
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/p9FVemz.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
-&lt;p&gt;需要重点关注和理解的是:&lt;br&gt;（1） 每个TCP连接包含源端和目的端的端口号，用于标识发端和收端的应用进程。这两个值和下层IP层的源、目的IP地址构成了唯一标识一个TCP连接的四元组。&lt;br&gt;（2）序列号(Sequence Number)是包的序号，用来标识从TCP发端向收端发送的数据字节流，用来解决网络报乱序的问题。&lt;br&gt;（3）ACK，表示收到TCP包的确认。&lt;br&gt;（4）TCP Flags标志位，也就是包的类型，用于标识TCP连接的状态。&lt;br&gt;（5）Window就是著名的滑动窗口，用于流量控制的。&lt;/p&gt;
-&lt;h3 id=&quot;TCP连接的建立和终止&quot;&gt;&lt;a href=&quot;#TCP连接的建立和终止&quot; class=&quot;headerlink&quot; title=&quot;TCP连接的建立和终止&quot;&gt;&lt;/a&gt;TCP连接的建立和终止&lt;/h3&gt;&lt;p&gt;很多人对于TCP协议最深的印象应该就是三次握手和四次挥手了。那么，这中间的过程是怎样的呢？&lt;/p&gt;
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/lP4JfiN.jpg&quot; alt=&quot;&quot;&gt;  &lt;/p&gt;
-&lt;h4 id=&quot;三次握手建立连接&quot;&gt;&lt;a href=&quot;#三次握手建立连接&quot; class=&quot;headerlink&quot; title=&quot;三次握手建立连接&quot;&gt;&lt;/a&gt;三次握手建立连接&lt;/h4&gt;&lt;p&gt;1）请求端（C/S模型中的Client）发送一个SYN字段指明客户打算连接的服务器的端口，以及初始序号x。&lt;br&gt;2）服务器发挥包含服务器初始序号y的SYN报文段作为应答。同时，将确认序号设置为客户的序号加1以对客户的SYN报文段进行确认。一个SYN将占用一个序号。&lt;br&gt;3）客户必须将确认序号设置为服务器的序号加1以对服务器的SYN报文段进行确认。&lt;/p&gt;
-&lt;h4 id=&quot;四次挥手终止连接&quot;&gt;&lt;a href=&quot;#四次挥手终止连接&quot; class=&quot;headerlink&quot; title=&quot;四次挥手终止连接&quot;&gt;&lt;/a&gt;四次挥手终止连接&lt;/h4&gt;&lt;p&gt;这是由TCP的半关闭造成的。因为TCP连接是全双工，因此每个方向都必须单独的关闭，都需要FIN和ACK。收到一个FIN只意味着在这一方向上没有数据流动，一个TCP连接在收到一个FIN后仍能发送数据。&lt;br&gt;如上图，客户执行主动关闭，发送序列号(seq)为x+1的FIN，服务器收到这个FIN，发回ACK(seq=x+3)。接着服务器关闭它的连接，导致它的TCP端发送一个FIN(seq=y+1)，客户端必须发回一个确认，即ACK(seq=y+2)。&lt;/p&gt;
-&lt;h4 id=&quot;连接建立的超时&quot;&gt;&lt;a href=&quot;#连接建立的超时&quot; class=&quot;headerlink&quot; title=&quot;连接建立的超时&quot;&gt;&lt;/a&gt;连接建立的超时&lt;/h4&gt;&lt;p&gt;实际中，有很多情况导致无法建立连接。比如，当Server收到Client的SYN并发回SYN-ACK后Client掉线了，Server端没有收到Client发回的ACK。这种情况下，Server端会重法SYN-ACK。在Linux下，默认重法次数为5次，重试的间隔时间从1s开始每次都翻倍，如果5次后仍旧没有收到，才会断开这个连接。               &lt;/p&gt;
-&lt;h3 id=&quot;TCP状态机&quot;&gt;&lt;a href=&quot;#TCP状态机&quot; class=&quot;headerlink&quot; title=&quot;TCP状态机&quot;&gt;&lt;/a&gt;TCP状态机&lt;/h3&gt;&lt;p&gt;下面这个图非常重要，TCP状态机和状态之间的转换是分析网络状态、故障、优化等的重中之重。&lt;/p&gt;
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/m6HYlnp.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
-&lt;p&gt;需要重点关注的：&lt;br&gt;（1）MSL和TIME_WAIT状态。据说，这是90%的互联网后台岗位面试都会考的内容。&lt;br&gt;每个具体TCP实现必须选择一个报文段最大生存时间MSL（Maximum Segment Lifetime），它是任何报文段被丢弃前在网络内的最长时间。这个时间是有限的，因为TCP报文段封装在IP数据包在网络内传输，而IP数据包有限制其生存时间的TTL字段。&lt;br&gt;当TCP执行一个主动关闭，并发回最后一个ACK（收到对端的FIN，并发送ACK），该连接必须在TIME_WAIT状态停留的时间为2MSL。这样做可以确保有足够的时间让对端收到ACK，如果被动关闭的那方没有收到ACK，就会触发被动端重发最后的FIN。一来一去正好2MSL。此外，这样做的另一个结果是标识这个TCP连接的四元组在2MSL期间不能再被使用，只能再2MSL结束后才能再被使用。&lt;br&gt;（2）TIME_WAIT过多&lt;br&gt;出现问题了，在高并发短连接的TCP服务器上，当服务器处理完请求后立刻主动关闭连接，这样，就会有很多连接处在TIME_WAIT状态，会消耗许多系统资源。如果客户端的并发量持续很高，部分客户端就会显示连接不上。这时，可以通过设置tcp_tw_reuse和tcp_tw_recycle两个参数，前者表示开启重用，允许将处于TIME_WAIT的Socket重新用于新的TCP连接，后者表示开启TCP连接中TIME_WAIT socket的快速回收。&lt;br&gt;其实，个人觉得最好的办法就是想方设法让Client来关闭连接，这样Server作为被动关闭的一方，就不存在上述问题了。&lt;br&gt;（3）SYN Flood攻击&lt;br&gt;了解TCP三次握手后，很容易明白SYN Flood攻击的来源了，在客户端给服务器发了建立连接的SYN后，就下线了，于是服务器需要默认等待63s才会断开连接，这样，攻击者就可以把服务器的SYN连接队列耗尽，让正常的连接请求不能处理。于是，Linux下有一个tcp_syncookies的参数来应对攻击，当SYN队列满之后，TCP会根据源地址端口、目标地址端口和时间戳打造一个特别的Sequence Number（SYN Cookie）发回客户端，如果是攻击者则不会有相应，如果是正常连接，则会把这个SYN Cookie发回，然后服务端通过cookie建立连接。&lt;/p&gt;
-&lt;h3 id=&quot;TCP保活定时器&quot;&gt;&lt;a href=&quot;#TCP保活定时器&quot; class=&quot;headerlink&quot; title=&quot;TCP保活定时器&quot;&gt;&lt;/a&gt;TCP保活定时器&lt;/h3&gt;&lt;p&gt;许多时候服务器希望知道客户主机是否崩溃并关机或者崩溃又重新启动这样的非正常情况，这就需要保活功能。如果一个特定的连接在固定时间之内没有任何动作，则服务器就向客户端发送一个探查报文。&lt;br&gt;保活功能的实现由两种方式，一是应用层面的心跳机制。通过自定义心跳消息头来完成保活功能。另一种就是TCP自带的保活功能。而这也是许多协议专家所争论的点：到底保活功能应该再哪一层实现。对于这两种方式，我认为应用层面的心跳机制具有灵活、扩展性强的特点，可以随意控制，不依赖与协议，但是也增加了开发的复杂程度。而TCP的保活功能，使用简单，减少了应用层代码的复杂度。所以，开发者可以根据实际的应用场景选择适合的保活功能的实现方式。&lt;/p&gt;
-&lt;h3 id=&quot;待续&quot;&gt;&lt;a href=&quot;#待续&quot; class=&quot;headerlink&quot; title=&quot;待续&quot;&gt;&lt;/a&gt;待续&lt;/h3&gt;&lt;p&gt;这一篇是TCP协议的一些基础知识，下一篇将学习较复杂的滑动窗口、重传与拥塞控制。&lt;/p&gt;
-&lt;p&gt;参考:  《TCP/IP详解 卷一：协议》   &lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;最近，在学习和科研中，越来越发现自己对于TCP协议的掌握不够，作为一个成天和网络打交道的人，TCP/IP简直是我们最核心的知识之一，所以，准备利用接下来准备考试的间隙时间，结合《TCP/IP详解 卷一：协议》再重新学习和巩固一下TCP。          &lt;/p&gt;
     
     </summary>
     

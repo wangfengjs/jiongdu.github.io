@@ -41,7 +41,7 @@
 <link href="/css/main.css?v=0.5.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="network/linux," />
+  <meta name="keywords" content="C++," />
 
 
 
@@ -59,20 +59,19 @@
 
 
 
-<meta name="description" content="最近，在学习和科研中，越来越发现自己对于TCP协议的掌握不够，作为一个成天和网络打交道的人，TCP/IP简直是我们最核心的知识之一，所以，准备利用接下来准备考试的间隙时间，结合《TCP/IP详解 卷一：协议》再重新学习和巩固一下TCP。">
+<meta name="description" content="上一篇文章总结了vector的结构和实现原理，今天来看看STL中另一个重要的容器：list。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="TCP协议总结（一）">
-<meta property="og:url" content="http://blog.dujiong.net/2016/06/13/tcp-1/index.html">
+<meta property="og:title" content="C++ STL之list">
+<meta property="og:url" content="http://blog.dujiong.net/2016/10/28/STL-list/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="最近，在学习和科研中，越来越发现自己对于TCP协议的掌握不够，作为一个成天和网络打交道的人，TCP/IP简直是我们最核心的知识之一，所以，准备利用接下来准备考试的间隙时间，结合《TCP/IP详解 卷一：协议》再重新学习和巩固一下TCP。">
-<meta property="og:image" content="http://i.imgur.com/p9FVemz.jpg">
-<meta property="og:image" content="http://i.imgur.com/lP4JfiN.jpg">
-<meta property="og:image" content="http://i.imgur.com/m6HYlnp.png">
-<meta property="og:updated_time" content="2016-09-20T13:41:36.933Z">
+<meta property="og:description" content="上一篇文章总结了vector的结构和实现原理，今天来看看STL中另一个重要的容器：list。">
+<meta property="og:image" content="http://i.imgur.com/rClntKM.png">
+<meta property="og:image" content="http://i.imgur.com/nq2Qm5c.png">
+<meta property="og:updated_time" content="2016-10-31T03:26:00.692Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="TCP协议总结（一）">
-<meta name="twitter:description" content="最近，在学习和科研中，越来越发现自己对于TCP协议的掌握不够，作为一个成天和网络打交道的人，TCP/IP简直是我们最核心的知识之一，所以，准备利用接下来准备考试的间隙时间，结合《TCP/IP详解 卷一：协议》再重新学习和巩固一下TCP。">
-<meta name="twitter:image" content="http://i.imgur.com/p9FVemz.jpg">
+<meta name="twitter:title" content="C++ STL之list">
+<meta name="twitter:description" content="上一篇文章总结了vector的结构和实现原理，今天来看看STL中另一个重要的容器：list。">
+<meta name="twitter:image" content="http://i.imgur.com/rClntKM.png">
 
 
 
@@ -90,7 +89,7 @@
   };
 </script>
 
-  <title> TCP协议总结（一） | 一期一会 </title>
+  <title> C++ STL之list | 一期一会 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -250,7 +249,7 @@
             
             
               
-                TCP协议总结（一）
+                C++ STL之list
               
             
           </h1>
@@ -262,8 +261,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-06-13T13:07:19+08:00" content="2016-06-13">
-              2016-06-13
+            <time itemprop="dateCreated" datetime="2016-10-28T19:33:14+08:00" content="2016-10-28">
+              2016-10-28
             </time>
           </span>
 
@@ -273,8 +272,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/06/13/tcp-1/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/06/13/tcp-1/" itemprop="commentsCount"></span>
+                <a href="/2016/10/28/STL-list/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/10/28/STL-list/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -296,22 +295,152 @@
       
 
       
-        <p>最近，在学习和科研中，越来越发现自己对于TCP协议的掌握不够，作为一个成天和网络打交道的人，TCP/IP简直是我们最核心的知识之一，所以，准备利用接下来准备考试的间隙时间，结合《TCP/IP详解 卷一：协议》再重新学习和巩固一下TCP。          </p>
-<a id="more"></a>
-<h3 id="TCP首部"><a href="#TCP首部" class="headerlink" title="TCP首部"></a>TCP首部</h3><p>首先，来看一下TCP首部的数据格式，如果不计算Option字段，它通常是20个字节。</p>
-<p><img src="http://i.imgur.com/p9FVemz.jpg" alt=""></p>
-<p>需要重点关注和理解的是:<br>（1） 每个TCP连接包含源端和目的端的端口号，用于标识发端和收端的应用进程。这两个值和下层IP层的源、目的IP地址构成了唯一标识一个TCP连接的四元组。<br>（2）序列号(Sequence Number)是包的序号，用来标识从TCP发端向收端发送的数据字节流，用来解决网络报乱序的问题。<br>（3）ACK，表示收到TCP包的确认。<br>（4）TCP Flags标志位，也就是包的类型，用于标识TCP连接的状态。<br>（5）Window就是著名的滑动窗口，用于流量控制的。</p>
-<h3 id="TCP连接的建立和终止"><a href="#TCP连接的建立和终止" class="headerlink" title="TCP连接的建立和终止"></a>TCP连接的建立和终止</h3><p>很多人对于TCP协议最深的印象应该就是三次握手和四次挥手了。那么，这中间的过程是怎样的呢？</p>
-<p><img src="http://i.imgur.com/lP4JfiN.jpg" alt="">  </p>
-<h4 id="三次握手建立连接"><a href="#三次握手建立连接" class="headerlink" title="三次握手建立连接"></a>三次握手建立连接</h4><p>1）请求端（C/S模型中的Client）发送一个SYN字段指明客户打算连接的服务器的端口，以及初始序号x。<br>2）服务器发挥包含服务器初始序号y的SYN报文段作为应答。同时，将确认序号设置为客户的序号加1以对客户的SYN报文段进行确认。一个SYN将占用一个序号。<br>3）客户必须将确认序号设置为服务器的序号加1以对服务器的SYN报文段进行确认。</p>
-<h4 id="四次挥手终止连接"><a href="#四次挥手终止连接" class="headerlink" title="四次挥手终止连接"></a>四次挥手终止连接</h4><p>这是由TCP的半关闭造成的。因为TCP连接是全双工，因此每个方向都必须单独的关闭，都需要FIN和ACK。收到一个FIN只意味着在这一方向上没有数据流动，一个TCP连接在收到一个FIN后仍能发送数据。<br>如上图，客户执行主动关闭，发送序列号(seq)为x+1的FIN，服务器收到这个FIN，发回ACK(seq=x+3)。接着服务器关闭它的连接，导致它的TCP端发送一个FIN(seq=y+1)，客户端必须发回一个确认，即ACK(seq=y+2)。</p>
-<h4 id="连接建立的超时"><a href="#连接建立的超时" class="headerlink" title="连接建立的超时"></a>连接建立的超时</h4><p>实际中，有很多情况导致无法建立连接。比如，当Server收到Client的SYN并发回SYN-ACK后Client掉线了，Server端没有收到Client发回的ACK。这种情况下，Server端会重法SYN-ACK。在Linux下，默认重法次数为5次，重试的间隔时间从1s开始每次都翻倍，如果5次后仍旧没有收到，才会断开这个连接。               </p>
-<h3 id="TCP状态机"><a href="#TCP状态机" class="headerlink" title="TCP状态机"></a>TCP状态机</h3><p>下面这个图非常重要，TCP状态机和状态之间的转换是分析网络状态、故障、优化等的重中之重。</p>
-<p><img src="http://i.imgur.com/m6HYlnp.png" alt=""></p>
-<p>需要重点关注的：<br>（1）MSL和TIME_WAIT状态。据说，这是90%的互联网后台岗位面试都会考的内容。<br>每个具体TCP实现必须选择一个报文段最大生存时间MSL（Maximum Segment Lifetime），它是任何报文段被丢弃前在网络内的最长时间。这个时间是有限的，因为TCP报文段封装在IP数据包在网络内传输，而IP数据包有限制其生存时间的TTL字段。<br>当TCP执行一个主动关闭，并发回最后一个ACK（收到对端的FIN，并发送ACK），该连接必须在TIME_WAIT状态停留的时间为2MSL。这样做可以确保有足够的时间让对端收到ACK，如果被动关闭的那方没有收到ACK，就会触发被动端重发最后的FIN。一来一去正好2MSL。此外，这样做的另一个结果是标识这个TCP连接的四元组在2MSL期间不能再被使用，只能再2MSL结束后才能再被使用。<br>（2）TIME_WAIT过多<br>出现问题了，在高并发短连接的TCP服务器上，当服务器处理完请求后立刻主动关闭连接，这样，就会有很多连接处在TIME_WAIT状态，会消耗许多系统资源。如果客户端的并发量持续很高，部分客户端就会显示连接不上。这时，可以通过设置tcp_tw_reuse和tcp_tw_recycle两个参数，前者表示开启重用，允许将处于TIME_WAIT的Socket重新用于新的TCP连接，后者表示开启TCP连接中TIME_WAIT socket的快速回收。<br>其实，个人觉得最好的办法就是想方设法让Client来关闭连接，这样Server作为被动关闭的一方，就不存在上述问题了。<br>（3）SYN Flood攻击<br>了解TCP三次握手后，很容易明白SYN Flood攻击的来源了，在客户端给服务器发了建立连接的SYN后，就下线了，于是服务器需要默认等待63s才会断开连接，这样，攻击者就可以把服务器的SYN连接队列耗尽，让正常的连接请求不能处理。于是，Linux下有一个tcp_syncookies的参数来应对攻击，当SYN队列满之后，TCP会根据源地址端口、目标地址端口和时间戳打造一个特别的Sequence Number（SYN Cookie）发回客户端，如果是攻击者则不会有相应，如果是正常连接，则会把这个SYN Cookie发回，然后服务端通过cookie建立连接。</p>
-<h3 id="TCP保活定时器"><a href="#TCP保活定时器" class="headerlink" title="TCP保活定时器"></a>TCP保活定时器</h3><p>许多时候服务器希望知道客户主机是否崩溃并关机或者崩溃又重新启动这样的非正常情况，这就需要保活功能。如果一个特定的连接在固定时间之内没有任何动作，则服务器就向客户端发送一个探查报文。<br>保活功能的实现由两种方式，一是应用层面的心跳机制。通过自定义心跳消息头来完成保活功能。另一种就是TCP自带的保活功能。而这也是许多协议专家所争论的点：到底保活功能应该再哪一层实现。对于这两种方式，我认为应用层面的心跳机制具有灵活、扩展性强的特点，可以随意控制，不依赖与协议，但是也增加了开发的复杂程度。而TCP的保活功能，使用简单，减少了应用层代码的复杂度。所以，开发者可以根据实际的应用场景选择适合的保活功能的实现方式。</p>
-<h3 id="待续"><a href="#待续" class="headerlink" title="待续"></a>待续</h3><p>这一篇是TCP协议的一些基础知识，下一篇将学习较复杂的滑动窗口、重传与拥塞控制。</p>
-<p>参考:  《TCP/IP详解 卷一：协议》   </p>
+        <p>上一篇文章总结了vector的结构和实现原理，今天来看看STL中另一个重要的容器：list。<br><a id="more"></a><br>相比于vector的连续线性空间，list显得复杂得多，它的好处是每次插入或删除一个元素，就配置或释放一个元素空间。因此，list对于空间的运用有绝对的精准，一点都不浪费。    </p>
+<h3 id="list的节点"><a href="#list的节点" class="headerlink" title="list的节点"></a>list的节点</h3><p>我们知道，list本身和list的节点是不同的结构，需分开设计。以下是STL list的节点结构：    </p>
+<pre><code>template &lt;class T&gt;
+struct __list_node {
+    typedef void* void_pointer;
+    void_pointer prev;
+    void_pointer next;
+    T data;    
+};
+</code></pre><p>可以看出，STL list是一个双向链表，有两个指针，分别指向前向节点和后向节点。  </p>
+<h3 id="list的迭代器"><a href="#list的迭代器" class="headerlink" title="list的迭代器"></a>list的迭代器</h3><p>list不能够像vector一样以普通指针作为迭代器，因为其节点不保证在存储空间连续存在。并且，由于list提供的是一个双向链表，迭都代器必须具备前移、后移的能力，所以list提供的是Bidirectional Iterators.<br>list有一个重要的性质：插入操作和结合操作都不会造成原有的list迭代器失效。这在vector是不成立的，因为vector的插入操作可能造成记忆体重新配置，导致原有的迭代器全部失效。甚至list的元素删除操作，也只有“指向被删除元素”的那个迭代器失效，其他迭代器不受任何影响。   </p>
+<pre><code>template&lt;class T, class Ref, class Ptr&gt;
+struct __list_iterator {
+    typedef __list_iterator&lt;T, &amp;T, T*&gt; iterator;
+    typedef __list_iterator&lt;T, Ref, Ptr&gt; self;
+
+    typedef __list_node&lt;T&gt;* link_type;
+    link_type node;                        //list的节点:node 
+
+    //迭代器的构造函数
+    __list_iterator(link_type x) : node(x) {}
+      __list_iterator() {}
+      __list_iterator(const iterator&amp; x) : node(x.node) {}    
+
+    reference operator*() const { return (*node).data; }
+    pointer operator-&gt;() const { return &amp;(operator*()); }
+
+    self&amp; operator++() {                    //先加1，再返回，类似++i
+        node = (link_type)((*node).next);
+        return *this;
+    }
+    self operator++(int) {                    //类似于i++
+        self tmp = *this;
+        ++*this;
+        return tmp;
+    }
+    ...
+};
+</code></pre><p>以上是list的迭代器的设计，只实现了迭代器的++，–，取值，成员调用四个基本操作，没有像vector迭代器那样的+n操作，主要是因为地址不连续。       </p>
+<h3 id="list的结构"><a href="#list的结构" class="headerlink" title="list的结构"></a>list的结构</h3><p>list不仅是一个双向链表，而且还是一个环状双向链表。所以，只需要一个指针，便可以完整表现整个链表：   </p>
+<pre><code>template &lt;class T, class Alloc = alloc&gt;
+class list {
+protected:
+    typedef __list_node&lt;T&gt; list_node;
+public:
+    typedef list_node* link_type;
+protected:
+    link_type node;        
+};
+</code></pre><p>如下图所示，如果让指针node指向刻意置于尾端的一个空白节点，node便能符合STL对于“前闭后开”区间的要求，成为last迭代器。<br><img src="http://i.imgur.com/rClntKM.png" alt=""></p>
+<h4 id="list的构造与内存管理"><a href="#list的构造与内存管理" class="headerlink" title="list的构造与内存管理"></a>list的构造与内存管理</h4><p>list提供了多种constructors，主要包括四种：默认构造函数、使用n个值来初始化list、将另一个list的部分数据来初始化以及复制构造函数。<br>以下是默认构造函数，就是创建一个节点，然后前后指向自己。    </p>
+<pre><code>list() { empty_initialize(); }
+void empty_initialize() {
+    node = get_node();
+    node-&gt;next = node;
+    node-&gt;prev = node;
+}
+</code></pre><p>list缺省使用alloc作为空间配置器，并据此另外定义了一个list_node_allocator，方便以节点大小为配置单位。</p>
+<pre><code>typedef simple_alloc&lt;list_node, Alloc&gt; list_node_allocator;
+</code></pre><p>于是，list_node_allocator(n)表示配置n个节点空间，list提供四个函数分别用来配置、释放、构造和销毁一个节点。</p>
+<pre><code>link_type get_node() { return list_node_allocator::allocate(); }
+void put_node(link_type p) { list_node_allocator::deallocate(p); }
+
+link_type create_node(const T&amp; x) {    //配置并构造节点
+    link_type p = get_node;
+    construct(&amp;p-&gt;data, x);
+    return p;
+}  
+void destroy_node(link_type p){        //析构并释放节点
+    destroy(&amp;p-&gt;data);
+    put_node(p);
+}
+</code></pre><p>另外，当我们以push_back()将新元素插入于list尾端时，此函数内部调用insert():</p>
+<pre><code>void push_back(const T&amp; x) { insert(end(), x); }
+</code></pre><p>insert()是一个重载函数，有多种形式，其中最简单的一种如下，符合以上所需： 首先配置并构造一个节点，然后进行适当的指针操作，将新节点插入进去：</p>
+<pre><code>iterator insert(iterator position, const T&amp; x){
+    link_type tmp = create_node(x);
+    tmp-&gt;next = position.node;
+    tmp-&gt;prev = position.node-&gt;prev;
+    (link_type(position.node-&gt;prev))-&gt;next = tmp;
+    position.node-&gt;prev = tmp;
+    return tmp;
+}
+</code></pre><h4 id="list的析构"><a href="#list的析构" class="headerlink" title="list的析构"></a>list的析构</h4><pre><code>~list() {
+    clear();
+    put_node(node);
+}
+</code></pre><p>clear()清空链表所有数据，即只剩下node节点，然后put_node将最后的node节点回收。</p>
+<h3 id="list常用操作函数"><a href="#list常用操作函数" class="headerlink" title="list常用操作函数"></a>list常用操作函数</h3><h4 id="在链表头尾插入节点"><a href="#在链表头尾插入节点" class="headerlink" title="在链表头尾插入节点"></a>在链表头尾插入节点</h4><pre><code>void push_front(const T&amp; x) { insert(begin(), x); }
+void push_back(const T&amp; x) { insert(end(), x); }
+</code></pre><h4 id="erase"><a href="#erase" class="headerlink" title="erase"></a>erase</h4><pre><code>iterator erase(iterator position){
+    link_type next_node = link_type(position.node-&gt;next);
+    link_type prev_node = link_type(position.node-&gt;prev);
+    prev_node-&gt;next = next_node;
+    next_node-&gt;prev = prev_node;
+    destroy_node(position.node);
+    return iterator(next_node);
+}
+</code></pre><p>修改前后节点的指针指向，然后销毁position处的节点。</p>
+<h4 id="remove"><a href="#remove" class="headerlink" title="remove"></a>remove</h4><p>将数值为value的所有元素移除：</p>
+<pre><code>template &lt;class T, class Alloc&gt;
+void list&lt;T, Alloc&gt;::remove(const T&amp; value){
+    iterator first = begin();
+    iterator last = end();
+    while(first != last){
+        iterator next = first;
+        ++next;
+        if(*first == value) erase(first);
+        first = next;
+    }
+}    
+</code></pre><p>这里的remove是真的移除了元素，而不像vector那样。</p>
+<h4 id="transfer"><a href="#transfer" class="headerlink" title="transfer"></a>transfer</h4><p>list内部提供一个迁移操作transfer：将某连续范围的元素迁移到某个特定位置之前。技术上很简单，节点间的指针移动。</p>
+<pre><code>void transfer(iterator position, iterator first, iterator last) {
+      if (position != last) {
+        (*(link_type((*last.node).prev))).next = position.node;    　　　　// (1)
+        (*(link_type((*first.node).prev))).next = last.node;           // (2)
+        (*(link_type((*position.node).prev))).next = first.node;         // (3)
+        link_type tmp = link_type((*position.node).prev);               // (4)
+        (*position.node).prev = (*last.node).prev;                       // (5)
+        (*last.node).prev = (*first.node).prev;                        // (6)
+        (*first.node).prev = tmp;                                       // (7)
+      }
+}
+</code></pre><p>示意图如下所示。<br>    <img src="http://i.imgur.com/nq2Qm5c.png" alt=""><br>transfer并非公开接口。list公开提供的是接合操作splice：将某连续范围的元素从一个list移动到另一个（或同一个）list的某个定点。</p>
+<pre><code>//将x链表的所有元素插入到当前list的position处
+void splice(iterator position, list&amp; x) {
+    if(!x.empty()){
+        transfer(position, x.begin(), x.end());
+    }
+}
+//将i处节点插到position之前，i和position可能来自同一个链表
+void splice(iterator position, list&amp;, iterator i) {
+    iterator j = i;
+    ++j;
+    if(position == i || position == j) return;
+    transfer(position, i, j);
+}
+//将[first, last)内的所有元素结合与position所指位置之前,position不能位于[first,last）之内
+void splice(iterator position, list&amp; iterator first, iterator last) {
+    if(first!=last) {
+        transfer(position, first, last);
+    }
+}
+</code></pre><h4 id="merge-reverse-sort"><a href="#merge-reverse-sort" class="headerlink" title="merge(), reverse(), sort()"></a>merge(), reverse(), sort()</h4><p>基于transfer操作，list提供了三个很有用的函数：<br>merge()：合并两个链表，要求两个链表必须有序，合并之后的链表也是有序的。merge之后，传入的list被清空。<br>reverse()：将链表数据反转。<br>sort()：由于list的迭代器为Bidirectional iterator，而STL的sort算法必须接受RamdonAccessIterator，所以list不能使用STL的sort算法。于是，基于quick sort，list实现了自身的sort。<br>三个函数的具体源码这里就不再详细列出。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>list是一种很常用的数据结构，我们不仅要熟练使用它，还要弄清其中的设计与实现。</p>
 
       
     </div>
@@ -326,7 +455,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/network-linux/" rel="tag">#network/linux</a>
+            <a href="/tags/C/" rel="tag">#C++</a>
           
         </div>
       
@@ -335,17 +464,13 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/06/05/cpp-constructor/" rel="next" title="C++构造函数一些常见问题分析">
-                <i class="fa fa-chevron-left"></i> C++构造函数一些常见问题分析
+              <a href="/2016/10/25/STL-vector/" rel="next" title="C++ STL之vector">
+                <i class="fa fa-chevron-left"></i> C++ STL之vector
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/06/25/tcp-2/" rel="prev" title="TCP协议总结（二）">
-                TCP协议总结（二） <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -371,8 +496,8 @@
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/06/13/tcp-1/"
-           data-title="TCP协议总结（一）" data-url="http://blog.dujiong.net/2016/06/13/tcp-1/">
+      <div class="ds-thread" data-thread-key="2016/10/28/STL-list/"
+           data-title="C++ STL之list" data-url="http://blog.dujiong.net/2016/10/28/STL-list/">
       </div>
     
   </div>
@@ -486,7 +611,7 @@
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP首部"><span class="nav-number">1.</span> <span class="nav-text">TCP首部</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP连接的建立和终止"><span class="nav-number">2.</span> <span class="nav-text">TCP连接的建立和终止</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#三次握手建立连接"><span class="nav-number">2.1.</span> <span class="nav-text">三次握手建立连接</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#四次挥手终止连接"><span class="nav-number">2.2.</span> <span class="nav-text">四次挥手终止连接</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#连接建立的超时"><span class="nav-number">2.3.</span> <span class="nav-text">连接建立的超时</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP状态机"><span class="nav-number">3.</span> <span class="nav-text">TCP状态机</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP保活定时器"><span class="nav-number">4.</span> <span class="nav-text">TCP保活定时器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#待续"><span class="nav-number">5.</span> <span class="nav-text">待续</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#list的节点"><span class="nav-number">1.</span> <span class="nav-text">list的节点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#list的迭代器"><span class="nav-number">2.</span> <span class="nav-text">list的迭代器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#list的结构"><span class="nav-number">3.</span> <span class="nav-text">list的结构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#list的构造与内存管理"><span class="nav-number">3.1.</span> <span class="nav-text">list的构造与内存管理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#list的析构"><span class="nav-number">3.2.</span> <span class="nav-text">list的析构</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#list常用操作函数"><span class="nav-number">4.</span> <span class="nav-text">list常用操作函数</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#在链表头尾插入节点"><span class="nav-number">4.1.</span> <span class="nav-text">在链表头尾插入节点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#erase"><span class="nav-number">4.2.</span> <span class="nav-text">erase</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#remove"><span class="nav-number">4.3.</span> <span class="nav-text">remove</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#transfer"><span class="nav-number">4.4.</span> <span class="nav-text">transfer</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#merge-reverse-sort"><span class="nav-number">4.5.</span> <span class="nav-text">merge(), reverse(), sort()</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">
