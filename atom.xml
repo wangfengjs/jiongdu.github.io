@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-10-31T03:26:00.692Z</updated>
+  <updated>2016-10-31T11:48:49.896Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -14,6 +14,160 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>C++ STL之deque</title>
+    <link href="http://blog.dujiong.net/2016/10/31/STL-deque/"/>
+    <id>http://blog.dujiong.net/2016/10/31/STL-deque/</id>
+    <published>2016-10-31T09:49:42.000Z</published>
+    <updated>2016-10-31T11:48:49.896Z</updated>
+    
+    <content type="html">&lt;p&gt;C++标准模板库序列式容器中，使用最少的估计就是deque了。但是，了解下deque这种双向开口的连续线性空间容器的底层设计与实现仍是很有帮助的。此外，stack和queue这两种适配器容器（容器底层是调用其他容器）底层实现默认就是使用deque。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&quot;与vector比较&quot;&gt;&lt;a href=&quot;#与vector比较&quot; class=&quot;headerlink&quot; title=&quot;与vector比较&quot;&gt;&lt;/a&gt;与vector比较&lt;/h3&gt;&lt;p&gt;deque和vector的最大差异，一是deque允许常熟时间内对起头端进行元素的插入或移除操作，二在于deque没有所谓容量观念，因为它是动态地以分段连续空间组合而成，随时可以增加一段新的空间并链接起来。即，像vector那样“因旧空间不足而重新配置一块更大空间，然后复制元素，再释放旧空间”这样的事情在deque是不会发生的。也因此，deque没有必要提供所谓的空间保留功能。&lt;br&gt;更具体的，array无法增长，vector虽可增长，却只能向尾端增长，而且所谓增长是个假象，事实上是（1）另觅更大空间；（2）将原数据复制过去；（3）释放原空间 三部曲。&lt;br&gt;deque是由一段一段的定量连续空间构成。一旦有必要在deque的前端或尾端增加新空间，便配置一段定量连续空间，串接在整个deque的头端或尾端。deque的最大任务，便是在这些分段的定量连续空间上，维护其整体连续的假象，并提供随机存取的接口。这样避开了“重新配置、复制、释放”的轮回，代价则是复杂的迭代器架构。    &lt;/p&gt;
+&lt;h3 id=&quot;deque的中控器和迭代器&quot;&gt;&lt;a href=&quot;#deque的中控器和迭代器&quot; class=&quot;headerlink&quot; title=&quot;deque的中控器和迭代器&quot;&gt;&lt;/a&gt;deque的中控器和迭代器&lt;/h3&gt;&lt;p&gt;deque底层实现一个中控器，即一个指针数组，其中的每一个元素都是指针，指向另一段连续线性空间，称为缓冲区。缓冲区才是deque的存储空间主体。&lt;br&gt;迭代器由以下四个部分组成：&lt;br&gt;（1）cur：指向缓冲区当前元素。&lt;br&gt;（2）first：指向缓冲区的第一个位置。&lt;br&gt;（3）last：指向末节点，即最后一个元素的下一个位置。&lt;br&gt;（4）node：指向主控器相应的索引位置。&lt;br&gt;中控器、缓冲区、迭代器之间的关系如下图所示。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/SsE0h85.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;以下是中控器和迭代器的相关源代码。     &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;template &amp;lt;class T, class Alloc = alloc, size_t BufSiz = 0&amp;gt;
+class deque {
+public:
+    typedef T value_type;
+    typedef value_type* pointer;        
+    ...
+protected:
+    typedef pointer* map_pointer;        //指针的指针
+    map_pointer map;        //map是指针数组，中控器
+    size_type map_size;        //map内可容纳多少指针
+};
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;可以看出，中控器map其实是一个T**，即是指向指针的指针，T为元素型别。      &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;template &amp;lt;class T, class Ref, class Ptr, size_t BufSiz&amp;gt;
+struct __deque_iterator {
+    typedef __deque_iterator&amp;lt;T, T&amp;amp;, T*, BufSiz&amp;gt; iterator;
+    typedef __deque_iterator&amp;lt;T, const T&amp;amp;, const T*, BufSiz&amp;gt; const_iterator;
+    static size_t buffer_size() { return __deque_buf_size(BufSiz, sizeof(T)); }
+    typedef random_access_iterator_tag iterator_category;    //RandomAccess Iterator
+    typedef T value_type; 
+    typedef Ptr pointer;
+    typedef Ref reference;
+    typedef size_t size_type;
+    typedef ptrdiff_t difference_type;
+    typedef T** map_pointer;                //指向主控器的指针
+
+    T* cur;
+    T* first;
+    T* last;
+    map_pointer node;
+};
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;迭代器的四个主要组成：cur、first、last、node的定义。&lt;br&gt;接下来是构造函数和迭代器的重载运算因子。          &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;__deque_iterator(T* x, map_pointer y)    //用T类型数据和指向中控器的指针初始化一个迭代器
+    : cur(x), first(*y), last(*y+buffer_size()), node(y) {}
+__deque_iterator() : cur(0), first(0), last(0), node(0) {}    //创建一个空的迭代器
+__deque_iterator(const iterator&amp;amp; x) : cur(x.cur), first(x.first), last(x.last), node(x.node) {}    //复制构造函数
+
+reference operator*() const { return *cur; }
+pointer operator-&amp;gt;() const { return &amp;amp;(operator*()); }
+difference_type operator-(const self&amp;amp; x) const {
+    return difference_type(buffer_size())*(node-x.node-1)+(cur-first)+(x.last-x.cur);
+}
+...
+self&amp;amp; operator+=(difference_type n){
+    difference_type offset=n+(cur-first);
+    if(offset&amp;gt;=0 &amp;amp;&amp;amp; offset&amp;lt;difference_type(buffer_size())){    //目标在同一个缓冲区内
+        cur+=n;
+    }else{            //目标位置不在同一个缓冲区内
+        difference_type node_offset = offset&amp;gt;0 ? offset/difference_type(buffer_size()) : -difference_type((-offset-1) / buffer_size())-1;
+        set_node(node + node_offset);
+        cur = first+(offset-node_offset*difference_type(buffer_size()));
+    }
+    return *this;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;在进行+=n运算时，要判断+n之后的索引是否还在当前缓冲区内，如果在，cur简单+n即可，如果不在，则要计算正确的缓存节点和正确的元素位置。其他+n，-=n，-运算都可以通过+=运算得出。&lt;/p&gt;
+&lt;h3 id=&quot;deque的结构&quot;&gt;&lt;a href=&quot;#deque的结构&quot; class=&quot;headerlink&quot; title=&quot;deque的结构&quot;&gt;&lt;/a&gt;deque的结构&lt;/h3&gt;&lt;p&gt;deque除了维护一个指向map的指针外，还维护start、finish两个迭代器，分别指向第一缓冲区的第一个元素和最后缓冲区的最后一个元素（的下一个位置）。    &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;template &amp;lt;class T, class Alloc = alloc, size_t BufSiz = 0&amp;gt;
+class deque {
+public:
+    typedef T value_type;
+    typedef value_type* pointer;
+    typedef size_t size_type;
+    typedef __deque_iterator&amp;lt;T, T&amp;amp;, T*, BufSiz&amp;gt; iterator;
+    typedef simple_alloc&amp;lt;value_type, Alloc&amp;gt; data_allocator;
+    typedef simple_alloc&amp;lt;pointer, Alloc&amp;gt; map_allocator;
+    ...
+protected:
+    typedef pointer* map_pointer;
+    iterator start;
+    iterator finish;
+    map_pointer map;
+    size_type map_size;        //map容纳指针的个数    
+    ...
+};
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&quot;默认构造函数&quot;&gt;&lt;a href=&quot;#默认构造函数&quot; class=&quot;headerlink&quot; title=&quot;默认构造函数&quot;&gt;&lt;/a&gt;默认构造函数&lt;/h4&gt;&lt;pre&gt;&lt;code&gt;deque()
+    : start(), finish(), map(0), map_size(0) {
+    create_map_nodes(0);
+} 
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;默认构造函数先初始化两个迭代器为空迭代器，然后设置map和map_size，接着调用create_map_and_nodes(size_type num_elements)来初始化一块内存。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;template&amp;lt;class T, class Alloc, size_t BufSize&amp;gt;
+void deque&amp;lt;T, Alloc, BufSize&amp;gt;::create_map_and_nodes(size_type num_elements) {
+    size_type num_nodes = num_elements/buffer_size() + 1;    //    需要节点数
+    map_size = max(initial_map_size(), num_nodes+2);    //一个map管理的节点数，最少8个，最多是“所需节点加2”
+    map = map_allocator::allocate(map_size);
+
+    map_pointer nstart = map+(map_size-num_nodes)/2;
+    map_pointer nfinish = nstart+num_nodes-1;
+    map_pointer cur;
+
+    __STL_TRY {
+        for(cur=nstart; cur&amp;lt;=nfinish; ++cur){
+            *cur = allocate_node();
+        }
+    }catch(...){
+        ...
+    }
+    //为deque内的两个迭代器设定正确的内容
+    start.set_node(nstart);
+    finish.set_node(nfinish);
+    start.cur = start.first;
+    finish.cur = finish.first + num_elements%buffer_size();
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&quot;由n个value初始化的构造函数&quot;&gt;&lt;a href=&quot;#由n个value初始化的构造函数&quot; class=&quot;headerlink&quot; title=&quot;由n个value初始化的构造函数&quot;&gt;&lt;/a&gt;由n个value初始化的构造函数&lt;/h4&gt;&lt;pre&gt;&lt;code&gt;deque(size_type n, const value_type&amp;amp; value)
+    : start(), finish(), map(0), map_size(0) {
+    fill_initialize(n, value);
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;该构造函数调用fill_initialize函数来初始化deque，fill_initialize函数负责产生并安排好deque的结构，并将元素的初值设定妥当。     &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;template &amp;lt;class T, class Alloc, size_t BufSize&amp;gt;
+void deque&amp;lt;T, Alloc, BufSize&amp;gt;::fill_initialize(
+    size_type n, const value_type&amp;amp; value) {
+    create_map_and_nodes(n);
+    map_pointer cur;
+    __STL_TRY {
+        //为每个节点的缓冲区设定初值
+        for(cur=start.node; cur&amp;lt;finish.node;++cur){
+            uninitialized_fill(*cur, *cur + buffer_size(), value);
+        }
+        uninitialized_fill(finish.first, finish.cur, value);    //最后一个节点单独对待
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&quot;两个迭代器初始化的构造函数&quot;&gt;&lt;a href=&quot;#两个迭代器初始化的构造函数&quot; class=&quot;headerlink&quot; title=&quot;两个迭代器初始化的构造函数&quot;&gt;&lt;/a&gt;两个迭代器初始化的构造函数&lt;/h4&gt;&lt;pre&gt;&lt;code&gt;template &amp;lt;class InputIterator&amp;gt;
+deque(InputIterator first, InputIterator last)
+    : start(), finish(), map(0), map_size(0) {
+    range_initialize(first, last, iterator_category(first));
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;该构造函数调用range_initialize来用迭代器范围内的元素初始化deque.range_initialize，根据迭代器类型，调用对应的版本。&lt;/p&gt;
+&lt;h4 id=&quot;析构函数&quot;&gt;&lt;a href=&quot;#析构函数&quot; class=&quot;headerlink&quot; title=&quot;析构函数&quot;&gt;&lt;/a&gt;析构函数&lt;/h4&gt;&lt;p&gt;deque的析构函数先是调用destroy析构缓冲区内的数据，然后调用destroy_map_and_nodes函数析构缓冲区和中控器内存。    &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;~deque() {
+    destroy(start, finish);
+    destroy_map_and_nodes();
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;deque的一些常用操作&quot;&gt;&lt;a href=&quot;#deque的一些常用操作&quot; class=&quot;headerlink&quot; title=&quot;deque的一些常用操作&quot;&gt;&lt;/a&gt;deque的一些常用操作&lt;/h3&gt;&lt;p&gt;deque所提供的元素操作很多，如pop_back、pop_front、clear、erase、insert等，这里不再一一列举，在理解时，只需把握“deque是多个连续缓冲区组合在一起的分段线性空间”即可。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;C++标准模板库序列式容器中，使用最少的估计就是deque了。但是，了解下deque这种双向开口的连续线性空间容器的底层设计与实现仍是很有帮助的。此外，stack和queue这两种适配器容器（容器底层是调用其他容器）底层实现默认就是使用deque。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
+    
+  </entry>
   
   <entry>
     <title>C++ STL之list</title>
@@ -2175,44 +2329,6 @@ void enqueue(int x)
     
     
       <category term="muduo" scheme="http://blog.dujiong.net/tags/muduo/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>TCP协议总结（二）</title>
-    <link href="http://blog.dujiong.net/2016/06/25/tcp-2/"/>
-    <id>http://blog.dujiong.net/2016/06/25/tcp-2/</id>
-    <published>2016-06-25T12:06:14.000Z</published>
-    <updated>2016-08-07T13:00:43.518Z</updated>
-    
-    <content type="html">&lt;p&gt;首先，纪念一下，如果不出意外的话（没过or狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…&lt;br&gt;好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。&lt;/p&gt;
-&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
-&lt;h3 id=&quot;TCP重传机制&quot;&gt;&lt;a href=&quot;#TCP重传机制&quot; class=&quot;headerlink&quot; title=&quot;TCP重传机制&quot;&gt;&lt;/a&gt;TCP重传机制&lt;/h3&gt;&lt;p&gt;TCP是可靠的、面向连接的协议，要保证所有的数据包都可以到达，所以，重传机制是必须的。&lt;br&gt;由于接收端给发送端的ACK只会确认最后一个连续的包，比如，发送端发了1、2、3、4、5一共5份数据，接收端收到了1、2，于是回ACK 3，然后收到了4，此时3没收到，怎么办？&lt;/p&gt;
-&lt;h4 id=&quot;超时重传机制&quot;&gt;&lt;a href=&quot;#超时重传机制&quot; class=&quot;headerlink&quot; title=&quot;超时重传机制&quot;&gt;&lt;/a&gt;超时重传机制&lt;/h4&gt;&lt;p&gt;一种方法是不回ACK，一直等3，当发送方发现收不到3的ACK，超时后会重传3.一旦接收方收到3后吗，会A回CK 4，表示3和4都收到了。&lt;br&gt;但是，问题来了，因为一直等3，可能会导致4和5即便已经收到了，发送方因为没有收到ACK，悲观地认为4和5也丢了，所以可能导致4和5的重传。对此有两种选择：一种是仅重传timeout的包。也就是第3份数据，另一种是重传timeout后所有的数据，也就是第3，4，5这三份数据。这两种方式有好也有不好。第一种会节省带宽，但是慢，第二种会快一点，但是会浪费带宽，很可能会有无用功。但总体来说都不好。因为都在等timeout，timeout可能会很长（下面会说TCP怎么动态计算timeout）。&lt;/p&gt;
-&lt;h4 id=&quot;快速重传机制&quot;&gt;&lt;a href=&quot;#快速重传机制&quot; class=&quot;headerlink&quot; title=&quot;快速重传机制&quot;&gt;&lt;/a&gt;快速重传机制&lt;/h4&gt;&lt;p&gt;快速重传机制不以时间驱动，而以数据驱动重传。也就是说，如果包没有连续到达，就回复ACK最后那个可能被丢了的包，如果发送方连续收到3次相同的ACK，就重传。这样，好处是不用等timeout了再重传。&lt;br&gt;比如：如果发送方发出了1、2、3、4、5共5份数据，第一份先到了，于是接收方回复ACK 2，结果2因为某些原因没到、3到了，于是还是ACK 2，后面的4和5都到了，但是还是ACK 2，因为2还没有到，于是发送端收到了三个ACK 2的确认，就马上重传2。然后，接收端收到了2，此时3、4、5都已经收到了，于是ACK 6。其图示如下。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/56fKXLt.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
-&lt;p&gt;但是，这样还是没有解决重传之前的一个还是重传所有的问题。就上面例子来说，发送端并不清楚这三个ACK 2是接收端收到哪些数据后传回来的。&lt;/p&gt;
-&lt;h4 id=&quot;SACK方法&quot;&gt;&lt;a href=&quot;#SACK方法&quot; class=&quot;headerlink&quot; title=&quot;SACK方法&quot;&gt;&lt;/a&gt;SACK方法&lt;/h4&gt;&lt;p&gt;另外一种更好的方式是：Selective ACK，需要在TCP头里加一个SACK的东西，ACK还是上面快速重传机制中的ACK。&lt;/p&gt;
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/2oZwECU.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
-&lt;p&gt;这样，在发送端就可以根据回传的SACK来知道哪些数据到了，哪些数据没有到。在Linux下，可以通过tcp_sack这个参数打开这个功能。      &lt;/p&gt;
-&lt;h4 id=&quot;Timeout与RTT&quot;&gt;&lt;a href=&quot;#Timeout与RTT&quot; class=&quot;headerlink&quot; title=&quot;Timeout与RTT&quot;&gt;&lt;/a&gt;Timeout与RTT&lt;/h4&gt;&lt;p&gt;从上述的TCP重传机制中可以看出，Timeout对于TCP重传的性能非常重要。如果设置长了，重发就慢，丢了很久才重发，效率低、性能差。而如果设置短了，导致并没有丢包就重发，这样重发加快，会增加网络拥塞，导致更多的超时，更多的超时又引起更多的重法，这样恶性循环。&lt;br&gt;所以，根据不同时间、网络情况，Timeout这个值需要设置，所以，TCP引入了RTT（往返时间，也就是一个数据包从发出去到回来的时间），这样就可以方便、有效的设置Timeout。&lt;br&gt;具体的RTT测量算法这里就不详述，细节可以参考《TCP/IP详解 卷一：协议》。&lt;/p&gt;
-&lt;h3 id=&quot;TCP滑动窗口&quot;&gt;&lt;a href=&quot;#TCP滑动窗口&quot; class=&quot;headerlink&quot; title=&quot;TCP滑动窗口&quot;&gt;&lt;/a&gt;TCP滑动窗口&lt;/h3&gt;&lt;p&gt;在上一篇中提到了TCP头部里有一个字段Window，即滑动窗口，这个字段是接收端告诉发送端自己还有多少缓冲区可以接收数据。从而发送端可以根据这个接收端的处理能力来发送数据，而不会导致接收端处理不过来。为了说明滑动窗口，首先来看一下TCP缓冲区的结构：&lt;/p&gt;
-&lt;p&gt;  &lt;img src=&quot;http://i.imgur.com/8afv8ge.jpg&quot; alt=&quot;&quot;&gt;            &lt;/p&gt;
-&lt;p&gt;从上图可以得到，接收端LastByteRead指向了TCP缓冲区中读到的位置，NextByteExpected指向的地方是收到的连续数据包的最后一个位置，LastByteRcved指向的是收到的包的最后一个位置，可以看到，中间有些数据还没有到达，所有有数据空白区。&lt;br&gt;而发送端的LastByteAcked指向了被接收端ACK了的位置（表示成功发送确认），LastByteSent表示发出去了，但还没有成功确认的地方，LastByteWritten指向的是上层应用正在写的地方。&lt;br&gt;所以，接收端会在给发送端返回的ACK中汇报自己的滑动窗口大小=MaxRcvBuffer-LastByteRcvd-1；而发送端会根据这个窗口大小来控制发送数据的大小，以保证接收方可以处理。要解决这个问题，就是要避免对小的window size做出响应，直到有足够大的window size再响应。     &lt;/p&gt;
-&lt;h4 id=&quot;Silly-Window-Syndrome和Nagle算法&quot;&gt;&lt;a href=&quot;#Silly-Window-Syndrome和Nagle算法&quot; class=&quot;headerlink&quot; title=&quot;Silly Window Syndrome和Nagle算法&quot;&gt;&lt;/a&gt;Silly Window Syndrome和Nagle算法&lt;/h4&gt;&lt;p&gt;网络上有个参数叫MTU，对于以太网来说，MTU是1500字节，除去TCP+IP头的40个字节，真正的数据传输可以有1460，这就是MSS（Max Segment Size），TCP的RFC中定义这个MSS的默认值是536。&lt;br&gt;那么，如果网络包可以塞满MTU，那么就可以用满整个带宽，如果不能，那么就会浪费带宽。这时，可以将其想象成一架飞机，如果飞机里满载的话，带宽最高，如果一个飞机只运一个人的话，无疑成本增加了。所以，Silly Window Syndrome这个现象就像是本来可以坐200人的飞机里只坐了一两人。&lt;br&gt;要解决这个问题，就要避免对小的窗口大小做出响应，直到有足够大的窗口大小再响应，这就是著名的Nagle算法。&lt;br&gt;Nagle算法要求一个TCP连接上最多只能有一个未被确认的未完成的小分组，在该分组的确认到达之前不能发送其他的小分组。TCP将手机这些少量的分组，并在确认到来时以一个分组的方式发出去。&lt;br&gt;该算法主要用于避免过多小分组在网络中传输，降低网络容量利用率。比如：一个20字节的TCP首部+20字节的IP首部+1个字节的数据组成的TCP数据报，有效传输利用率只有近1/40，这些小分组在广域网上会增加拥塞出现的可能。&lt;br&gt;但是，有时我们又需要关闭Nagle算法，比如说一些需要快速响应、对时延敏感的应用，如窗口程序，可以通过套接字选项TCP_NODELAY来关闭该算法。&lt;/p&gt;
-&lt;h3 id=&quot;TCP的拥塞处理&quot;&gt;&lt;a href=&quot;#TCP的拥塞处理&quot; class=&quot;headerlink&quot; title=&quot;TCP的拥塞处理&quot;&gt;&lt;/a&gt;TCP的拥塞处理&lt;/h3&gt;&lt;p&gt;如前面所描述的，TCP通过滑动窗口来做流控，但是这样还不够，因为滑动窗口只是依赖于连接的发送端和接收端，并不知道网络中间发生了什么。想象一下，网络上的延时突然增加，如果TCP对此作出的应对只有重传数据，但是，大量的重传会导致网络的负担更重，于是会导致更大的延迟以及更多的丢包，这样就产生了恶性循环，最终会拖垮整个网络。&lt;br&gt;所以，TCP不能一个劲地只是重发数据，所以，TCP的理念是，当拥塞发生的时候，要做自我牺牲，就像交通阻塞一样，每个车都应该把路让出来，而不要再去抢路了。&lt;br&gt;拥塞控制主要是四个算法：慢启动、拥塞避免、拥塞发生和快速恢复。       &lt;/p&gt;
-&lt;h4 id=&quot;慢启动、拥塞避免和拥塞发生&quot;&gt;&lt;a href=&quot;#慢启动、拥塞避免和拥塞发生&quot; class=&quot;headerlink&quot; title=&quot;慢启动、拥塞避免和拥塞发生&quot;&gt;&lt;/a&gt;慢启动、拥塞避免和拥塞发生&lt;/h4&gt;&lt;p&gt;慢启动的意思是，刚加入网络的连接，一点一点地提速。慢启动为发送方的TCP增加了另一个窗口：拥塞窗口（cwnd）。当与接收方建立TCP连接时，拥塞窗口被初始化为一个报文段，每收到一个ACK，拥塞窗口就增加一个报文段(cwnd以字节为单位，但是慢启动以报文段大小为单位进行增加)，但是有一个上限sshthresh，当cwnd&amp;gt;=ssthresh时，就会进入“拥塞避免算法”。慢启动算法初始设置cwnd为1个报文段，此后每收到一个确认就加1，这样会使窗口按指数方式增长，而拥塞避免算法要求每次收到一个确认时将cwnd增加1/cwnd。与慢启动的指数增加相比起来，这是一种加性增长。&lt;br&gt;所以，拥塞窗口是发送方使用的流量控制，而通告窗口则是接收方使用的流量控制。拥塞避免算法和慢启动算法需要对每个链接维持两个变量：一个拥塞窗口cwnd和一个慢启动门限ssthresh。这样，算法可以描述如下：&lt;br&gt;1）对于一个连接，初始化cwnd为1个报文段，ssthresh为65535个字节。&lt;br&gt;2）TCP输出例程的输出不能超过cwnd和接收方通告窗口的大小。前者是发送方感受到的网络拥塞的估计，而后者则与接收方在该连接上的可用缓存大小有关。&lt;br&gt;3）当拥塞发生时（超时或收到重复确认），ssthresh被设置为当前窗口（cwnd和接收方通告窗口大小的最小值，但最小为2个报文段）大小的一半。此外，如果是超时引起了拥塞，则cwnd被设置为1个报文段（相当于慢启动）。&lt;br&gt;4）当新的数据被对方确认时，就增加cwnd，但增加的方法依赖于是否正在进行慢启动或拥塞避免。如果cwnd小于或等于ssthresh，则正在进行慢启动，否则正在进行拥塞避免。       &lt;/p&gt;
-&lt;h4 id=&quot;快速恢复算法&quot;&gt;&lt;a href=&quot;#快速恢复算法&quot; class=&quot;headerlink&quot; title=&quot;快速恢复算法&quot;&gt;&lt;/a&gt;快速恢复算法&lt;/h4&gt;&lt;p&gt;通常和快速重传算法一起使用，算法流程如下：&lt;br&gt;1）当收到第三个重复的ACK时（前面已述），将ssthresh设置为当前拥塞窗口cwnd的一半。重传丢失的报文段。设置cwnd为ssthresh加上3倍的报文段大小。&lt;br&gt;2）每次收到另一个重复的ACK时，cwnd增加1个报文段大小并发送1个分组。&lt;br&gt;3）当下一个确认新数据的ACK到达时，设置cwnd为ssthresh。这个ACK应该是在进行重传后的一个往返时间内对步骤1中重传的确认。另外，这个ACK也应该对丢失的分组和收到的第1个重复的ACK之间的所有中间报文段的确认。这一步采用的是拥塞避免，因为当分组丢失时将当前速率减半。&lt;/p&gt;
-&lt;h3 id=&quot;总结&quot;&gt;&lt;a href=&quot;#总结&quot; class=&quot;headerlink&quot; title=&quot;总结&quot;&gt;&lt;/a&gt;总结&lt;/h3&gt;&lt;p&gt;通过这两篇总结，对TCP协议的核心知识点进行了复习和再认识，后面还需要结合具体的实例进一步加深理解，能对网络中的实际问题进行更好的分析和处理。&lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;首先，纪念一下，如果不出意外的话（没过or狠心读个博），学生期间所有的考试应该就此结束了，以后就不会大冬天的早上7点起床去图书馆占座了，想想也是佩服自己啊，啧…&lt;br&gt;好了，言归正传，接着上篇，今天学习TCP协议中较难的重传、滑动窗口和拥塞控制。&lt;/p&gt;
-    
-    </summary>
-    
-    
-      <category term="network/linux" scheme="http://blog.dujiong.net/tags/network-linux/"/>
     
   </entry>
   
