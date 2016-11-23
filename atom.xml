@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-11-23T08:24:56.583Z</updated>
+  <updated>2016-11-23T12:03:19.622Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -14,6 +14,151 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Redis之发布与订阅</title>
+    <link href="http://blog.dujiong.net/2016/11/13/Redis-pubsub/"/>
+    <id>http://blog.dujiong.net/2016/11/13/Redis-pubsub/</id>
+    <published>2016-11-13T10:13:33.000Z</published>
+    <updated>2016-11-23T12:03:19.622Z</updated>
+    
+    <content type="html">&lt;p&gt;本文分析下Redis的发布与订阅功能，该功能有点类似网络中的多播或者广播的感觉，即当一个客户端向某个频道发布消息时，频道的所有订阅者和与这个频道相匹配的模式的订阅者都会收到该消息。&lt;br&gt;Redis的发布与订阅功能分为频道的订阅和模式的订阅。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;   &lt;/p&gt;
+&lt;h3 id=&quot;相关的数据结构&quot;&gt;&lt;a href=&quot;#相关的数据结构&quot; class=&quot;headerlink&quot; title=&quot;相关的数据结构&quot;&gt;&lt;/a&gt;相关的数据结构&lt;/h3&gt;&lt;p&gt;首先看一下服务器和客户端与发布/订阅相关的属性。   &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;struct redisServer {
+    ...
+    dict* pubsub_channels;    //字典，键为频道，值为链表，记录所有订阅这个频道的客户端
+    list* pubsub_patterns;    //订阅模式列表，为pubsubPattern结构
+    ...
+}
+typedef struct redisClient {
+    ...
+    dict* pubsub_channels;    //该客户端感兴趣的频道列表
+    list* pubsub_patterns;    //该客户端感兴趣的模式
+    ...
+}redisClient;
+
+typedef struct pubsubPattern {
+    redisClient* client;            //订阅模式的客户端
+    robj* pattern;                    //被订阅的模式
+}pubsubPattern;
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;频道的订阅与退订&quot;&gt;&lt;a href=&quot;#频道的订阅与退订&quot; class=&quot;headerlink&quot; title=&quot;频道的订阅与退订&quot;&gt;&lt;/a&gt;频道的订阅与退订&lt;/h3&gt;&lt;p&gt;频道的订阅与退订在Redis中对应的命令分别为SUBSCRIBE和UNSUBSCRIBE。&lt;br&gt;首先学习SUBSCRIBE相关的源码。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;void subscribeCommand(redisClient* c){
+    int j;
+    for(j=1; j&amp;lt;c-&amp;gt;argc; j++){
+        pubsubSubscribeChannel(c, c-&amp;gt;argv[j]);    //第二个参数开始的都是要订阅的频道
+    }
+}
+
+int pubsubSubscribeChannel(redisClient* c, robj* channel){
+    dictEntry* de;
+    list* client=NULL;
+    int retval=0;
+    //将channels放入客户端c-&amp;gt;pubsub_channels的集合中
+    if(dictAdd(c-&amp;gt;pubsub_channels, channel, NULL) == DICT_OK){
+        retval=1;
+        incrRefCount(channel);        //与该channel关联的引用计数加1
+        //在server中查找这个频道的客户端链表是否存在
+        de = dictFind(server.pubsub_channels, channel);
+        if(de==NULL){    //不存在创建一个
+            clients = listCreate();
+            dictAdd(server.pubsub_channels, channel, clients);    //添加进字典
+            increRefCount(channel);
+        }else{
+            clients = dictGetVal(de);    //如果已经存在，则直接获取频道所对应的客户端链表
+        }
+
+        listaddNodeTail(clients, c);    //将客户端添加到链表的末尾
+    }
+    //回复客户端
+    addReply(c, shared.mbulkhdr[3]);
+    addReply(c, shared.subscribebulk);
+    addReply(c, channel);    
+    addReplyLongLong(c,dictSize(c-&amp;gt;pubsub_channels)+listLength(c-&amp;gt;pubsub_patterns));
+
+    return retval; 
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这样，客户端就订阅了频道。&lt;br&gt;UNSUBSCRIBE命令的行为和SUBSCRIBE的行为正好相反，当一个客户端退订某个或某些频道的时候，服务器将从pubsub_channels中解除客户端与被退订频道之间的关联。&lt;/p&gt;
+&lt;h3 id=&quot;模式的订阅与退订&quot;&gt;&lt;a href=&quot;#模式的订阅与退订&quot; class=&quot;headerlink&quot; title=&quot;模式的订阅与退订&quot;&gt;&lt;/a&gt;模式的订阅与退订&lt;/h3&gt;&lt;p&gt;如前文所述，服务器将所有模式的订阅关系都保存在服务器状态的pubsub_patterns属性里面。&lt;br&gt;模式的订阅与退订在Redis中对应的命令分别为PSUBSCRIBE和PUNSUBSCRIBE。&lt;br&gt;下面是PSUBSCRIBE相关的源代码。    &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;int pubsubSubscribePattern(redisClient* c, robj* pattern){
+    int retval=0;
+
+    //看客户端是否已经订阅了这个模式
+    if(listSearchKey(c-&amp;gt;pubsub_patterns, pattern)==NULL){    //没有
+        retval=1;
+        pubsubPattern* pat;
+        listAddNodeTail(c-&amp;gt;pubsub_patterns, pattern);
+        incrRefCount(pattern);
+
+        //创建并设置新的pubsubPattern结构
+        pat = zmalloc(sizeof(*pat));
+        pat-&amp;gt;pattern = getDecodedObject(pattern);
+        pat-&amp;gt;client = c;
+
+        listAddNodeTail(server.pubsub_patterns, pat);
+    }
+    //回复客户端
+    ...
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;同频道订阅操作类似，只是在数据结构上有些许差异。&lt;br&gt;模式的退订命令PUNSUBSCRIBE是PSUBSCRIBE命令的反操作：当一个客户端退订某个或某些模式的时候，服务器将在pubsub_patterns链表查找并删除那些pattern属性为被退订模式，并且client属性为执行退订命令的客户端的pubsubPattern结构。&lt;/p&gt;
+&lt;h3 id=&quot;发送消息&quot;&gt;&lt;a href=&quot;#发送消息&quot; class=&quot;headerlink&quot; title=&quot;发送消息&quot;&gt;&lt;/a&gt;发送消息&lt;/h3&gt;&lt;p&gt;当一个Redis客户端执行PUBLISH &lt;channel&gt; &lt;message&gt;命令将消息message发送给频道channel的时候，服务器需要执行以下两个动作：&lt;br&gt;（1）将消息message发送给channel频道的所有订阅者；&lt;br&gt;（2）如果有一个或多个模式pattern与频道channel相匹配，那么将消息message发送给pattern模式的订阅者。&lt;br&gt;下面是相关的源码。&lt;/message&gt;&lt;/channel&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;int pubsubPublishMessage(robj* channel, robj* message) {
+    int receives=0;
+    dictEntry* de;
+    listNode* ln;
+    listIter li;
+
+    de = dictFind(server.pubsub_channels, channel);    //查找channel
+    if(de){
+        list* list = dictGetVal(de);    //得到客户端链表
+        listNode* ln;
+        listIter* li;
+
+        listRewind(list, &amp;amp;li);
+        while(ln = listNext(&amp;amp;li)!=NULL){    //遍历客户端链表，将消息发送给他们
+            redisClient* c = ln-&amp;gt;value;
+            addReply(c,shared.mbulkhdr[3]);
+            addReply(c,shared.messagebulk);
+            addReplyBulk(c,channel);
+            addReplyBulk(c,message);
+            receives++;        //接收客户端计数
+        }
+    }
+
+    //将消息发送给与频道匹配的模式
+    if(listLength(server.pubsub_patterns)){
+        listRewind(server.pubsub_patterns,&amp;amp;li);
+        channel = getDecodedObject(channel);
+        while ((ln = listNext(&amp;amp;li)) != NULL) {
+            if (stringmatchlen((char*)pat-&amp;gt;pattern-&amp;gt;ptr,
+                            sdslen(pat-&amp;gt;pattern-&amp;gt;ptr),
+                            (char*)channel-&amp;gt;ptr,
+                            sdslen(channel-&amp;gt;ptr),0)){    //如果模式和channel匹配
+                //给所以订阅该模式的客户端发送消息
+                addReply(pat-&amp;gt;client,shared.mbulkhdr[4]);
+                addReply(pat-&amp;gt;client,shared.pmessagebulk);
+                addReplyBulk(pat-&amp;gt;client,pat-&amp;gt;pattern);
+                addReplyBulk(pat-&amp;gt;client,channel);
+                addReplyBulk(pat-&amp;gt;client,message);
+
+                receives++;        //接收客户端计数
+            }
+        }
+    }
+    return receives;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;查看订阅信息&quot;&gt;&lt;a href=&quot;#查看订阅信息&quot; class=&quot;headerlink&quot; title=&quot;查看订阅信息&quot;&gt;&lt;/a&gt;查看订阅信息&lt;/h3&gt;&lt;p&gt;此外，Redis还支持PUBSUB命令，客户端用以查看频道或者模式的相关信息，比如某个频道目前有多少订阅者、某个模式目前有多少订阅者等。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;本文分析下Redis的发布与订阅功能，该功能有点类似网络中的多播或者广播的感觉，即当一个客户端向某个频道发布消息时，频道的所有订阅者和与这个频道相匹配的模式的订阅者都会收到该消息。&lt;br&gt;Redis的发布与订阅功能分为频道的订阅和模式的订阅。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="Redis" scheme="http://blog.dujiong.net/tags/Redis/"/>
+    
+  </entry>
   
   <entry>
     <title>Redis之启动过程分析</title>
@@ -2234,37 +2379,6 @@ struct epoll_event{
     
     
       <category term="network/linux" scheme="http://blog.dujiong.net/tags/network-linux/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>2015-2016年互联网公司校招编程题汇总</title>
-    <link href="http://blog.dujiong.net/2016/07/21/internetcompany/"/>
-    <id>http://blog.dujiong.net/2016/07/21/internetcompany/</id>
-    <published>2016-07-21T12:16:02.000Z</published>
-    <updated>2016-09-19T15:38:36.004Z</updated>
-    
-    <content type="html">&lt;p&gt;本文收录了近两年的各大互联网公司校招（实习）笔试的编程题，并提供了自己的思路和解法。希望能对自己和备战互联网校招的同学提供一些帮助。 &lt;/p&gt;
-&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
-&lt;p&gt;所有题目均来自于牛客网“校招真题编程题汇总”板块，感谢牛客网的汇总并提供在线编程平台。为了方便大家检验，下面每个题会链接到牛客网的OJ界面。而我提供的思路和解法会链接至我的&lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;github&lt;/a&gt;，欢迎大家多沟通、交流。&lt;/p&gt;
-&lt;h3 id=&quot;华为&quot;&gt;&lt;a href=&quot;#华为&quot; class=&quot;headerlink&quot; title=&quot;华为&quot;&gt;&lt;/a&gt;华为&lt;/h3&gt;&lt;p&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/784efd40ed8e465a84821c8f3970b7b5?tpId=49&amp;amp;tqId=29297&amp;amp;rp=2&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;字符集合&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E5%8D%8E%E4%B8%BA/%E5%AD%97%E7%AC%A6%E9%9B%86%E5%90%88&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/f9533a71aada4f35867008be22be5b6e?tpId=49&amp;amp;tqId=29296&amp;amp;rp=2&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;删数&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E5%8D%8E%E4%B8%BA/%E5%88%A0%E6%95%B0&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;/p&gt;
-&lt;h3 id=&quot;腾讯&quot;&gt;&lt;a href=&quot;#腾讯&quot; class=&quot;headerlink&quot; title=&quot;腾讯&quot;&gt;&lt;/a&gt;腾讯&lt;/h3&gt;&lt;p&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/fbcf95ed620f42a88be24eb2cd57ec54?tpId=49&amp;amp;tqId=29311&amp;amp;rp=3&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;微信红包&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E8%85%BE%E8%AE%AF/%E5%BE%AE%E4%BF%A1%E7%BA%A2%E5%8C%85&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/50959b5325c94079a391538c04267e15?tpId=49&amp;amp;tqId=29310&amp;amp;rp=3&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;生成格雷码&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E8%85%BE%E8%AE%AF/%E7%94%9F%E6%88%90%E6%A0%BC%E9%9B%B7%E7%A0%81&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;/p&gt;
-&lt;h3 id=&quot;网易&quot;&gt;&lt;a href=&quot;#网易&quot; class=&quot;headerlink&quot; title=&quot;网易&quot;&gt;&lt;/a&gt;网易&lt;/h3&gt;&lt;p&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/62cdf520b9d94616b6644ac03a0306ff?tpId=49&amp;amp;tqId=29309&amp;amp;rp=3&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;路灯&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E7%BD%91%E6%98%93/%E8%B7%AF%E7%81%AF&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/cee98a512ec246a2918ea8121f7612c8?tpId=49&amp;amp;tqId=29308&amp;amp;rp=3&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;奖学金&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E7%BD%91%E6%98%93/%E5%A5%96%E5%AD%A6%E9%87%91&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/question/next?pid=2252291&amp;amp;qid=45846&amp;amp;tid=4847537&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;统计回文&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E7%BD%91%E6%98%93/%E7%BB%9F%E8%AE%A1%E5%9B%9E%E6%96%87&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/question/next?pid=2252291&amp;amp;qid=45842&amp;amp;tid=4847537&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;两种排序方法&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E7%BD%91%E6%98%93/%E4%B8%A4%E7%A7%8D%E6%8E%92%E5%BA%8F%E6%96%B9%E6%B3%95&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/question/next?pid=2252291&amp;amp;qid=45844&amp;amp;tid=4847537&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;Fibonacci数列&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E7%BD%91%E6%98%93/Fibonacci%E6%95%B0%E5%88%97&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/question/next?pid=2252291&amp;amp;qid=45840&amp;amp;tid=5196556&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;解救小易&lt;/a&gt; ——————–&amp;gt;  &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E7%BD%91%E6%98%93/%E8%A7%A3%E6%95%91%E5%B0%8F%E6%98%93&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/question/next?pid=2252291&amp;amp;qid=45842&amp;amp;tid=5196556&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;不要二&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E7%BD%91%E6%98%93/%E4%B8%8D%E8%A6%81%E4%BA%8C&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/question/next?pid=2252291&amp;amp;qid=45842&amp;amp;tid=5196556&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;饥饿的小易&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E7%BD%91%E6%98%93/%E9%A5%A5%E9%A5%BF%E7%9A%84%E5%B0%8F%E6%98%93&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/question/next?pid=2252291&amp;amp;qid=45843&amp;amp;tid=5196556&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;数字游戏&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E7%BD%91%E6%98%93/%E6%95%B0%E5%AD%97%E6%B8%B8%E6%88%8F&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/question/next?pid=2252291&amp;amp;qid=45847&amp;amp;tid=5196556&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;混合颜料&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E7%BD%91%E6%98%93/%E6%B7%B7%E5%90%88%E9%A2%9C%E6%96%99&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;/p&gt;
-&lt;h3 id=&quot;京东&quot;&gt;&lt;a href=&quot;#京东&quot; class=&quot;headerlink&quot; title=&quot;京东&quot;&gt;&lt;/a&gt;京东&lt;/h3&gt;&lt;p&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/532d89889b974506a0805062fd1089fb?tpId=49&amp;amp;tqId=29307&amp;amp;rp=2&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;小东分苹果&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E4%BA%AC%E4%B8%9C/%E5%B0%8F%E4%B8%9C%E5%88%86%E8%8B%B9%E6%9E%9C&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/ae45a1d8bc1d43858c83762fe8c2802c?tpId=49&amp;amp;tqId=29306&amp;amp;rp=2&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;抛小球&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E4%BA%AC%E4%B8%9C/%E6%8A%9B%E5%B0%8F%E7%90%83&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/4b24ebad2ffd4f679320fd464b2036a6?tpId=49&amp;amp;tqId=29321&amp;amp;rp=3&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;上台阶&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E4%BA%AC%E4%B8%9C/%E4%B8%8A%E5%8F%B0%E9%98%B6&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;  &lt;/p&gt;
-&lt;h3 id=&quot;小米&quot;&gt;&lt;a href=&quot;#小米&quot; class=&quot;headerlink&quot; title=&quot;小米&quot;&gt;&lt;/a&gt;小米&lt;/h3&gt;&lt;p&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/ba033b0d1c2f497da1dd04330cc003af?tpId=49&amp;amp;tqId=29232&amp;amp;rp=1&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;懂二进制&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E5%B0%8F%E7%B1%B3/%E6%87%82%E4%BA%8C%E8%BF%9B%E5%88%B6&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/9370d298b8894f48b523931d40a9a4aa?tpId=49&amp;amp;tqId=29233&amp;amp;rp=1&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;风口的猪-中国牛市&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E5%B0%8F%E7%B1%B3/%E9%A3%8E%E5%8F%A3%E7%9A%84%E7%8C%AA-%E4%B8%AD%E5%9B%BD%E7%89%9B%E5%B8%82&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;/p&gt;
-&lt;h3 id=&quot;去哪儿&quot;&gt;&lt;a href=&quot;#去哪儿&quot; class=&quot;headerlink&quot; title=&quot;去哪儿&quot;&gt;&lt;/a&gt;去哪儿&lt;/h3&gt;&lt;p&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/28d5a9b7fc0b4a078c9a6d59830fb9b9?tpId=49&amp;amp;tqId=29278&amp;amp;rp=1&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;二分查找&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E5%8E%BB%E5%93%AA%E5%84%BF/%E4%BA%8C%E5%88%86%E6%9F%A5%E6%89%BE&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/dab59997905b4459a42587fece8a75f4?tpId=49&amp;amp;tqId=29279&amp;amp;rp=1&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;首个重复字符&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E5%8E%BB%E5%93%AA%E5%84%BF/%E9%A6%96%E4%B8%AA%E9%87%8D%E5%A4%8D%E5%AD%97%E7%AC%A6&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/a386fd3a5080435dad3252bac76950a7?tpId=49&amp;amp;tqId=29280&amp;amp;rp=1&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;寻找Coder&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E5%8E%BB%E5%93%AA%E5%84%BF/%E5%AF%BB%E6%89%BECoder&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/227893ccf81d4e8589875922f0d9319e?tpId=49&amp;amp;tqId=29299&amp;amp;rp=2&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;表达式合法判断&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E5%8E%BB%E5%93%AA%E5%84%BF/%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%90%88%E6%B3%95%E5%88%A4%E6%96%AD&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/5541c433dee04c17ba7774c4a20430de?tpId=49&amp;amp;tqId=29303&amp;amp;rp=2&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;5-血型遗传监测&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E5%8E%BB%E5%93%AA%E5%84%BF/5-%E8%A1%80%E5%9E%8B%E9%81%97%E4%BC%A0%E7%9B%91%E6%B5%8B&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;/p&gt;
-&lt;h3 id=&quot;美团&quot;&gt;&lt;a href=&quot;#美团&quot; class=&quot;headerlink&quot; title=&quot;美团&quot;&gt;&lt;/a&gt;美团&lt;/h3&gt;&lt;p&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/13ba51c3fec74b58bbc8fa8c3eedf877?tpId=49&amp;amp;tqId=29284&amp;amp;rp=1&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;直方图内最大矩形&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E7%BE%8E%E5%9B%A2/%E7%9B%B4%E6%96%B9%E5%9B%BE%E5%86%85%E6%9C%80%E5%A4%A7%E7%9F%A9%E5%BD%A2&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/0b5ab6cc51804dd59f9988ad70d8c4a0?tpId=49&amp;amp;tqId=29282&amp;amp;rp=1&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;棋子翻转&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E7%BE%8E%E5%9B%A2/%E6%A3%8B%E5%AD%90%E7%BF%BB%E8%BD%AC&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/3745638815d04c26babcfc463c25478c?tpId=49&amp;amp;tqId=29286&amp;amp;rp=1&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;平均年龄&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E7%BE%8E%E5%9B%A2/%E5%B9%B3%E5%9D%87%E5%B9%B4%E9%BE%84&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/1f7675ae7a9e40e4bd04eb754b62fd00?tpId=49&amp;amp;tqId=29281&amp;amp;rp=1&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;最大差值&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E7%BE%8E%E5%9B%A2/%E6%9C%80%E5%A4%A7%E5%B7%AE%E5%80%BC&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/12cbdcdf5d1e4059b6ddd420de6342b6?tpId=49&amp;amp;tqId=29283&amp;amp;rp=1&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;拜访&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E7%BE%8E%E5%9B%A2/%E6%8B%9C%E8%AE%BF&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/196141ecd6eb401da3111748d30e9141?tpId=49&amp;amp;tqId=29315&amp;amp;rp=3&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;奇数位丢弃&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E7%BE%8E%E5%9B%A2/%E5%A5%87%E6%95%B0%E4%BD%8D%E4%B8%A2%E5%BC%83&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/6fadc1dac83a443c9434f350a5803b51?tpId=49&amp;amp;tqId=29316&amp;amp;rp=3&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;二维数组打印&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E7%BE%8E%E5%9B%A2/%E4%BA%8C%E7%BB%B4%E6%95%B0%E7%BB%84%E6%89%93%E5%8D%B0&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/3e8c66829a7949d887334edaa5952c28?tpId=49&amp;amp;tqId=29317&amp;amp;rp=3&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;股票交易日&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E7%BE%8E%E5%9B%A2/%E8%82%A1%E7%A5%A8%E4%BA%A4%E6%98%93%E6%97%A5&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;/p&gt;
-&lt;h3 id=&quot;蘑菇街&quot;&gt;&lt;a href=&quot;#蘑菇街&quot; class=&quot;headerlink&quot; title=&quot;蘑菇街&quot;&gt;&lt;/a&gt;蘑菇街&lt;/h3&gt;&lt;p&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/3a571cdc72264d76820396770a151f90?tpId=49&amp;amp;tqId=29292&amp;amp;rp=2&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;最大间隔&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E8%98%91%E8%8F%87%E8%A1%97&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;br&gt;&lt;a href=&quot;http://www.nowcoder.com/practice/655a43d702cd466093022383c24a38bf?rp=2&amp;amp;ru=/ta/2016test&amp;amp;qru=/ta/2016test/question-ranking&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;回文串&lt;/a&gt; ——————–&amp;gt; &lt;a href=&quot;https://github.com/jiongdu/Algorithm/tree/master/%E6%A0%A1%E6%8B%9B%E7%BC%96%E7%A8%8B%E9%A2%98/%E8%98%91%E8%8F%87%E8%A1%97/%E5%9B%9E%E6%96%87%E4%B8%B2&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;思路和解答&lt;/a&gt;&lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;本文收录了近两年的各大互联网公司校招（实习）笔试的编程题，并提供了自己的思路和解法。希望能对自己和备战互联网校招的同学提供一些帮助。 &lt;/p&gt;
-    
-    </summary>
-    
-    
-      <category term="数据结构与算法" scheme="http://blog.dujiong.net/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/"/>
     
   </entry>
   
