@@ -4,6 +4,23 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/11/10/Redis-start/</loc>
+    <lastmod>2016-11-23T08:24:56.583Z</lastmod>
+    <data>
+        <display>
+        <title>Redis之启动过程分析</title>
+        <pubTime>2016-11-10T01:49:28.000Z</pubTime>
+        
+        <tag>Redis</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/11/05/Redis-event/</loc>
     <lastmod>2016-11-15T05:52:30.834Z</lastmod>
     <data>
