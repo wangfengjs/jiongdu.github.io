@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://blog.dujiong.net/2016/11/17/Redis-db/</loc>
+    
+    <lastmod>2016-11-24T07:49:39.294Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://blog.dujiong.net/2016/11/13/Redis-pubsub/</loc>
     
     <lastmod>2016-11-23T12:03:19.622Z</lastmod>

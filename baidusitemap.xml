@@ -4,6 +4,23 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/11/17/Redis-db/</loc>
+    <lastmod>2016-11-24T07:49:39.294Z</lastmod>
+    <data>
+        <display>
+        <title>Redis之数据库的实现</title>
+        <pubTime>2016-11-17T11:46:03.000Z</pubTime>
+        
+        <tag>Redis</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/11/13/Redis-pubsub/</loc>
     <lastmod>2016-11-23T12:03:19.622Z</lastmod>
     <data>
