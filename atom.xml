@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-11-24T07:49:39.294Z</updated>
+  <updated>2016-11-24T13:21:46.614Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -14,6 +14,113 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>最短路问题</title>
+    <link href="http://blog.dujiong.net/2016/11/20/shortest-path/"/>
+    <id>http://blog.dujiong.net/2016/11/20/shortest-path/</id>
+    <published>2016-11-20T12:03:09.000Z</published>
+    <updated>2016-11-24T13:21:46.614Z</updated>
+    
+    <content type="html">&lt;p&gt;最短路问题是图论中最基础的问题。最短路是给定两个顶点，在以这两个点为起点和终点的路径中，边的权值和最小的路径。如果把权值当做距离，考虑最短距离就很容易理解了。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&quot;单源最短路问题&quot;&gt;&lt;a href=&quot;#单源最短路问题&quot; class=&quot;headerlink&quot; title=&quot;单源最短路问题&quot;&gt;&lt;/a&gt;单源最短路问题&lt;/h3&gt;&lt;p&gt;单源最短路问题是固定一个起点，求它到其他所有点的最短路的问题。如果终点也固定，这样的问题叫做两点之间的最短路问题。        &lt;/p&gt;
+&lt;h4 id=&quot;Bellman-Ford算法&quot;&gt;&lt;a href=&quot;#Bellman-Ford算法&quot; class=&quot;headerlink&quot; title=&quot;Bellman-Ford算法&quot;&gt;&lt;/a&gt;Bellman-Ford算法&lt;/h4&gt;&lt;p&gt;记从起点s出发到顶点i的最短距离为d[i]。则下列等式成立：&lt;br&gt; &lt;img src=&quot;http://i.imgur.com/sZLfLxF.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;如果给定的图是一个有向无环图，可以按拓扑排序给顶点编号，并利用这条递推关系式计算出d。但是，如果图中有圈，就无法依赖这样的顺序进行排序。这种情况下，记当前到顶点i的最短路长度为d[i]，并设初值d[s]=0，d[i]=INF，再不断使用这条关系式更新d的值，就可以算出新的d。只要图中不存在负圈，这样的更新操作是有限的。结束之后的d就是所求的最短距离。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;struct edge {
+    int from, to;
+    int cost;
+}
+
+edge es[MAX_E];        //边
+
+int d[MAX_V];        //最短距离
+int V, E;            //顶点数和边数
+
+void shortest_path(int s) {
+    for(int i=0;i&amp;lt;V;i++){
+        d[i]=INF;    //初始化为INF
+    }
+    d[s]=0;
+    while(true){
+        bool update =false;
+        for(int i=0;i&amp;lt;E;i++){
+            edge e = es[i];        //边
+            if(d[e.from]!=INF &amp;amp;&amp;amp; d[e.to]&amp;gt;d[e.from]+e.cost){
+                d[e.to] = d[e.from]+cost;    
+                update = true;
+            }
+        }
+        if(!update) break;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;该算法叫做Bellman-Ford算法。如果在图中不存在从s可达的负圈，那么最短路不会经过同一顶点两次（即最多通过|V-1|条边），while循环最多执行|V|-1次。因此，复杂度是O(|V|x|E|)。反之，如果存在从s到达的负圈，那么在第|V|次循环中也会更新d的值，因此可以利用这个性质来检查负圈。&lt;/p&gt;
+&lt;h4 id=&quot;Dijkstra算法&quot;&gt;&lt;a href=&quot;#Dijkstra算法&quot; class=&quot;headerlink&quot; title=&quot;Dijkstra算法&quot;&gt;&lt;/a&gt;Dijkstra算法&lt;/h4&gt;&lt;p&gt;考虑一下Bellman-Ford算法没有负边的情况。如果d[i]还不是最短距离的话，那么即使进行d[j]=d[i]+(从i到j的边的权值)的更新，d[j]也不会变成最短距离。而且，即使d[i]没有变化，每一次循环也要检查一遍从i出发的所有边，这是很浪费时间的。因此可以对算法做如下修改：&lt;br&gt;（1）找到最短距离已经确定的顶点，从它出发更新相邻的最短距离；&lt;br&gt;（2）此后不需要再关心（1）中“最短距离已经确定的顶点”。&lt;br&gt;得到上述提到的“最短距离已经确定的顶点“是问题的关键。在最开始时，只有起点的最短距离是确定的。而在尚未使用过的顶点中，距离d[i]最小的顶点就是最短距离已经确定的顶点。因为不存在负边，所以d[i]不会在后面的更新中变小。该算法称为Dijkstra算法。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;int cost[MAX_V][MAX_V];        //cost[u][v]表示边e=(u,v)的权值
+int d[MAX_V];                //顶点s出发的最短距离
+bool used[MAX_V];            //已经使用过的图
+int V;
+
+void dijkstra(int s){
+    fill(d, d+V, INF);        //初始距离设为无穷大
+    d[s]=0;
+
+    while(true){
+        int v=-1;
+        for(int u=0;u&amp;lt;V;u++){
+            if(!used[u] &amp;amp;&amp;amp; (v==-1 || d[u]&amp;lt;d[v])) v=u;    //从尚未使过的顶点中选择一个距离最小的顶点
+        }
+        if(v==-1) break;
+        used[v]=true;
+        for(int u=0;u&amp;lt;V;u++){
+            d[u] = min(d[u], d[v]+cost[v][u]);
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;使用邻接矩阵实现的Dijkstra算法的复杂度是O(|V|^2)。使用邻接表的话，更新最短距离只需要访问每条边一次即可，因此这部分的复杂度是O(|E|)。但是每次要枚举所有的顶点来查找下一个使用的顶点，因此最终复杂度还是O(|V|^2)。在|E|比较小时，大部分时间花在了查找下一个使用的顶点上，因此需要使用合适的数据结构对其进行优化。&lt;br&gt;使用堆就可以了，把每个顶点当前的最短距离用堆维护，在更新最短距离时，把对应的元素往根的方向移动以满足堆的性质。而每次从堆中取出的最小值就是下一次要使用的顶点。这样堆中元素共有O(|V|)个，更新和取出数值的操作有O(|E|)次，因此整个算法的复杂度是O(|E|log|V|)。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;struct edge {
+    int to, cost;    
+}
+
+typedef pair&amp;lt;int, int&amp;gt; P;        //first是最短距离，second是顶点的编号
+
+int V;
+vector&amp;lt;edge&amp;gt; G[MAX_V];
+
+int d[MAX_V];
+
+void dijkstra(int s) {
+    priority_queue&amp;lt;P, vector&amp;lt;P&amp;gt;, greater&amp;lt;P&amp;gt; &amp;gt; que;
+    fill(d, d+V, INF);
+    d[s]=0;
+    que.push(P(0, s));
+
+    while(!que.empty()){
+        P p=que.top();
+        que.pop();
+        int v=p.second;        //顶点
+        if(d[v]&amp;lt;p.first) continue;
+        for(int i=0;i&amp;lt;G[v].size();i++){        //找距离最短的邻点
+            edge e=G[v][i];
+            if(d[e.to]&amp;gt;d[v]+e.cost){            //更新
+                d[e.to]=d[v]+e.cost;
+                que.push(P(d[e.to], e.to));        //把最近的节点和距离放入堆中
+            }
+        }    
+
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;任意两点间的最短路问题&quot;&gt;&lt;a href=&quot;#任意两点间的最短路问题&quot; class=&quot;headerlink&quot; title=&quot;任意两点间的最短路问题&quot;&gt;&lt;/a&gt;任意两点间的最短路问题&lt;/h3&gt;&lt;p&gt;求解所有两点间的最短路问题叫做任意两点间的最短路问题。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;最短路问题是图论中最基础的问题。最短路是给定两个顶点，在以这两个点为起点和终点的路径中，边的权值和最小的路径。如果把权值当做距离，考虑最短距离就很容易理解了。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="数据结构与算法" scheme="http://blog.dujiong.net/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/"/>
+    
+  </entry>
   
   <entry>
     <title>Redis之数据库的实现</title>
@@ -2368,148 +2475,6 @@ class BlockingQueue : boost::noncopyable
     
     
       <category term="设计模式" scheme="http://blog.dujiong.net/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>shared_ptr的注意事项</title>
-    <link href="http://blog.dujiong.net/2016/08/08/shared-ptr/"/>
-    <id>http://blog.dujiong.net/2016/08/08/shared-ptr/</id>
-    <published>2016-08-08T13:38:44.000Z</published>
-    <updated>2016-08-27T13:24:49.329Z</updated>
-    
-    <content type="html">&lt;p&gt;前面在&lt;a href=&quot;http://blog.dujiong.net/2016/05/15/cplusplus-sematics/&quot;&gt;浅谈C++值语义和对象语义&lt;/a&gt;一文中简要的阐述了一下智能指针shared_ptr的作用和用法，作为C++11中最为广泛使用的智能指针，shared_ptr虽然解决了裸指针的诸多问题，但是它并非完美、无懈可击，所以，本文就shared_ptr使用过程中需要注意的一些问题做一下总结。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;  &lt;/p&gt;
-&lt;h3 id=&quot;循环引用&quot;&gt;&lt;a href=&quot;#循环引用&quot; class=&quot;headerlink&quot; title=&quot;循环引用&quot;&gt;&lt;/a&gt;循环引用&lt;/h3&gt;&lt;p&gt;首当其冲的便是shared_ptr造成的循环引用。     &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;#include &amp;lt;iostream&amp;gt;
-#include &amp;lt;memory&amp;gt;
-
-using namespace std;
-
-class BaseClass;
-class DerivedClass;
-
-typedef std::shared_ptr&amp;lt;BaseClass&amp;gt; BaseClassPtr;
-typedef std::shared_ptr&amp;lt;DerivedClass&amp;gt; DerivedClassPtr;
-
-class BaseClass
-{
-    public:
-        DerivedClassPtr derivedPtr;
-        ~BaseClass()
-        {
-            cout &amp;lt;&amp;lt; &amp;quot;~BaseClass()&amp;quot; &amp;lt;&amp;lt; endl;
-        }
-};
-
-class DerivedClass
-{
-    public:
-        BaseClassPtr basePtr;
-        ~DerivedClass()
-        {
-            cout &amp;lt;&amp;lt; &amp;quot;~DerivedClass()&amp;quot; &amp;lt;&amp;lt; endl;
-        }
-};
-
-int main()
-{
-    BaseClassPtr base(new BaseClass());
-    DerivedClassPtr derived(new DerivedClass());
-
-    base-&amp;gt;derivedPtr = derived;
-    derived-&amp;gt;basePtr = base;
-
-    cout &amp;lt;&amp;lt; base.use_count() &amp;lt;&amp;lt; endl;
-    cout &amp;lt;&amp;lt; derived.use_count() &amp;lt;&amp;lt; endl;
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;程序运行结果如下。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/dqHRq8F.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;从结果可以看出，堆上的BaseClass和DerivedClass都没有被析构，因为二者的引用都为1，并形成了循环引用，类似于“放开我的引用”，“你先放开我的我就放你的”的恶性循环，所以，造成了内存泄露。&lt;br&gt;解决方法是使用弱智能指针weak_ptr，让BaseClass和DerivedClass分别持有对方的weak_ptr，而不是shared_ptr，weak_ptr也是一个引用计数型智能指针，但是它不增加对象的引用计数。这样，就可以保证内存正常释放。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/cG2fmZx.png&quot; alt=&quot;&quot;&gt;    &lt;/p&gt;
-&lt;h3 id=&quot;线程安全&quot;&gt;&lt;a href=&quot;#线程安全&quot; class=&quot;headerlink&quot; title=&quot;线程安全&quot;&gt;&lt;/a&gt;线程安全&lt;/h3&gt;&lt;p&gt;shared_ptr是引用计数型智能指针，几乎所有的实现都采用在堆上存放计数值的方法。具体来说，shared_ptr&lt;foo&gt;包含两个成员，一个是指向Foo的指针ptr，另一个是ref_count指针（不一定是原始指针），指向堆上的ref_count对象。ref_count对象有多个成员。&lt;/foo&gt;&lt;/p&gt;
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/WZNNAPg.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
-&lt;p&gt;所以，如果执行：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;shared_ptr&amp;lt;Foo&amp;gt; x(new Foo);
-shared_ptr&amp;lt;Foo&amp;gt; y = x;
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;y=x将会涉及两个成员的拷贝,ptr和ref_count指针。这两步不是原子的，所以在多线程中会有race condition，需要加锁保护。     &lt;/p&gt;
-&lt;h3 id=&quot;内存多次释放&quot;&gt;&lt;a href=&quot;#内存多次释放&quot; class=&quot;headerlink&quot; title=&quot;内存多次释放&quot;&gt;&lt;/a&gt;内存多次释放&lt;/h3&gt;&lt;p&gt;shared_ptr多次引用同一数据会导致内存多次释放。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;#include &amp;lt;iostream&amp;gt;
-#include &amp;lt;memory&amp;gt;
-
-using namespace std;
-
-int main()
-{
-    int* ptr = new int(100);
-    std::shared_ptr sptr1(ptr);
-    ...
-    std::shared_ptr sptr2(ptr);
-
-    return 0;
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;只分配了一次内存，却两次释放。&lt;/p&gt;
-&lt;h3 id=&quot;enable-shared-from-this&quot;&gt;&lt;a href=&quot;#enable-shared-from-this&quot; class=&quot;headerlink&quot; title=&quot;enable_shared_from_this&quot;&gt;&lt;/a&gt;enable_shared_from_this&lt;/h3&gt;&lt;p&gt;当使用智能指针时，类的某些成员函数需要返回的是管理自身的shared_ptr，这时就需要使A继承自enable_shared_from_this（顾名思义，将this指针变身为shared_ptr），然后通过其成员函数shared_from_this()返回指向自身的shared_ptr。      &lt;/p&gt;
-&lt;p&gt;首先看没有使用它会发生什么？&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;#include &amp;lt;iostream&amp;gt;
-#include &amp;lt;memory&amp;gt;
-
-using namespace std;
-
-class A
-{
-    public:
-        ~A()
-        {
-            cout &amp;lt;&amp;lt; &amp;quot;~A()&amp;quot; &amp;lt;&amp;lt; endl;
-        }
-        shared_ptr&amp;lt;A&amp;gt; get_sptr()
-        {
-            return shared_ptr&amp;lt;A&amp;gt;(this);
-        }
-};
-
-int main()
-{
-    shared_ptr&amp;lt;A&amp;gt; a(new A());
-    shared_ptr&amp;lt;A&amp;gt; b = a-&amp;gt;get_sptr();
-
-    return 0;
-}  
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;运行结果为：&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/21rnuTE.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;可以看出，只new了一个A对象，但是却调用了两次析构函数。产生这个错误的原因get_sptr()成员函数中将shared_ptr中的引用计数器的值加了1。所以，需要解决的是，怎样通过一个类的成员函数获取当前对象的shared_ptr？&lt;br&gt;方法就是使类继承enable_shared_from_this，然后在需要shared_ptr的地方调用其成员函数shared_from_this()即可。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;#include &amp;lt;iostream&amp;gt;
-#include &amp;lt;memory&amp;gt;
-
-using namespace std;
-
-class A : public enable_shared_from_this&amp;lt;A&amp;gt;
-{
-    public:
-        ~A()
-        {
-            cout &amp;lt;&amp;lt; &amp;quot;~A()&amp;quot; &amp;lt;&amp;lt; endl;
-        }
-        shared_ptr&amp;lt;A&amp;gt; get_sptr()
-        {
-            return shared_from_this();
-        }
-};
-
-int main()
-{
-    shared_ptr&amp;lt;A&amp;gt; a(new A());
-    shared_ptr&amp;lt;A&amp;gt; b = a-&amp;gt;get_sptr();
-
-    return 0;
-}  
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;运行结果为：&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/ZuA23y9.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;需要注意的是，不能在构造函数中使用&lt;code&gt;shared_from_this()&lt;/code&gt;，因为虽然对象的基类&lt;code&gt;enable_shared_from_this&lt;/code&gt;的构造函数已经调用，但是&lt;code&gt;shared_ptr&lt;/code&gt;的构造函数并没有调用，所以这个时候调用&lt;code&gt;shared_from_this()&lt;/code&gt;是错的。&lt;/p&gt;
-&lt;h3 id=&quot;总结&quot;&gt;&lt;a href=&quot;#总结&quot; class=&quot;headerlink&quot; title=&quot;总结&quot;&gt;&lt;/a&gt;总结&lt;/h3&gt;&lt;p&gt;智能指针虽好，但也并非完美，在使用的过程中还是需要注意。&lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;前面在&lt;a href=&quot;http://blog.dujiong.net/2016/05/15/cplusplus-sematics/&quot;&gt;浅谈C++值语义和对象语义&lt;/a&gt;一文中简要的阐述了一下智能指针shared_ptr的作用和用法，作为C++11中最为广泛使用的智能指针，shared_ptr虽然解决了裸指针的诸多问题，但是它并非完美、无懈可击，所以，本文就shared_ptr使用过程中需要注意的一些问题做一下总结。&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
     
   </entry>
   
