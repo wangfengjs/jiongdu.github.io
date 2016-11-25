@@ -4,6 +4,23 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/11/25/Redis-RDB/</loc>
+    <lastmod>2016-11-25T08:21:30.775Z</lastmod>
+    <data>
+        <display>
+        <title>Redis之RDB持久化</title>
+        <pubTime>2016-11-25T06:22:16.000Z</pubTime>
+        
+        <tag>Redis</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/11/20/shortest-path/</loc>
     <lastmod>2016-11-25T01:45:32.826Z</lastmod>
     <data>

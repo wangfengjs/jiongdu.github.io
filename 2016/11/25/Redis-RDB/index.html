@@ -41,7 +41,7 @@
 <link href="/css/main.css?v=0.5.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="数据结构与算法," />
+  <meta name="keywords" content="Redis," />
 
 
 
@@ -59,18 +59,22 @@
 
 
 
-<meta name="description" content="线段树，又称为区间数，是一种二叉搜索树，它将一个区间划分成一些单元区间，每个单元区间对应线段树中的一个叶节点。而对于线段树中的每一个非叶节点[a,b]，它的左子树表示的区间为[a,(a+b)/2]，右子树表示的区间为[(a+b)/2+1,b]，因此线段树是平衡二叉树（结构平衡的二叉搜索树，即叶节点的深度差不超过1）。叶节点数目为N，即整个线段区间的长度。">
+<meta name="description" content="Redis是内存数据库，它将自己的数据库状态储存在内存里面，所以，如果不想办法将储存在内存中的数据库状态保存到磁盘里面，那么一旦服务器进程退出，服务器中的数据库状态也会消失不见。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="数据结构之线段树">
-<meta property="og:url" content="http://blog.dujiong.net/2016/09/23/SegmentTree/index.html">
+<meta property="og:title" content="Redis之RDB持久化">
+<meta property="og:url" content="http://blog.dujiong.net/2016/11/25/Redis-RDB/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="线段树，又称为区间数，是一种二叉搜索树，它将一个区间划分成一些单元区间，每个单元区间对应线段树中的一个叶节点。而对于线段树中的每一个非叶节点[a,b]，它的左子树表示的区间为[a,(a+b)/2]，右子树表示的区间为[(a+b)/2+1,b]，因此线段树是平衡二叉树（结构平衡的二叉搜索树，即叶节点的深度差不超过1）。叶节点数目为N，即整个线段区间的长度。">
-<meta property="og:image" content="http://i.imgur.com/JEkWmlu.png">
-<meta property="og:updated_time" content="2016-09-17T02:46:29.535Z">
+<meta property="og:description" content="Redis是内存数据库，它将自己的数据库状态储存在内存里面，所以，如果不想办法将储存在内存中的数据库状态保存到磁盘里面，那么一旦服务器进程退出，服务器中的数据库状态也会消失不见。">
+<meta property="og:image" content="http://i.imgur.com/fnagdgd.png">
+<meta property="og:image" content="http://i.imgur.com/vjF6XaN.png">
+<meta property="og:image" content="http://i.imgur.com/8NLANJY.png">
+<meta property="og:image" content="http://i.imgur.com/NYbtrsP.png">
+<meta property="og:image" content="http://i.imgur.com/vI9BEm5.png">
+<meta property="og:updated_time" content="2016-11-25T08:21:30.775Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="数据结构之线段树">
-<meta name="twitter:description" content="线段树，又称为区间数，是一种二叉搜索树，它将一个区间划分成一些单元区间，每个单元区间对应线段树中的一个叶节点。而对于线段树中的每一个非叶节点[a,b]，它的左子树表示的区间为[a,(a+b)/2]，右子树表示的区间为[(a+b)/2+1,b]，因此线段树是平衡二叉树（结构平衡的二叉搜索树，即叶节点的深度差不超过1）。叶节点数目为N，即整个线段区间的长度。">
-<meta name="twitter:image" content="http://i.imgur.com/JEkWmlu.png">
+<meta name="twitter:title" content="Redis之RDB持久化">
+<meta name="twitter:description" content="Redis是内存数据库，它将自己的数据库状态储存在内存里面，所以，如果不想办法将储存在内存中的数据库状态保存到磁盘里面，那么一旦服务器进程退出，服务器中的数据库状态也会消失不见。">
+<meta name="twitter:image" content="http://i.imgur.com/fnagdgd.png">
 
 
 
@@ -88,7 +92,7 @@
   };
 </script>
 
-  <title> 数据结构之线段树 | 一期一会 </title>
+  <title> Redis之RDB持久化 | 一期一会 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -248,7 +252,7 @@
             
             
               
-                数据结构之线段树
+                Redis之RDB持久化
               
             
           </h1>
@@ -260,8 +264,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-09-23T21:28:16+08:00" content="2016-09-23">
-              2016-09-23
+            <time itemprop="dateCreated" datetime="2016-11-25T14:22:16+08:00" content="2016-11-25">
+              2016-11-25
             </time>
           </span>
 
@@ -271,8 +275,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/09/23/SegmentTree/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/09/23/SegmentTree/" itemprop="commentsCount"></span>
+                <a href="/2016/11/25/Redis-RDB/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/11/25/Redis-RDB/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -294,90 +298,105 @@
       
 
       
-        <p>线段树，又称为区间数，是一种二叉搜索树，它将一个区间划分成一些单元区间，每个单元区间对应线段树中的一个叶节点。而对于线段树中的每一个非叶节点[a,b]，它的左子树表示的区间为[a,(a+b)/2]，右子树表示的区间为[(a+b)/2+1,b]，因此线段树是平衡二叉树（结构平衡的二叉搜索树，即叶节点的深度差不超过1）。叶节点数目为N，即整个线段区间的长度。<br><a id="more"></a><br>线段树具有如下性质：<br>（1）线段树是一棵平衡树，使用线段树可以快速地查找某一个节点在若干条线段中出现的次数，时间复杂度为O(logN)。<br>（2）线段树同一层的节点所代表的区间，相互不会重叠。<br>（3）线段树任两节点要么是包含关系要么是没有公共部分，不可能部分重叠。<br>（4）给定一个叶子l，从根到l路径上所有节点代表的区间都包含l，且其他节点代表的区间都不包含l。<br>一棵[1,10]的线段树表示如下。注意，线段树的构造在各区间的端点处的处理方式不一样，会导致线段树最终的表示有些差别，但是本质上是一样的。<br><img src="http://i.imgur.com/JEkWmlu.png" alt=""></p>
-<h3 id="线段树的基本操作"><a href="#线段树的基本操作" class="headerlink" title="线段树的基本操作"></a>线段树的基本操作</h3><p>线段树的基本操作和普通二叉树很类似，只不过线段树的节点上存储的是一个区间（左右端点值）。下面以线段树的建立、插入线段和删除线段为例简要说明线段树的基本操作。</p>
-<h4 id="线段树的构建"><a href="#线段树的构建" class="headerlink" title="线段树的构建"></a>线段树的构建</h4><p>首先定义线段树的结构，这里采用链表的方式组织。     </p>
-<pre><code>struct Node
-{
-    int left,right;
-    int cover;            
-    Node* leftChild;
-    Node* rightChild;    
-};
-</code></pre><p>其中，cover字段用于计算一条线段被覆盖的次数。接下来，以递归的方式构建线段树。     </p>
-<pre><code>Node* build(int l, int r)
-{
-    Node* root = new Node();
-    root-&gt;left = l;
-    root-&gt;right = r;
-    root-&gt;cover = 0;
-    root-&gt;leftChild = NULL;
-    root-&gt;rightChild = NULL;
-    if(r-l &gt; 1)
-    {
-        int mid = (l+r) &gt;&gt; 1;
-        root-&gt;leftChild = build(l,mid);
-        root-&gt;rightChild = build(mid,r);        //build(mid+1,r)
-    }
-    return root;
-}
-</code></pre><h4 id="线段插入与删除"><a href="#线段插入与删除" class="headerlink" title="线段插入与删除"></a>线段插入与删除</h4><p>如上所述，通过cover字段来计算一条线段被覆盖的次数。插入与删除时更新相应线段的cover。     </p>
-<pre><code>void Insert(int start, int end, Node* root)
-{
-    if(root==NULL || start&gt;root-&gt;right || end&lt;root-&gt;left)
-    {
-        cout &lt;&lt; &quot;error&quot; &lt;&lt; endl;
-        return;
-    }
-    if(start&lt;=root-&gt;left &amp;&amp; end&gt;=root-&gt;right)
-    {
-        root-&gt;cover++;
-        return;
-    }
-    int mid=(root-&gt;left+root-&gt;right)&gt;&gt;1;
-    if(end&lt;=mid)
-    {
-        Insert(start,end,root-&gt;leftChild);
-    }
-    else if(start&gt;=mid)
-    {
-        Insert(start,end,root-&gt;rightChild);
-    }
-    else
-    {
-        Insert(start,mid,root-&gt;leftChild);
-        Insert(mid,end,root-&gt;rightChild); 
-    }
-}
+        <p>Redis是内存数据库，它将自己的数据库状态储存在内存里面，所以，如果不想办法将储存在内存中的数据库状态保存到磁盘里面，那么一旦服务器进程退出，服务器中的数据库状态也会消失不见。<br><a id="more"></a><br>Redis提供了RDB持久化功能，该功能可以将Redis在内存中的数据库状态保存到磁盘里面，避免数据意外丢失。RDB持久化可以手动执行，也可以根据服务器配置选项定期执行。RDB文件是一个压缩的二进制文件，通过该文件可以还原生成RDB文件时的数据库状态。      </p>
+<h3 id="RDB文件的创建与载入"><a href="#RDB文件的创建与载入" class="headerlink" title="RDB文件的创建与载入"></a>RDB文件的创建与载入</h3><p>有两个命令Redis命令可以用于生成RDB文件，一个是SAVE（rdb.c/rdbSave），另一个是BGSAVE(rdb.c/rdbSaveBackground)。<br>SAVE命令会阻塞Redis服务器进程，直到RDB文件创建完毕为止，在服务器进程阻塞期间，服务器不能处理任何命令请求。而BGSAVE命令会派生一个子进程，然后由子进程负责创建RDB文件，服务器进程（父进程）继续处理命令请求。<br>创建RDB文件的实际工作由rdb.c/rdbSave函数完成，SAVE命令和BGSAVE命令以不同的方式调用这个函数，关键代码如下：</p>
+<pre><code>int rdbSave(char* filename) {
+    dictIterator *di = NULL;
+    dictEntry *de;
+    char tmpfile[256];
+    char magic[10];
+    int j;
+    long long now = mstime();
+    FILE *fp;
+    rio rdb;
+    uint64_t cksum;
 
-void Delete(int start, int end, Node* root)
-{
-    if(root==NULL || start&gt;root-&gt;right || end&lt;root-&gt;left)
-    {
-        cout &lt;&lt; &quot;error&quot; &lt;&lt; endl;
-        return;
+    snprintf(tmpfile, 256, &quot;temp-%d.rdb&quot;, (int)getpid());    //创建临时文件，pid为标识
+    fp = fopen(tmpfile, &quot;w&quot;);
+    if(!fp) {
+        redisLog(REDIS_WARNING, &quot;Failed opening .rdb for saving : %s&quot;, strerror(errno));
+        return REDIS_ERR;
     }
-    if(start&lt;=root-&gt;left &amp;&amp; end&gt;=root-&gt;right)
-    {
-        root-&gt;cover--;
-        return;
+
+    rioInitWithFile(&amp;rdb, fp);        //初始化I/O
+
+    if(server.rdb_checksum)            //设置校验和函数
+        rdb.update_cksum = rioGenericUpdateChecksum;
+    snprintf(magic, sizeof(magic), &quot;REDIS%04d&quot;, REDIS_RDB_VERSION);
+    if(rdbWriteRaw(&amp;rdb, magic, 0)==-1) goto err;    //写入RDB版本号
+
+    for(j=0; j&lt;server.dbnum; j++){
+        redisDb *db = server.db+j;    //指向数据库
+        dict *d = db-&gt;dict;            //数据库键空间
+        if(dictSize(d) == 0) continue;    //跳过空数据库
+        di = dictGetSafeIterator(d);
+        if(!di){
+            fclose(fp);            
+            return REDIS_ERR;
+        }
+        //写入SELECTDB
+        if (rdbSaveType(&amp;rdb,REDIS_RDB_OPCODE_SELECTDB) == -1) goto werr;
+        //对数据库ID编码后写入
+        if (rdbSaveLen(&amp;rdb,j) == -1) goto werr;
+        //遍历数据库，写入每个键值对数据
+        while((de = dictNext(di)) != NULL){
+            sds keystr = dictGetKey(de);
+            robj key, *o = dictGetValue(de);
+            long long expire;
+
+            initStaticStringObject(key, keystr);
+            expire = getExpire(db, &amp;key);
+            if(rdbSaveKeyValuePair(&amp;rdb, &amp;key, o, expire, now)==-1) goto err;
+        }
+        dictReleaseIterator(di);
     }
-    int mid=(root-&gt;left+root-&gt;right)&gt;&gt;1;
-    if(end&lt;=mid)
-    {
-        Delete(start,end,root-&gt;leftChild);
+    di = NULL;
+    if (rdbSaveType(&amp;rdb,REDIS_RDB_OPCODE_EOF) == -1) goto werr;        //写入EOF
+    //校验和
+    cksum = rdb.cksum;
+    memrev64ifbe(&amp;cksum);
+    rioWrite(&amp;rdb,&amp;cksum,8);
+    //冲洗缓存
+    if (fflush(fp) == EOF) goto werr;
+    if (fsync(fileno(fp)) == -1) goto werr;
+    if (fclose(fp) == EOF) goto werr;
+    //命名
+    if (rename(tmpfile,filename) == -1) {
+        redisLog(REDIS_WARNING,&quot;Error moving temp DB file on the final destination: %s&quot;, strerror(errno));
+        unlink(tmpfile);
+        return REDIS_ERR;
     }
-    else if(start&gt;=mid)
-    {
-        Delete(start,end,root-&gt;rightChild);
-    }
-    else
-    {
-        Delete(start,mid,root-&gt;leftChild);
-        Delete(mid,end,root-&gt;rightChild);
-    }
-}    
-</code></pre><h3 id="线段树的应用"><a href="#线段树的应用" class="headerlink" title="线段树的应用"></a>线段树的应用</h3><p>TODO</p>
+    //清零数据库脏状态
+    server.dirty = 0;
+    //记录最后一次完成 SAVE 的时间
+    server.lastsave = time(NULL);
+    //记录最后一次执行 SAVE 的状态
+    server.lastbgsave_status = REDIS_OK;
+
+    return REDIS_OK;
+
+werr:
+    fclose(fp);
+    unlink(tmpfile);
+    ...
+}
+</code></pre><h3 id="RDB文件的结构"><a href="#RDB文件的结构" class="headerlink" title="RDB文件的结构"></a>RDB文件的结构</h3><p>从上文的代码分析中可以看出RDB文件的结构。<br><img src="http://i.imgur.com/fnagdgd.png" alt=""><br>RDB文件的最开头部分是REDIS，通过这五个字符，程序可以在载入文件时，快速检查所载入的文件是否是RDB文件。<br>db_version长度为4字节，它的值是一个字符串表示的整数，该整数记录了RDB文件的版本号，比如“0006”代表RDB文件的版本为第六版。  </p>
+<h4 id="databases部分"><a href="#databases部分" class="headerlink" title="databases部分"></a>databases部分</h4><p>一个RDB文件的databases部分可以保存任意多个非空数据库。每个非空数据库在RDB文件中都可以保存为SELECTDB、db_number、key_value_pairs三个部分，如下图所示。<br><img src="http://i.imgur.com/vjF6XaN.png" alt=""><br><img src="http://i.imgur.com/8NLANJY.png" alt=""><br>SELECTDB常量的长度为1字节，当读入程序遇到这个值的时候，它知道接下来要读入的将是一个数据库号码。db_number保存着一个数据库号码，根据号码的大小不同，该部分的长度可以是1、2或者5字节。key_value_pairs部分保存了数据库中的所有键值对数据，如果键值对带有过期时间，那么过期时间也会和键值对保存在一起。</p>
+<h5 id="key-value-pairs部分"><a href="#key-value-pairs部分" class="headerlink" title="key_value_pairs部分"></a>key_value_pairs部分</h5><p>RDB文件中的每个key_value_pairs部分都保存了一个或以上数量的键值对，如果键值对带有过期时间的话，那么键值对的过期时间也会被保存在内。<br>不带过期时间的键值对在RDB文件中由TYPE、key、value三部分组成。<br><img src="http://i.imgur.com/NYbtrsP.png" alt=""><br>TYPE记录了value的类型，长度为1字节。可能的取值包括REDIS_RDB_TYPE_STRING、REDIS_RDB_TYPE_LIST、REDIS_RDB_TYPE_SET、REDIS_RDB_TYPE_HASH等，每个TYPE常量代表了一种对象类型或者底层编码，当服务器读入RDB文件中的键值对数据时，程序会根据TYPE的值来决定如何读入和解释value的数据。<br>带有过期时间的键值对在RDB文件中的结构如图10-17所示。<br><img src="http://i.imgur.com/vI9BEm5.png" alt=""><br>带有过期时间的键值对中的TYPE、key、value三部分的意义和前面不带过期时间键值对三部分的意义完全相同，新增的EXPIRETIME_\MS常量的长度为1字节，它的作用是告知程序，接下来要读入的将是一个以毫秒为单位的过期时间；ms是一个8字节长的带符号整数，记录着以ms为单位的时间戳，即过期时间。  </p>
+<h3 id="自动间隔性保存"><a href="#自动间隔性保存" class="headerlink" title="自动间隔性保存"></a>自动间隔性保存</h3><p>因为BGSAVE命令可以在不阻塞服务器进程的情况下执行，所以Redis允许用户通过设置服务器配置的save选项，让服务器每隔一段时间自动执行一次BGSAVE命令。用户可以通过save选项设置多个保存条件，但只要其中任意一个条件满足，服务器就会执行BGSAVE命令。<br>当Redis服务器启动时，用户可以通过指定配置文件或者传入启动参数的方式设置save选项，如果用户没有主动设置save选项，那么服务器会为save选项设置默认条件：     </p>
+<pre><code>save 900 1
+save 300 10
+save 60 10000
+</code></pre><p>接着，服务器程序会根据save选项所设置的保存条件，设置服务器状态redisServer结构的saveparams属性。      </p>
+<pre><code>struct redisServer {
+    struct saveparam *saveparams;
+    ...
+}
+struct saveparams {
+    time_t seconds;        //秒数
+    int changes;        //修改数
+}
+</code></pre><h3 id="RDB文件的载入"><a href="#RDB文件的载入" class="headerlink" title="RDB文件的载入"></a>RDB文件的载入</h3><p>RDB文件的载入工作(rdb.c/rdbLoad)是在服务器启动时自动执行的，所以Redis并没有专门用于载入RDB文件的命令，只要Redis服务器在启动时监测到RDB文件存在，它就会自动载入RDB文件。<br>另外，因为AOF文件（见下文分析）的更新频率通常比RDB文件的更新频率高，所以：<br>（1）如果服务器开启了AOF持久化功能，那么服务器会优先使用AOF文件来还原数据库状态；<br>（2）只有在AOF持久化功能处于关闭状态时，服务器才会使用RDB文件来还原数据库状态。</p>
 
       
     </div>
@@ -392,7 +411,7 @@ void Delete(int start, int end, Node* root)
       
         <div class="post-tags">
           
-            <a href="/tags/数据结构与算法/" rel="tag">#数据结构与算法</a>
+            <a href="/tags/Redis/" rel="tag">#Redis</a>
           
         </div>
       
@@ -401,17 +420,13 @@ void Delete(int start, int end, Node* root)
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/09/18/spinlock-vs-mutex/" rel="next" title="Spin lock与Mutex">
-                <i class="fa fa-chevron-left"></i> Spin lock与Mutex
+              <a href="/2016/11/20/shortest-path/" rel="next" title="最短路问题">
+                <i class="fa fa-chevron-left"></i> 最短路问题
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/09/28/tcp-backlog/" rel="prev" title="浅谈tcp backlog">
-                浅谈tcp backlog <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -437,8 +452,8 @@ void Delete(int start, int end, Node* root)
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/09/23/SegmentTree/"
-           data-title="数据结构之线段树" data-url="http://blog.dujiong.net/2016/09/23/SegmentTree/">
+      <div class="ds-thread" data-thread-key="2016/11/25/Redis-RDB/"
+           data-title="Redis之RDB持久化" data-url="http://blog.dujiong.net/2016/11/25/Redis-RDB/">
       </div>
     
   </div>
@@ -552,7 +567,7 @@ void Delete(int start, int end, Node* root)
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#线段树的基本操作"><span class="nav-number">1.</span> <span class="nav-text">线段树的基本操作</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#线段树的构建"><span class="nav-number">1.1.</span> <span class="nav-text">线段树的构建</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#线段插入与删除"><span class="nav-number">1.2.</span> <span class="nav-text">线段插入与删除</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#线段树的应用"><span class="nav-number">2.</span> <span class="nav-text">线段树的应用</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#RDB文件的创建与载入"><span class="nav-number">1.</span> <span class="nav-text">RDB文件的创建与载入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RDB文件的结构"><span class="nav-number">2.</span> <span class="nav-text">RDB文件的结构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#databases部分"><span class="nav-number">2.1.</span> <span class="nav-text">databases部分</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#key-value-pairs部分"><span class="nav-number">2.1.1.</span> <span class="nav-text">key_value_pairs部分</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#自动间隔性保存"><span class="nav-number">3.</span> <span class="nav-text">自动间隔性保存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RDB文件的载入"><span class="nav-number">4.</span> <span class="nav-text">RDB文件的载入</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">

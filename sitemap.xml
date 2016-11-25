@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://blog.dujiong.net/2016/11/25/Redis-RDB/</loc>
+    
+    <lastmod>2016-11-25T08:21:30.775Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://blog.dujiong.net/2016/11/20/shortest-path/</loc>
     
     <lastmod>2016-11-25T01:45:32.826Z</lastmod>
