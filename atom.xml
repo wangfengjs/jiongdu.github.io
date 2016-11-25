@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-11-24T13:21:46.614Z</updated>
+  <updated>2016-11-25T01:45:32.826Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://blog.dujiong.net/2016/11/20/shortest-path/"/>
     <id>http://blog.dujiong.net/2016/11/20/shortest-path/</id>
     <published>2016-11-20T12:03:09.000Z</published>
-    <updated>2016-11-24T13:21:46.614Z</updated>
+    <updated>2016-11-25T01:45:32.826Z</updated>
     
     <content type="html">&lt;p&gt;最短路问题是图论中最基础的问题。最短路是给定两个顶点，在以这两个点为起点和终点的路径中，边的权值和最小的路径。如果把权值当做距离，考虑最短距离就很容易理解了。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h3 id=&quot;单源最短路问题&quot;&gt;&lt;a href=&quot;#单源最短路问题&quot; class=&quot;headerlink&quot; title=&quot;单源最短路问题&quot;&gt;&lt;/a&gt;单源最短路问题&lt;/h3&gt;&lt;p&gt;单源最短路问题是固定一个起点，求它到其他所有点的最短路的问题。如果终点也固定，这样的问题叫做两点之间的最短路问题。        &lt;/p&gt;
@@ -108,7 +108,20 @@ void dijkstra(int s) {
 
     }
 }
-&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;任意两点间的最短路问题&quot;&gt;&lt;a href=&quot;#任意两点间的最短路问题&quot; class=&quot;headerlink&quot; title=&quot;任意两点间的最短路问题&quot;&gt;&lt;/a&gt;任意两点间的最短路问题&lt;/h3&gt;&lt;p&gt;求解所有两点间的最短路问题叫做任意两点间的最短路问题。&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;任意两点间的最短路问题&quot;&gt;&lt;a href=&quot;#任意两点间的最短路问题&quot; class=&quot;headerlink&quot; title=&quot;任意两点间的最短路问题&quot;&gt;&lt;/a&gt;任意两点间的最短路问题&lt;/h3&gt;&lt;p&gt;求解所有两点间的最短路问题叫做任意两点间的最短路问题，可以尝试使用动态规划。只使用顶点0~k和i,j的情况下，记i到j的最短路长度为d[k+1][i][j]。k=-1时，认为只使用i和j，所以d[0][i][j]=cost[i][j]。接下来把只使用顶点0~k的问题归约到只使用0~k-1的问题上。&lt;br&gt;只使用0~k时，我们分i到j的最短路正好经过顶点k一次和完全不经过顶点k两种情况来讨论。不经过顶点k的情况，d[k][i][j]=d[k-1][i][j]。通过顶点k的情况下，d[k][i][j]=d[k-1][i][k]+d[k-1][k][j]。合起来，就得到了d[k][i][j]=min(d[k-1][i][j], d[k-1][i][k]+d[k-1][k][j])。这个DP也可以使用同一个数组，不断进行d[i][j]=d[i][k]+d[k][j]的更新来实现。&lt;br&gt;该算法叫做Floyd-Warshall算法，可以在O(|V|^3)时间里求得所有两点间的最短路长度。该算法可以处理边是负数的情况。而判断图中是否有负圈，只需检查是否存在d[i][i]是负数的顶点i即可。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;int d[MAX_V][MAX_V];    //边不存在为INF，d[i][i]=0
+int V;
+
+void warshall_floyd() {
+    for(int k=0;k&amp;lt;V;k++){
+        for(int i=0;i&amp;lt;V;i++){
+            for(int j=0;j&amp;lt;V;j++){
+                dp[i][j]=min(d[i][j], d[i][k]+d[k][j]);
+            }
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这样通过三重循环非常简单地就可以求出所有两点间的最短路长度。实现起来简单，复杂度也在可以承受的范围之内。&lt;/p&gt;
 </content>
     
     <summary type="html">
