@@ -4,6 +4,23 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/11/27/Redis-AOF/</loc>
+    <lastmod>2016-11-28T11:47:43.686Z</lastmod>
+    <data>
+        <display>
+        <title>Redis之AOF持久化</title>
+        <pubTime>2016-11-27T12:17:07.000Z</pubTime>
+        
+        <tag>Redis</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/11/25/Redis-RDB/</loc>
     <lastmod>2016-11-25T08:21:30.775Z</lastmod>
     <data>
