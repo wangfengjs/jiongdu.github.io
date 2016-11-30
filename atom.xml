@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-11-28T11:47:43.686Z</updated>
+  <updated>2016-11-30T13:21:20.180Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -14,6 +14,102 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>协程</title>
+    <link href="http://blog.dujiong.net/2016/12/03/Coroutine/"/>
+    <id>http://blog.dujiong.net/2016/12/03/Coroutine/</id>
+    <published>2016-12-03T10:41:42.000Z</published>
+    <updated>2016-11-30T13:21:20.180Z</updated>
+    
+    <content type="html">&lt;p&gt;协程，顾名思义，是“协作的例程”。跟具有操作系统概念的线程不一样，协程是在用户空间利用程序语言的语法语义就能实现逻辑上类似多任务的编程技巧。协程可以在运行期间的某个点上暂停执行，并在恢复运行时从暂停的点上继续执行。协程已经被证明是一种非常有用的程序组件，不仅被Python、lua、ruby等脚本语言广泛语言，还被新一代面多核的编程语言如golang等作为并发的基本单位。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;   &lt;/p&gt;
+&lt;h3 id=&quot;协程的特点&quot;&gt;&lt;a href=&quot;#协程的特点&quot; class=&quot;headerlink&quot; title=&quot;协程的特点&quot;&gt;&lt;/a&gt;协程的特点&lt;/h3&gt;&lt;p&gt;协程的调度完全由用户控制，一个线程可以有多个协程，每个协程都是循环按照指定的任务清单顺序完成不同的任务，当任务被阻塞的时候执行下一个任务，当恢复的时候再回来执行这个任务，任务之间的切换只需要保存每个任务的上下文内容，就像直接操作栈一样，这样就完全没有内核切换的开销，可以不加锁的访问全局变量，所以上下文的切换非常快。&lt;br&gt;因此，与传统的抢占式线程相比，协程主要具有以下两个优点：&lt;br&gt;（1）与线程不同，线程是自己主动让出CPU，并交付它期望的下一个协程运行，而不是在任何时候都有可能被系统调度打断。因此协程的使用更加清晰易懂，并且大多数情况下不需要锁机制。&lt;br&gt;（2）与线程相比，协程的切换由程序控制，发生在用户空间而非内核空间，因此切换的代价非常小。    &lt;/p&gt;
+&lt;h3 id=&quot;进程与线程&quot;&gt;&lt;a href=&quot;#进程与线程&quot; class=&quot;headerlink&quot; title=&quot;进程与线程&quot;&gt;&lt;/a&gt;进程与线程&lt;/h3&gt;&lt;p&gt;下面简单回顾下进程与线程的概念。   &lt;/p&gt;
+&lt;h4 id=&quot;进程&quot;&gt;&lt;a href=&quot;#进程&quot; class=&quot;headerlink&quot; title=&quot;进程&quot;&gt;&lt;/a&gt;进程&lt;/h4&gt;&lt;p&gt;进程是具有一定独立功能的程序关于某个数据集合上的一次活动，进程是系统进行资源分配和调度的单位。&lt;br&gt;进程之间不共享任何状态，进程的调度由操作系统完成，每个进程都有自己的独立的内存空间，而进程间的通信主要是通过信号传递的方式来实现的，实现的方式有多种，如信号量、管道等，但是任何一种方式的通信都需要通过内核，因此效率比较低。同时，由于进程拥有的是独立的内存空间，所以在进行上下文切换的时候需要先保存调用栈的信息，CPU各寄存器的信息，虚拟内存以及打开的句柄等信息，所以导致进程间切换开销很大。&lt;/p&gt;
+&lt;h4 id=&quot;线程&quot;&gt;&lt;a href=&quot;#线程&quot; class=&quot;headerlink&quot; title=&quot;线程&quot;&gt;&lt;/a&gt;线程&lt;/h4&gt;&lt;p&gt;线程是进程的一个实体，是CPU调度的基本单位，它是比进程更小的能独立运行的基本单位。线程自己基本上不拥有系统资源，只拥有一点再运行中比不可少的资源（如程序计数器、一些寄存器和栈），它与同一个进程的其他线程共享所拥有的全部资源。&lt;br&gt;线程之间共享变量，解决了通信麻烦的问题，但同时，多个线程对变量的访问需要进行同步与互斥操作。线程的调度也主要由操作系统完成，一个进程可以拥有多个线程，每个线程会共享父进程向操作系统申请的资源，包括虚拟内存，文件等，因此创建线程所需的资源要比进程小很多，相应的可创建的线程数量也变得多很多。线程之间的通信除了可以使用进程之间通信的方式之外还可以通过共享内存的方式，此外，在线程调度方面，由于线程间共享进程的资源，所以上下文切换的时候需要保存的东西相对少些，上下文也因此高效一些。     &lt;/p&gt;
+&lt;h3 id=&quot;构建C协程&quot;&gt;&lt;a href=&quot;#构建C协程&quot; class=&quot;headerlink&quot; title=&quot;构建C协程&quot;&gt;&lt;/a&gt;构建C协程&lt;/h3&gt;&lt;p&gt;C/C++不直接支持协程语义，但目前已有不少开源的协程库，本文以其中最常用的使用glibc的ucontext组件的实现方式进行说明。&lt;/p&gt;
+&lt;h4 id=&quot;ucontext组件&quot;&gt;&lt;a href=&quot;#ucontext组件&quot; class=&quot;headerlink&quot; title=&quot;ucontext组件&quot;&gt;&lt;/a&gt;ucontext组件&lt;/h4&gt;&lt;p&gt;ucontext组件是GNU C库提供的一组用于创建、保存、切换用户态执行”上下文”的API。主要包括以下两个结构体和四个函数：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;//mcontest_t类型与机器相关，并且不透明
+typedef struct ucontext {
+    struct ucontext* uc_link;    //链接下一个执行的上下文
+    sigset_t uc_sigmask;    //阻塞信号集合
+    stack_t uc_stack;        //该上下文中使用的栈
+    mcontext_t uc_mcontest;
+    ...
+} ucontext_t;
+
+//初始化一个ucontext_t类型的结构，即用户执行上下文。
+//函数指针func指明了该context的入口函数，argc指入口参数个数    
+void makecontext(ucontext_t *ucp, void (*func)(), int argc, ...);
+//&amp;quot;原子&amp;quot;地完成旧状态的保存和切换到新状态的工作
+int swapcontext(ucontext_t *oucp, ucontext_t *ucp);
+//将当前执行上下文保存到ucp中，若后续调用setcontext或swapcontext恢复状态，
+//则程序会沿着getcontext调用点之后继续执行，看起来好像刚从getcontext函数返回一样。
+int getcontext(ucontext_t *ucp);
+//将当前程序执行线索切换到ucp所指向的上下文状态，
+//在执行正确的情况下，该函数直接切入到新的执行状态，不再回返回
+int setcontext(const ucontext_t *ucp);
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;来看一个简单的实例：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;ucontext.h&amp;gt;
+#include &amp;lt;unistd.h&amp;gt;
+
+int main()
+{
+    ucontext_t context;
+
+    getcontext(&amp;amp;context);    
+    puts(&amp;quot;hello world&amp;quot;);
+    sleep(1);
+    setcontext(&amp;amp;context);
+    return 0;
+}         
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;运行结果如下：&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/SvtkRI7.png&quot; alt=&quot;&quot;&gt;               &lt;/p&gt;
+&lt;p&gt;程序通过getcontext保存了一个上下文，然后输出”hello world”，睡一秒后执行到setcontext，恢复上下文到getcontext之后，重新执行代码，所以程序不断输出“hello world”。   &lt;/p&gt;
+&lt;h4 id=&quot;使用ucontext实现线程切换&quot;&gt;&lt;a href=&quot;#使用ucontext实现线程切换&quot; class=&quot;headerlink&quot; title=&quot;使用ucontext实现线程切换&quot;&gt;&lt;/a&gt;使用ucontext实现线程切换&lt;/h4&gt;&lt;p&gt;虽然我们称协程是一个用户态的轻量级线程，但实际上多个协程同属于一个线程。任意一个时刻，同一个线程不可能同时运行两个协程。&lt;br&gt;接下来通过一个实例说明协程与主函数的切换，即实现协程的调度。 &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;#include &amp;lt;ucontext.h&amp;gt;
+#include &amp;lt;stdio.h&amp;gt;
+
+void func1(void *arg)
+{
+    puts(&amp;quot;1&amp;quot;);
+    puts(&amp;quot;11&amp;quot;);
+    puts(&amp;quot;111&amp;quot;);
+    puts(&amp;quot;1111&amp;quot;);
+}
+
+void context_test()
+{
+    char stack[1024*128];
+    ucontext_t child, main;
+    getcontext(&amp;amp;child);
+    child.uc_stack.ss_sp = stack;
+    child.uc_stack.ss_size = sizeof(stack);
+    child.uc_link = &amp;amp;main;
+    makecontext(&amp;amp;child, (void (*)(void))func1, 0);
+    swapcontext(&amp;amp;main, &amp;amp;child);
+    puts(&amp;quot;main&amp;quot;);
+}
+
+int main()
+{
+    context_test();
+    return 0;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;运行结果如下图所示。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/FbFrKKW.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;在context_test中，创建了一个用户线程（协程）child，其运行的函数为func1，指定后继上下文为main，当func1返回后激活后继上下文，继续执行main函数。&lt;/p&gt;
+&lt;h3 id=&quot;开源C-C-协程库&quot;&gt;&lt;a href=&quot;#开源C-C-协程库&quot; class=&quot;headerlink&quot; title=&quot;开源C/C++协程库&quot;&gt;&lt;/a&gt;开源C/C++协程库&lt;/h3&gt;&lt;p&gt;最后，罗列几个比较出名的开源C/C++协程库，后面争取再深入学习下。&lt;br&gt;libco： &lt;a href=&quot;http://code.tencent.com/libco.html&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;腾讯的开源协程库&lt;/a&gt;&lt;br&gt;coroutine: &lt;a href=&quot;https://github.com/cloudwu/coroutine/&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;云风大牛的作品&lt;/a&gt;&lt;br&gt;Protothreads: &lt;a href=&quot;http://coolshell.cn/articles/10975.html&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;一个”蝇量级”C语言协程库&lt;/a&gt;&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;协程，顾名思义，是“协作的例程”。跟具有操作系统概念的线程不一样，协程是在用户空间利用程序语言的语法语义就能实现逻辑上类似多任务的编程技巧。协程可以在运行期间的某个点上暂停执行，并在恢复运行时从暂停的点上继续执行。协程已经被证明是一种非常有用的程序组件，不仅被Python、lua、ruby等脚本语言广泛语言，还被新一代面多核的编程语言如golang等作为并发的基本单位。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="进程/线程/并发" scheme="http://blog.dujiong.net/tags/%E8%BF%9B%E7%A8%8B-%E7%BA%BF%E7%A8%8B-%E5%B9%B6%E5%8F%91/"/>
+    
+  </entry>
   
   <entry>
     <title>Redis之AOF持久化</title>
@@ -2268,7 +2364,7 @@ void Delete(int start, int end, Node* root)
     <link href="http://blog.dujiong.net/2016/09/18/spinlock-vs-mutex/"/>
     <id>http://blog.dujiong.net/2016/09/18/spinlock-vs-mutex/</id>
     <published>2016-09-18T13:34:32.000Z</published>
-    <updated>2016-09-16T13:26:29.859Z</updated>
+    <updated>2016-11-30T10:38:14.506Z</updated>
     
     <content type="html">&lt;p&gt;线程同步是多线程编程中最重要的问题之一，Linux下的POSIX threads库(Pthreads)是在Linux平台下进行多线程编程的一套API，其中线程同步最典型的应用就是用Pthreads提供的锁机制(lock)来对多个线程共享的临界区进行保护。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;br&gt;Pthreads提供了多种线程同步锁机制：&lt;br&gt;（1）Mutex（互斥量）：pthread_mutex_xxx&lt;br&gt;（2）Spin lock(自旋锁)：pthread_spin_xxx&lt;br&gt;（3）Condition Variable（条件变量）：pthread_cond_xxx&lt;br&gt;（4）Read/Write lock（读写锁）：pthread_rwlock_xxx&lt;br&gt;本文主要讲解Spin lock和其与Mutex（Mutex的用法很常见、也很简单，若还不熟悉，可参考&lt;a href=&quot;http://blog.dujiong.net/2016/07/08/muduo-5/&quot;&gt;muduo中的封装&lt;/a&gt;）之间的区别。     &lt;/p&gt;
 &lt;h3 id=&quot;Spin-lock&quot;&gt;&lt;a href=&quot;#Spin-lock&quot; class=&quot;headerlink&quot; title=&quot;Spin lock&quot;&gt;&lt;/a&gt;Spin lock&lt;/h3&gt;&lt;p&gt;Spin lock又称自旋锁，线程通过busy-wait-loop的方式来获取锁，任何时刻都只有一个线程能够获得锁，其他线程忙等待直到获得锁。Spin lock在多处理器多线程环境的场景中有很广泛的使用。   &lt;/p&gt;
@@ -2459,7 +2555,7 @@ int main(int argc, char *argv[])
     </summary>
     
     
-      <category term="多线程" scheme="http://blog.dujiong.net/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/"/>
+      <category term="进程/线程/并发" scheme="http://blog.dujiong.net/tags/%E8%BF%9B%E7%A8%8B-%E7%BA%BF%E7%A8%8B-%E5%B9%B6%E5%8F%91/"/>
     
   </entry>
   
@@ -2567,94 +2663,6 @@ int main()
     
     
       <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>线性排序算法：计数排序、基数排序和桶排序</title>
-    <link href="http://blog.dujiong.net/2016/09/07/LinearSort/"/>
-    <id>http://blog.dujiong.net/2016/09/07/LinearSort/</id>
-    <published>2016-09-07T12:43:51.000Z</published>
-    <updated>2016-09-16T11:48:04.705Z</updated>
-    
-    <content type="html">&lt;p&gt;在计算机科学中，排序是一个非常基础的算法。不同的排序算法有不同的时间和空间开销。在这么多的排序算法中，根据在排序的最终结果中，各元素的次序是否依赖于它们之间的比较，可以将排序算法分为两大类：基于比较的排序和非基于比较的排序。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;br&gt;基于比较的排序需要对序列中的数据进行比较，如我们最常用的快速排序、堆排序和归并排序。根据决策树模型可以证明：基于比较的排序算法的时间复杂度是不能突破O(NlogN)的。（《算法导论》8.1）&lt;br&gt;而非基于比较的排序，如本文将要介绍的计数排序、基数排序和桶排序，则可以突破O(NlogN)的时间下限。当然，这样的非比较的排序的使用会有一些条件的限制，比如元素的大小，所以，在一般在特定场合下，非基于比较的排序算法能够巧妙地解决一些问题。     &lt;/p&gt;
-&lt;h3 id=&quot;计数排序&quot;&gt;&lt;a href=&quot;#计数排序&quot; class=&quot;headerlink&quot; title=&quot;计数排序&quot;&gt;&lt;/a&gt;计数排序&lt;/h3&gt;&lt;p&gt;首先介绍计数排序。&lt;br&gt;计数排序假设n个输入元素的每一个都是在0到K区间内的一个整数，其中K为某个正整数。计数排序的基本思想是，对每一个输入元素x，确定小于x的元素个数。利用这一信息，就可以直接把x放到它在输出数组的位置上了。比如，如果有17个元素小于x，则x就应该放在第18（或17，看数组a[0]怎么处理）个输出位置上。&lt;br&gt;按照这个思想，可以写出计数排序的伪代码：    &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;COUNTING-SORT(A,B,k)
-    let C[0,k] be a new array
-    for i=0 to k
-        C[i]=0
-    for j=0 to A.length-1
-        C[A[j]]=C[A[j]]+1
-    for i=1 to k
-        C[i]=C[i]+C[i-1]
-    for j=A.length-1 to 0
-        B[C[A[j]]-1]=A[j]
-        C[A[j]]=C[A[J]]-1
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;说明一下，《算法导论》中的伪代码采用的是输入数组为A[1..n],输出数组为B[1..n]。这里没有这样做，而是采用传统的0~n-1的数组下标作为输入输出，本质是一样的。     &lt;/p&gt;
-&lt;p&gt;下面以数据2 5 3 0 2 3 0 3为例说明计数排序的执行过程。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/pgoZnNn.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/Yz80C5w.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/hvHJ4Lx.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;容易看出，第一个for循环所花时间为Θ(k)，第二个for循环所花时间为Θ(n)，第三个for循环所花时间为Θ(k)，最后一个循环所花时间为Θ(n)。这样，总的时间代价就是Θ(n+k)。所以，当k=O(n)时，一般可以采用计数排序，这时运行时间为Θ(n)。          &lt;/p&gt;
-&lt;h3 id=&quot;桶排序&quot;&gt;&lt;a href=&quot;#桶排序&quot; class=&quot;headerlink&quot; title=&quot;桶排序&quot;&gt;&lt;/a&gt;桶排序&lt;/h3&gt;&lt;p&gt;桶排序假设输入数据服从均匀分布，平均情况下它的时间代价为O(n)。与计数排序类似，因为对输入数据做了某种假设，桶排序的速度也很快。具体来说，计数排序假设输入数据都属于一个小区间内的整数，而桶排序则假设输入是由一个随机过程产生，该过程将元素均匀、独立地分布在[0,1)区间上。我们把区间[0,1)划分成n个相同大小的子区间，称为桶。将n个记录分布到各个桶中去。如果有多于一个记录分到同一个桶中，需要进行桶内排序。&lt;br&gt;在桶排序的代码中，假设输入是一个包含n个元素的数组A，且每个元素A[i]满足0&amp;lt;=A[i]&amp;lt;1。此外，算法还需要一个临时数组B[0..n-1]来存放链表（即桶），并假设存在一种用于维护这些链表的机制。在分完桶后，对每个桶进行排序，然后合并最后的结果。&lt;br&gt;桶排序用伪代码表示如下：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;BUCKET-SORT(A)
-    n=A.length
-    let B[0..n-1] to be a new array
-    for i=0 to n-1
-        make B[i] an empty list
-    for i=1 to n
-        insert A[i] to list B[nA[i]]
-    for i=0 to n-1
-        sort list B[i] with insertion sort
-    concatenate the list B[0],B[1],...,B[n-1] together in order
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;例如，要对大小为[1..1000]范围内的n个整数A[1,n]排序，可以把桶设为大小为10的范围，具体而言，设集合B[0]存储[1..10)的整数，集合B[2]存储(10,20]的整数…依次，总共有100个桶。然后对A[1,n]从头到尾扫描一遍，把每个A[i]放入对应的桶B[j]中。然后再对这100个桶中每个桶里的数字进行排序。最后依次输出每个桶里面的数字，这样得到的就是排好序的序列了。&lt;br&gt;桶排序的平均时间复杂度为线性的O(N+C)，其中C为桶内快排的时间复杂度，如果对于同样的N，桶数量M越大，其效率越大，最好的时间复杂度达到O(N)。但是，桶排序的空间复杂度为O(N+M)，如果输入数据很庞大，而桶的数量也非常多，则空间代价是昂贵的。 &lt;/p&gt;
-&lt;h3 id=&quot;基数排序&quot;&gt;&lt;a href=&quot;#基数排序&quot; class=&quot;headerlink&quot; title=&quot;基数排序&quot;&gt;&lt;/a&gt;基数排序&lt;/h3&gt;&lt;p&gt;另外一种线性排序方式是基数排序。下面通过一个例子来说明基数排序的思想。&lt;br&gt;假设有待排序的数据序列如下：&lt;br&gt;73 22 93 43 55 14 28 65 39 81&lt;br&gt;首先根据个位数的数值，在遍历数据时将它们各自分到编号为0-9的桶中，分配的结果如下图所示：&lt;br&gt; &lt;img src=&quot;http://i.imgur.com/eOVN7vZ.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;分配结束后，接下来将所有桶中所盛数据按照桶号由小到大依次重新收集起来，得到下列仍然无序的数据序列：&lt;br&gt;81 22 73 93 43 14 55 65 28 39&lt;br&gt;接着，再进行一次分配，这次根据十位数值来分配（原理同上），分配结构如下所示。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/sLQPdaX.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;这样，原来无序的数据序列已经排序完毕。如果排序的位数大于2，则重复以上动作至最后一位。&lt;br&gt;当然，上面的排序过程中有一个还需探究的问题，即在原来的序列中的73 93 43（个位数相同）三个数的顺序，在经过第一次分配之后，在桶中的顺序由底至上应该为73 93 43（即装的迟的在最上面），但是在3号桶中刚好相反。这正是基数排序稳定的原因，分配时是从预排数据序列的末尾开始进行，逐次分配至首位。&lt;br&gt;所以，不难看出，基数排序原理类似于桶排序，只是这里总是需要十个桶，多次使用。     &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;/*
- * getdigit(arr[i],k)用于获得arr[i]第k位上的数字
- */
-
-void lsdRadixSort(int arr[], int begin, int end, int d)
-{
-    const int radix = 10;
-    int count[radix];
-    int i,j;
-
-    int *bucket = (int*)malloc((end-start+1)*sizeof(int));
-    for(int k=1;k&amp;lt;=d;k++)
-    {
-        for(i=0;i&amp;lt;radix;i++)
-        {
-            count[i]=0;
-        }
-        for(i=begin;i&amp;lt;=end;i++)
-        {
-            count[getdigit(arr[i], k)]++;    
-        }    
-        for(i=1;i&amp;lt;radix;i++)
-        {
-            count[i] = count[i] + count[i-1];
-        }
-        for(i=end;i&amp;gt;=end;--i)
-        {
-            j = getdigit(arr[i], k);
-            bucket[count[j]-1] = arr[i];
-            --count[j];
-        }
-        for(i=begin,j=0;i&amp;lt;=end;++i,++j)
-        {
-            arr[i] = bucket[j];
-        }
-    }
-    free(bucket);    
-}            
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;所以，给定n个d位数，其中每一个数位有k个可能的取值，所以，每一轮排序耗时Θ(n+k)，那么整个基数排序的总时间为Θ(d(n+k))，当d为常数且k=O(n)时，基数排序具有线性的时间代价。&lt;/p&gt;
-&lt;h3 id=&quot;总结&quot;&gt;&lt;a href=&quot;#总结&quot; class=&quot;headerlink&quot; title=&quot;总结&quot;&gt;&lt;/a&gt;总结&lt;/h3&gt;&lt;p&gt;以上三种线性时间排序方法突破了基于比较排序的O(NlogN)的时间下界，这样的非比较排序的方法会有一些使用场景的限制，比如元素的大小，所以，在特定的条件下，会体现出较好的性能。&lt;br&gt;本质上，都体现了用空间换时间的理念。        &lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;在计算机科学中，排序是一个非常基础的算法。不同的排序算法有不同的时间和空间开销。在这么多的排序算法中，根据在排序的最终结果中，各元素的次序是否依赖于它们之间的比较，可以将排序算法分为两大类：基于比较的排序和非基于比较的排序。&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="数据结构与算法" scheme="http://blog.dujiong.net/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/"/>
     
   </entry>
   
