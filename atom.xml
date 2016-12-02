@@ -1637,7 +1637,7 @@ iterator erase(iterator position){
     <link href="http://blog.dujiong.net/2016/10/23/permutation/"/>
     <id>http://blog.dujiong.net/2016/10/23/permutation/</id>
     <published>2016-10-23T11:09:33.000Z</published>
-    <updated>2016-10-21T14:09:27.309Z</updated>
+    <updated>2016-12-02T02:55:05.318Z</updated>
     
     <content type="html">&lt;p&gt;很久没有深入研究数据结构和算法了…&lt;br&gt;这次换个套路，先不说那些干瘪瘪的理论，首先来看一道编程题。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt; &lt;/p&gt;
 &lt;h3 id=&quot;题目描述&quot;&gt;&lt;a href=&quot;#题目描述&quot; class=&quot;headerlink&quot; title=&quot;题目描述&quot;&gt;&lt;/a&gt;题目描述&lt;/h3&gt;&lt;p&gt;编写一个方法，确定某字符串的所有排列组合。&lt;br&gt;给定一个string A[]和一个int n，代表字符串和其长度，请返回所有该字符串字符的排列，保证字符串长度小于等于11且字符串中字符均为大写英文字符，排列中的字符串按字典序从大到小排序。&lt;br&gt;样例： “ABC”&lt;br&gt;返回：[“CBA”,”CAB”,”BCA”,”BAC”,”ACB”,”ABC”]&lt;/p&gt;
@@ -1669,7 +1669,7 @@ iterator erase(iterator position){
 }
 &lt;/code&gt;&lt;/pre&gt;&lt;p&gt;运行上面的例子，结果如下图所示。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/aVKXDCF.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;所以，其实STL算法next_permutation是去掉了重复的全排列。&lt;/p&gt;
 &lt;h3 id=&quot;组合&quot;&gt;&lt;a href=&quot;#组合&quot; class=&quot;headerlink&quot; title=&quot;组合&quot;&gt;&lt;/a&gt;组合&lt;/h3&gt;&lt;p&gt;如果不是求字符的所有排列，而是求其所有组合呢？比如字符a、b、c，它们的组合有a,b,c,ab,ac,bc,abc。    &lt;/p&gt;
-&lt;h4 id=&quot;基于位图的算法&quot;&gt;&lt;a href=&quot;#基于位图的算法&quot; class=&quot;headerlink&quot; title=&quot;基于位图的算法&quot;&gt;&lt;/a&gt;基于位图的算法&lt;/h4&gt;&lt;p&gt;简单的数学知识：假设原有n个字符，则最终组合结果是2^n-1个。采用位操作：假设有元素a、b、c三个，规定二进制1表示取该元素，0表示不取。故取a的二进制表示为001，ab为001，依次类推，000没有意义。&lt;br&gt;所以，这些结果与位图的对应关系：&lt;br&gt;001, 010, 011, 100, 101, 110, 111&lt;br&gt;a, b, ab, c, ac, bc, abc&lt;br&gt;因此，可以循环1~2^n-1，然后输出对应代表的组合即可。    &lt;/p&gt;
+&lt;h4 id=&quot;基于位图的算法&quot;&gt;&lt;a href=&quot;#基于位图的算法&quot; class=&quot;headerlink&quot; title=&quot;基于位图的算法&quot;&gt;&lt;/a&gt;基于位图的算法&lt;/h4&gt;&lt;p&gt;简单的数学知识：假设原有n个字符，则最终组合结果是2^n-1个。采用位操作：假设有元素a、b、c三个，规定二进制1表示取该元素，0表示不取。故取a的二进制表示为001，ab为011，依次类推，000没有意义。&lt;br&gt;所以，这些结果与位图的对应关系：&lt;br&gt;001, 010, 011, 100, 101, 110, 111&lt;br&gt;a, b, ab, c, ac, bc, abc&lt;br&gt;因此，可以循环1~2^n-1，然后输出对应代表的组合即可。    &lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;void Combination(string A){
     int n=1&amp;lt;&amp;lt;A.size();
     for(int i=1;i&amp;lt;n;++i){

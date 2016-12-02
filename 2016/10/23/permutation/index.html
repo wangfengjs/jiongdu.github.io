@@ -69,7 +69,7 @@
 <meta property="og:image" content="http://i.imgur.com/iqS7F6D.png">
 <meta property="og:image" content="http://i.imgur.com/aVKXDCF.png">
 <meta property="og:image" content="http://i.imgur.com/hJmuKDD.png">
-<meta property="og:updated_time" content="2016-10-21T14:09:27.309Z">
+<meta property="og:updated_time" content="2016-12-02T02:55:05.318Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="字符串的排列与组合">
 <meta name="twitter:description" content="很久没有深入研究数据结构和算法了…这次换个套路，先不说那些干瘪瘪的理论，首先来看一道编程题。">
@@ -327,7 +327,7 @@
 }
 </code></pre><p>运行上面的例子，结果如下图所示。<br><img src="http://i.imgur.com/aVKXDCF.png" alt=""><br>所以，其实STL算法next_permutation是去掉了重复的全排列。</p>
 <h3 id="组合"><a href="#组合" class="headerlink" title="组合"></a>组合</h3><p>如果不是求字符的所有排列，而是求其所有组合呢？比如字符a、b、c，它们的组合有a,b,c,ab,ac,bc,abc。    </p>
-<h4 id="基于位图的算法"><a href="#基于位图的算法" class="headerlink" title="基于位图的算法"></a>基于位图的算法</h4><p>简单的数学知识：假设原有n个字符，则最终组合结果是2^n-1个。采用位操作：假设有元素a、b、c三个，规定二进制1表示取该元素，0表示不取。故取a的二进制表示为001，ab为001，依次类推，000没有意义。<br>所以，这些结果与位图的对应关系：<br>001, 010, 011, 100, 101, 110, 111<br>a, b, ab, c, ac, bc, abc<br>因此，可以循环1~2^n-1，然后输出对应代表的组合即可。    </p>
+<h4 id="基于位图的算法"><a href="#基于位图的算法" class="headerlink" title="基于位图的算法"></a>基于位图的算法</h4><p>简单的数学知识：假设原有n个字符，则最终组合结果是2^n-1个。采用位操作：假设有元素a、b、c三个，规定二进制1表示取该元素，0表示不取。故取a的二进制表示为001，ab为011，依次类推，000没有意义。<br>所以，这些结果与位图的对应关系：<br>001, 010, 011, 100, 101, 110, 111<br>a, b, ab, c, ac, bc, abc<br>因此，可以循环1~2^n-1，然后输出对应代表的组合即可。    </p>
 <pre><code>void Combination(string A){
     int n=1&lt;&lt;A.size();
     for(int i=1;i&lt;n;++i){
