@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://blog.dujiong.net/2016/11/30/Redis-RDB-AOF/</loc>
+    
+    <lastmod>2016-12-05T08:56:28.009Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://blog.dujiong.net/2016/10/23/permutation/</loc>
     
     <lastmod>2016-12-02T02:55:05.318Z</lastmod>

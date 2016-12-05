@@ -112,6 +112,39 @@ int main()
   </entry>
   
   <entry>
+    <title>Redis两种持久化方式比较</title>
+    <link href="http://blog.dujiong.net/2016/11/30/Redis-RDB-AOF/"/>
+    <id>http://blog.dujiong.net/2016/11/30/Redis-RDB-AOF/</id>
+    <published>2016-11-30T09:14:03.000Z</published>
+    <updated>2016-12-05T08:56:28.009Z</updated>
+    
+    <content type="html">&lt;p&gt;本文对前面所述的Redis两种持久化方式RDB和AOF做简单总结和比较。&lt;/p&gt;
+&lt;h3 id=&quot;RDB和AOF简单总结&quot;&gt;&lt;a href=&quot;#RDB和AOF简单总结&quot; class=&quot;headerlink&quot; title=&quot;RDB和AOF简单总结&quot;&gt;&lt;/a&gt;RDB和AOF简单总结&lt;/h3&gt;&lt;p&gt;RDB持久化可以在指定的时间间隔内生成数据集的时间点快照，保存的是该时间点Redis在内存中的数据库状态。&lt;br&gt;AOF持久化记录的是服务器执行的所有写操作命令，并在服务器启动时，通过重新执行这些命令来还原数据集。AOF文件中的命令全部以Redis协议的格式来保存，新命令会被追加到文件的末尾。Redis还可以在后台对AOF文件进行重写，使得AOF文件的体积不会超出保存数据集状态所需的实际大小。Redis可以同时使用AOF持久化和RDB持久化，在这种情况下，当Redis重启下，它会优先使用AOF来还原数据集，因为AOF文件保存的数据集通常比RDB文件所保存的数据集更完整。           &lt;/p&gt;
+&lt;h3 id=&quot;RDB&quot;&gt;&lt;a href=&quot;#RDB&quot; class=&quot;headerlink&quot; title=&quot;RDB&quot;&gt;&lt;/a&gt;RDB&lt;/h3&gt;&lt;h4 id=&quot;RDB的优点&quot;&gt;&lt;a href=&quot;#RDB的优点&quot; class=&quot;headerlink&quot; title=&quot;RDB的优点&quot;&gt;&lt;/a&gt;RDB的优点&lt;/h4&gt;&lt;p&gt;RDB是一个非常紧凑的文件，它保存了Redis在某个时间点上的数据集，这种文件非常适合进行备份。比如，可以在一天内，每小时备份RDB文件，并在每月的每一天，也备份一个RDB文件。这样的话，即使遇上问题，也可以随时将数据集还原到不同的版本。RDB非常适用于灾难恢复，它只有一个文件，并且内容都非常紧凑，可以（在加密后）将它传送到别的数据中心。RDB可以最大化Redis的性能：父进程在保存RDB文件时唯一要做的就是fork出一个子进程，然后这个子进程就会处理接下来的所有保存工作，父进程无须执行任何磁盘I/O操作。RDB在恢复大数据集时的速度比AOF的恢复速度要快。          &lt;/p&gt;
+&lt;h4 id=&quot;RDB的缺点&quot;&gt;&lt;a href=&quot;#RDB的缺点&quot; class=&quot;headerlink&quot; title=&quot;RDB的缺点&quot;&gt;&lt;/a&gt;RDB的缺点&lt;/h4&gt;&lt;p&gt;如果需要尽量避免在服务器故障时丢失数据，那么RDB不适合。因为，虽然Redis允许设置不同的保存点来控制保存RDB文件的频率，但是，因为RDB文件需要保存整个数据集的状态，所以它并不是一个轻松的操作。因此，可能会至少需要5分钟才保存一次RDB文件。这种情况下，一旦出现故障停机，那么便会丢失几分钟的数据。此外，每次保存RDB的时候，Redis都要fork出一个子进程，并由子进程来进行实际的持久化工作。当数据集比较庞大的时候，fork过程会非常耗时，造成服务器端在短时间内停止处理客户端。虽然AOF重写也需要进行fork，但无论fork重写的执行间隔有多长，数据的耐久性都不会有任何损失。&lt;/p&gt;
+&lt;h3 id=&quot;AOF&quot;&gt;&lt;a href=&quot;#AOF&quot; class=&quot;headerlink&quot; title=&quot;AOF&quot;&gt;&lt;/a&gt;AOF&lt;/h3&gt;&lt;h4 id=&quot;AOF的优点&quot;&gt;&lt;a href=&quot;#AOF的优点&quot; class=&quot;headerlink&quot; title=&quot;AOF的优点&quot;&gt;&lt;/a&gt;AOF的优点&lt;/h4&gt;&lt;p&gt;使用AOF持久化会让Redis变得非常耐久，AOF支持设置不同的fsync策略，比如每秒钟fsync、每次执行写命令时fsync。AOF的默认策略为每秒钟fsync一次，在这种配置下，Redis仍然可以保持良好的性能，并且就算发生故障停机，也最多只会丢失一秒钟的数据（fsync会在后台进程执行，所以主进程可以继续处理命令请求）。另外，AOF文件是一个只进行追加操作的日志文件，因此对AOF文件的写入不需要进行seek，即使日志因为某些原因而包含了未写入完整的命令（比如写入时磁盘已满，写入中途停机），redis-check-aof工具也可以轻易地修复这种问题。Redis可以在AOF文件体积变得过大时，自动地在后台对AOF进行重写，重写后的新AOF文件包含了恢复当前数据集所需的最小命令集合。整个重写操作是绝对安全的，因为Redis在创建AOF文件的过程中，会继续将命令追加到现有的AOF文件里面，即使重写过程中发生停机，现有的AOF文件也不会丢失。而一旦新AOF文件创建完毕，Redis就会从旧AOF文件切换到新AOF文件，并开始对新AOF文件进行追加操作。AOF文件有序地保存了对数据库执行的所有写操作，这些写入操作以Redis协议的格式保存，因此AOF文件的内容非常容易被人读懂，对文件进行分析也很轻松。比如，如果不小心执行了FLUSHALL命令，但只要AOF文件未被重写，那么只要停止服务器，移除AOF文件末尾的FLUSHALL命令，并重启Redis，就可以将数据集恢复到执行FLUSHALL之前的状态。           &lt;/p&gt;
+&lt;h4 id=&quot;AOF的缺点&quot;&gt;&lt;a href=&quot;#AOF的缺点&quot; class=&quot;headerlink&quot; title=&quot;AOF的缺点&quot;&gt;&lt;/a&gt;AOF的缺点&lt;/h4&gt;&lt;p&gt;对同样的数据集，AOF文件通常要大于等价的RDB文件。&lt;br&gt;AOF可能比RDB慢，这取决于具体的fsync策略。&lt;br&gt;另外，Redis AOF是通过递增地更新一个已经存在的状态，而RDB快照则是一次又一次地从头开始创造一切，概念上更健壮。&lt;/p&gt;
+&lt;h3 id=&quot;二者的使用&quot;&gt;&lt;a href=&quot;#二者的使用&quot; class=&quot;headerlink&quot; title=&quot;二者的使用&quot;&gt;&lt;/a&gt;二者的使用&lt;/h3&gt;&lt;p&gt;一般来说，如果想达到很高的数据安全性，那么应该同时使用两种持久化功能。如果可以承受数分钟以内的数据丢失，那么可以只使用RDB持久化。但是不建议只是用AOF持久化：因为定时生成RDB快照非常便于进行数据库备份，并且RDB恢复数据集的速度也要比AOF恢复的速度要快。&lt;/p&gt;
+&lt;h3 id=&quot;其他一些问题&quot;&gt;&lt;a href=&quot;#其他一些问题&quot; class=&quot;headerlink&quot; title=&quot;其他一些问题&quot;&gt;&lt;/a&gt;其他一些问题&lt;/h3&gt;&lt;h4 id=&quot;RDB设置&quot;&gt;&lt;a href=&quot;#RDB设置&quot; class=&quot;headerlink&quot; title=&quot;RDB设置&quot;&gt;&lt;/a&gt;RDB设置&lt;/h4&gt;&lt;p&gt;在默认情况下，Redis将数据库快照保存dump.rdb的二进制文件中。可以对Redis进行设置，让它在“N秒内数据集至少有M个改动”这样的条件满足时，自动保存一次数据集。此外，还可以使用SAVE或BGSAVE手动对Redis进行数据集保存操作。&lt;/p&gt;
+&lt;h4 id=&quot;AOF文件出错&quot;&gt;&lt;a href=&quot;#AOF文件出错&quot; class=&quot;headerlink&quot; title=&quot;AOF文件出错&quot;&gt;&lt;/a&gt;AOF文件出错&lt;/h4&gt;&lt;p&gt;服务器可能在程序正在对AOF文件进行写入时停机，如果停机造成了AOF文件出错，那么Redis在重启时会拒绝载入这个AOF文件，从而确保数据的一致性不会被破坏。&lt;br&gt;当发生这种情况时，可以为现有的AOF文件创建一个备份，然后使用Redis附带的redis-check-aof程序，对原来的AOF文件进行修复，并查看两个文件的不同之处，最后重启Redis服务器，等待服务器载入修复后的AOF文件，并进行数据恢复。&lt;/p&gt;
+&lt;h4 id=&quot;RDB和AOF之间的相互作用&quot;&gt;&lt;a href=&quot;#RDB和AOF之间的相互作用&quot; class=&quot;headerlink&quot; title=&quot;RDB和AOF之间的相互作用&quot;&gt;&lt;/a&gt;RDB和AOF之间的相互作用&lt;/h4&gt;&lt;p&gt;在版本大于等于2.4的Redis中，BGSAVE执行的过程中，不可以执行BGREWRITEAOF。同样，在执行BGREWRITEAOF的过程中，也不可执行BGSAVE。这样主要是防止两个Redis后台进程同时对磁盘进行大量的I/O操作。&lt;br&gt;如果BGSAVE正在执行，并且用户显示地调用BGREWRITEAOF命令， 那么服务器将向用户回复一个OK状态，并告知用户，BGREWRITEAOF已经被预定执行：一旦BGSAVE执行完毕，BGREWRITEAOF就会正式开始。&lt;br&gt;当Redis启动时，如果RDB持久化和AOF持久化都打开了，那么程序会优先使用AOF文件来恢复数据集，因为AOF文件所保存的数据通常是最完整的。&lt;/p&gt;
+&lt;h4 id=&quot;RDB备份数据&quot;&gt;&lt;a href=&quot;#RDB备份数据&quot; class=&quot;headerlink&quot; title=&quot;RDB备份数据&quot;&gt;&lt;/a&gt;RDB备份数据&lt;/h4&gt;&lt;p&gt;Redis对于数据备份是非常友好的，可以在服务器运行的时候对 RDB 文件进行复制：RDB文件一旦被创建，就不会进行任何修改。当服务器要创建一个新的RDB文件时，它先将文件的内容保存在一个临时文件里，当临时文件写入完毕时，程序才原子地使用临时文件替换原来的RDB文件。即，无论何时，复制RDB文件都是绝对安全的。&lt;/p&gt;
+&lt;p&gt;参考： &lt;a href=&quot;https://segmentfault.com/a/1190000005052628&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;Redis持久化&lt;/a&gt;&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;本文对前面所述的Redis两种持久化方式RDB和AOF做简单总结和比较。&lt;/p&gt;
+&lt;h3 id=&quot;RDB和AOF简单总结&quot;&gt;&lt;a href=&quot;#RDB和AOF简单总结&quot; class=&quot;headerlink&quot; title=&quot;RDB和AOF简单总结&quot;&gt;&lt;/a&gt;RDB和AOF简单
+    
+    </summary>
+    
+    
+      <category term="Redis" scheme="http://blog.dujiong.net/tags/Redis/"/>
+    
+  </entry>
+  
+  <entry>
     <title>Redis之AOF持久化</title>
     <link href="http://blog.dujiong.net/2016/11/27/Redis-AOF/"/>
     <id>http://blog.dujiong.net/2016/11/27/Redis-AOF/</id>
@@ -2556,113 +2589,6 @@ int main(int argc, char *argv[])
     
     
       <category term="进程/线程/并发" scheme="http://blog.dujiong.net/tags/%E8%BF%9B%E7%A8%8B-%E7%BA%BF%E7%A8%8B-%E5%B9%B6%E5%8F%91/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>C++引用剖析</title>
-    <link href="http://blog.dujiong.net/2016/09/14/cplusplusReference/"/>
-    <id>http://blog.dujiong.net/2016/09/14/cplusplusReference/</id>
-    <published>2016-09-14T11:58:41.000Z</published>
-    <updated>2016-09-14T15:17:56.403Z</updated>
-    
-    <content type="html">&lt;p&gt;引用是C++对于C语言的一个强有力的补充，它是对象的别名，这里的对象是指广义的，不仅是用类、结构体等复杂类型来声明的变量，还包括用int，float等简单类型声明的变量。引用在逻辑上不是独立的，它的存在具有依附性，所以引用必须在一开始就被初始化，而且其引用的对象在其整个生命期是不能被改变的，即自始至终只能依附于同一个变量。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;h3 id=&quot;C-引用的本质&quot;&gt;&lt;a href=&quot;#C-引用的本质&quot; class=&quot;headerlink&quot; title=&quot;C++引用的本质&quot;&gt;&lt;/a&gt;C++引用的本质&lt;/h3&gt;&lt;p&gt;C++引用的本质是指针常量。&lt;br&gt;引用是个常量，不同于指针，其在声明时必须初始化。此外，引用其实也是一种指针，绑定于自身的指针。只不过二者的接口并不相同，引用的接口有一定的限制，下述。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;struct A
-{
-    char name_;
-    int num_;
-    A&amp;amp; a_;
-};    
-
-struct B
-{
-    int num_;
-    B&amp;amp; b_;
-};
-
-int main()
-{
-    cout &amp;lt;&amp;lt; sizeof(A) &amp;lt;&amp;lt; endl;        //12
-    cout &amp;lt;&amp;lt; sizeof(B) &amp;lt;&amp;lt; endl;        //8
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;32位平台下，运行上述测试代码，可以看出两个结构中对自身的引用占四个字节，是与对象的一种绑定关系，通过引用可以获得对象。&lt;/p&gt;
-&lt;h3 id=&quot;指针和引用的区别&quot;&gt;&lt;a href=&quot;#指针和引用的区别&quot; class=&quot;headerlink&quot; title=&quot;指针和引用的区别&quot;&gt;&lt;/a&gt;指针和引用的区别&lt;/h3&gt;&lt;p&gt;虽然引用很多时候表现出指针的特性，但是二者是有很大区别的。&lt;br&gt;首先，引用不可以为空，但指针可以为空。前面说过，引用是对象的别名，若对象不存在，怎么可能有别名？所以，定义一个引用的时候，必须初始化。而如果有一个变量是用于指向另一个对象，但是它可能为空，这时应该使用指针。因此，在实际代码编写中，使用指针之前必须做判空操作(&lt;code&gt;if(!p==NULL)&lt;/code&gt;)，而引用就不必。&lt;br&gt;其次，引用不可以改变指向，始终绑定同一个对象，这也正是上述常量指针的表现。而指针可以改变指向。需要注意的是，虽然引用不可以改变指向，但是可以改变初始化对象的内容。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;int i = 10;
-int&amp;amp; ref = i;
-ref++;
-cout &amp;lt;&amp;lt; &amp;quot;i &amp;quot; &amp;lt;&amp;lt; i &amp;lt;&amp;lt; &amp;quot; ref &amp;quot; &amp;lt;&amp;lt; ref &amp;lt;&amp;lt; endl;
-
-int j = 20;
-ref = j;
-ref++;
-cout &amp;lt;&amp;lt; &amp;quot;i &amp;quot; &amp;lt;&amp;lt; i &amp;lt;&amp;lt; &amp;quot; ref &amp;quot; &amp;lt;&amp;lt; ref &amp;lt;&amp;lt; &amp;quot; j &amp;quot; &amp;lt;&amp;lt; j &amp;lt;&amp;lt; endl;
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;输出为：&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/qgy7FOO.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;可以看出，对ref的++操作是直接反应到所绑定变量之上，所以，第一个cout之后i和ref都变为了11，对ref重新赋值并不影响它的指向。，它仍然指向的是i，而不是j，只是其绑定变量的值变为了j的值20，然后再对ref++，最终，i和ref都变为了21，而j，仍然是20。&lt;br&gt;第三，引用的大小是所绑定的变量的大小，因为引用只是一个别名而已；而指针对应的是指针本身的大小，4个字节（32bits）。    &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;struct    A
-{
-    char name_;
-    int num_;
-    int sum_
-};    
-
-int main()
-{
-    A a;
-    A&amp;amp; ref = a;
-    cout &amp;lt;&amp;lt; sizeof(ref) &amp;lt;&amp;lt; endl;  //12
-    A* p = new A();
-    cout &amp;lt;&amp;lt; sizeof(p) &amp;lt;&amp;lt; endl;    //4
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;最后，引用比指针更安全。因为不存在空引用，并且引用一旦被初始化为指向一个对象，它就不能被改变为另一个对象的引用，因此引用很安全。而对于指针来说，它可以随时指向别的对象，并且可以不被初始化，或为NULL，所以不安全。&lt;br&gt;总而言之—指针指向一块内存，它的内容是指向内存的地址；而引用则是某块内存的别名，引用不改变指向。&lt;/p&gt;
-&lt;h3 id=&quot;const&quot;&gt;&lt;a href=&quot;#const&quot; class=&quot;headerlink&quot; title=&quot;const&quot;&gt;&lt;/a&gt;const&lt;/h3&gt;&lt;p&gt;很多C++程序员一提到const就头疼，特别是对常量指针、指针常量、常量指针常量等概念，现在还要加上引用…&lt;br&gt;首先总结下如何判定const是修饰指针，还是修饰指针所指向的数据。有一个简单的规则，画一条垂直穿过指针声明星号(*)的线，如果const出现在线的左边，则指针指向的数据位常量；如果const出现在右边，指针本身为常量。   &lt;/p&gt;
-&lt;h4 id=&quot;常量指针和常量引用&quot;&gt;&lt;a href=&quot;#常量指针和常量引用&quot; class=&quot;headerlink&quot; title=&quot;常量指针和常量引用&quot;&gt;&lt;/a&gt;常量指针和常量引用&lt;/h4&gt;&lt;p&gt;常量指针：指向常量的指针，表示指向的对象是常量。比如&lt;code&gt;const int* p = &amp;amp;a&lt;/code&gt;，即告诉编译器*p是常量，不能将*p作为左值进行操作。&lt;br&gt;常量引用：指向常量的引用，表示指向的对象是常量。和指针一样不能利用引用对指向的变量进行重新赋值操作。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;int main()
-{   
-    int i = 10;    
-    const int&amp;amp; ref = i;      
-    ref = 20;             //error    
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&quot;指针常量和引用常量&quot;&gt;&lt;a href=&quot;#指针常量和引用常量&quot; class=&quot;headerlink&quot; title=&quot;指针常量和引用常量&quot;&gt;&lt;/a&gt;指针常量和引用常量&lt;/h4&gt;&lt;p&gt;指针常量：表示指针本身是常量，所以，在定义指针常量时必须进行初始化。比如&lt;code&gt;int* const p = &amp;amp;b&lt;/code&gt;，即告诉编译器，p是常量，不能作为左值进行操作，但是允许修改间接访问值，即*p可以修改。&lt;br&gt;引用常量：这是引用天生俱来的属性，不用再引用const来定义。   &lt;/p&gt;
-&lt;h4 id=&quot;常量指针常量和常量引用常量&quot;&gt;&lt;a href=&quot;#常量指针常量和常量引用常量&quot; class=&quot;headerlink&quot; title=&quot;常量指针常量和常量引用常量&quot;&gt;&lt;/a&gt;常量指针常量和常量引用常量&lt;/h4&gt;&lt;p&gt;常量指针常量：指向常量的指针常量，如&lt;code&gt;const int* const p = &amp;amp;c&lt;/code&gt;，告诉编译器，p和*p都是常量，他们都不能作为左值进行操作。&lt;br&gt;不存在所谓的“常量引用常量”，因为跟上面讲的一样，引用变量就是引用常量。C++不区分变量的const引用和const变量的引用。绝不能给引用本身重新赋值，使它指向另一个变量，因此引用总是const的。如果对引用应用关键字const，起作用就是使其目标成为const变量。即没有：&lt;code&gt;const int const&amp;amp; a = 1&lt;/code&gt;,只有&lt;code&gt;const int&amp;amp; a = 1&lt;/code&gt;。     &lt;/p&gt;
-&lt;h3 id=&quot;指针传递和引用传递&quot;&gt;&lt;a href=&quot;#指针传递和引用传递&quot; class=&quot;headerlink&quot; title=&quot;指针传递和引用传递&quot;&gt;&lt;/a&gt;指针传递和引用传递&lt;/h3&gt;&lt;p&gt;最后，介绍一下指针传递参数和引用传递参数的区别。&lt;br&gt;指针传递参数本质上是值传递方式，它所传递的是一个地址值。值传递过程中，被调函数的形式参数作为被调函数的局部变量处理，即在栈中开辟了内存空间以存放由主调函数放进来的实参的值，从而成为了实参的一个副本。值传递的特点是被调函数对形式参数的任何操作都是作为局部变量进行，不会影响主调函数的实参变量的值。&lt;br&gt;引用传递的过程中，被调函数的形式参数也作为局部变量在栈中开辟了内存空间，但是这时存放的是由主调函数放进来的实参变量的地址。被调函数对形参的任何操作都被处理成间接寻址，即通过栈中存放的地址访问主调函数中的实参变量。所以，被调函数对形参做的任何操作都影响了主调函数中的实参变量。&lt;br&gt;所以，对于指针传递的参数，如果改变被调函数中的指针地址，它影响不到主调函数的相关变量。如果想通过指针参数传递来改变主调函数中的相关指针变量，那就得使用指向指针的指针，或者指针引用。&lt;br&gt;下面以一个代码来说明指针传递和引用传递的区别。  &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;void func1(int x)
-{
-    x = x + 1;
-}
-
-void func2(int *x)
-{
-    (*x) = (*x) + 1;
-}
-
-void func3(int&amp;amp; x)
-{
-    x = x + 1;
-}
-
-int main()
-{
-    int a = 0;
-    func1(a);
-    cout &amp;lt;&amp;lt; a &amp;lt;&amp;lt; endl;    //0
-    int b = 0;
-    func2(&amp;amp;b);            
-    cout &amp;lt;&amp;lt; b &amp;lt;&amp;lt; endl;    //1
-    int c = 0;
-    func(c);        
-    cout &amp;lt;&amp;lt; c &amp;lt;&amp;lt; endl;    //1
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;三个函数分别对应值传递、指针传递和引用传递，值传递中，函数体内的x是外部变量的一份拷贝，改变x不会影响a。而指针传递中，函数体内的x是指向外部b的指针，改变该指针的内容将导致b值改变。引用传递中，函数体内的x是外部变量的引用，即二值是同一个东西，改变x等于改变c。&lt;br&gt;但是，要通过指针参数传递来改变主调函数中的相关指针变量，那就得使用指向指针的指针，或者指针引用。&lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;引用是C++对于C语言的一个强有力的补充，它是对象的别名，这里的对象是指广义的，不仅是用类、结构体等复杂类型来声明的变量，还包括用int，float等简单类型声明的变量。引用在逻辑上不是独立的，它的存在具有依附性，所以引用必须在一开始就被初始化，而且其引用的对象在其整个生命期是不能被改变的，即自始至终只能依附于同一个变量。&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
     
   </entry>
   
