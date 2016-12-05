@@ -59,19 +59,16 @@
 
 
 
-<meta name="description" content="本文对前面所述的Redis两种持久化方式RDB和AOF做简单总结和比较。
-RDB和AOF简单总结RDB持久化可以在指定的时间间隔内生成数据集的时间点快照，保存的是该时间点Redis在内存中的数据库状态。AOF持久化记录的是服务器执行的所有写操作命令，并在服务器启动时，通过重新执行这些命令来还原数据集。AOF文件中的命令全部以Redis协议的格式来保存，新命令会被追加到文件的末尾。Redis还可以在">
+<meta name="description" content="本文对前面所述的Redis两种持久化方式RDB和AOF做简单总结和比较。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Redis两种持久化方式比较">
 <meta property="og:url" content="http://blog.dujiong.net/2016/11/30/Redis-RDB-AOF/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="本文对前面所述的Redis两种持久化方式RDB和AOF做简单总结和比较。
-RDB和AOF简单总结RDB持久化可以在指定的时间间隔内生成数据集的时间点快照，保存的是该时间点Redis在内存中的数据库状态。AOF持久化记录的是服务器执行的所有写操作命令，并在服务器启动时，通过重新执行这些命令来还原数据集。AOF文件中的命令全部以Redis协议的格式来保存，新命令会被追加到文件的末尾。Redis还可以在">
-<meta property="og:updated_time" content="2016-12-05T08:56:28.009Z">
+<meta property="og:description" content="本文对前面所述的Redis两种持久化方式RDB和AOF做简单总结和比较。">
+<meta property="og:updated_time" content="2016-12-05T09:10:53.872Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Redis两种持久化方式比较">
-<meta name="twitter:description" content="本文对前面所述的Redis两种持久化方式RDB和AOF做简单总结和比较。
-RDB和AOF简单总结RDB持久化可以在指定的时间间隔内生成数据集的时间点快照，保存的是该时间点Redis在内存中的数据库状态。AOF持久化记录的是服务器执行的所有写操作命令，并在服务器启动时，通过重新执行这些命令来还原数据集。AOF文件中的命令全部以Redis协议的格式来保存，新命令会被追加到文件的末尾。Redis还可以在">
+<meta name="twitter:description" content="本文对前面所述的Redis两种持久化方式RDB和AOF做简单总结和比较。">
 
 
 
@@ -295,7 +292,7 @@ RDB和AOF简单总结RDB持久化可以在指定的时间间隔内生成数据�
       
 
       
-        <p>本文对前面所述的Redis两种持久化方式RDB和AOF做简单总结和比较。</p>
+        <p>本文对前面所述的Redis两种持久化方式RDB和AOF做简单总结和比较。<br><a id="more"></a>  </p>
 <h3 id="RDB和AOF简单总结"><a href="#RDB和AOF简单总结" class="headerlink" title="RDB和AOF简单总结"></a>RDB和AOF简单总结</h3><p>RDB持久化可以在指定的时间间隔内生成数据集的时间点快照，保存的是该时间点Redis在内存中的数据库状态。<br>AOF持久化记录的是服务器执行的所有写操作命令，并在服务器启动时，通过重新执行这些命令来还原数据集。AOF文件中的命令全部以Redis协议的格式来保存，新命令会被追加到文件的末尾。Redis还可以在后台对AOF文件进行重写，使得AOF文件的体积不会超出保存数据集状态所需的实际大小。Redis可以同时使用AOF持久化和RDB持久化，在这种情况下，当Redis重启下，它会优先使用AOF来还原数据集，因为AOF文件保存的数据集通常比RDB文件所保存的数据集更完整。           </p>
 <h3 id="RDB"><a href="#RDB" class="headerlink" title="RDB"></a>RDB</h3><h4 id="RDB的优点"><a href="#RDB的优点" class="headerlink" title="RDB的优点"></a>RDB的优点</h4><p>RDB是一个非常紧凑的文件，它保存了Redis在某个时间点上的数据集，这种文件非常适合进行备份。比如，可以在一天内，每小时备份RDB文件，并在每月的每一天，也备份一个RDB文件。这样的话，即使遇上问题，也可以随时将数据集还原到不同的版本。RDB非常适用于灾难恢复，它只有一个文件，并且内容都非常紧凑，可以（在加密后）将它传送到别的数据中心。RDB可以最大化Redis的性能：父进程在保存RDB文件时唯一要做的就是fork出一个子进程，然后这个子进程就会处理接下来的所有保存工作，父进程无须执行任何磁盘I/O操作。RDB在恢复大数据集时的速度比AOF的恢复速度要快。          </p>
 <h4 id="RDB的缺点"><a href="#RDB的缺点" class="headerlink" title="RDB的缺点"></a>RDB的缺点</h4><p>如果需要尽量避免在服务器故障时丢失数据，那么RDB不适合。因为，虽然Redis允许设置不同的保存点来控制保存RDB文件的频率，但是，因为RDB文件需要保存整个数据集的状态，所以它并不是一个轻松的操作。因此，可能会至少需要5分钟才保存一次RDB文件。这种情况下，一旦出现故障停机，那么便会丢失几分钟的数据。此外，每次保存RDB的时候，Redis都要fork出一个子进程，并由子进程来进行实际的持久化工作。当数据集比较庞大的时候，fork过程会非常耗时，造成服务器端在短时间内停止处理客户端。虽然AOF重写也需要进行fork，但无论fork重写的执行间隔有多长，数据的耐久性都不会有任何损失。</p>
