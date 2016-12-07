@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-11-30T13:21:20.180Z</updated>
+  <updated>2016-12-07T08:33:13.404Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -14,6 +14,50 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>《C++编程思想》之字符串学习笔记</title>
+    <link href="http://blog.dujiong.net/2016/12/08/String/"/>
+    <id>http://blog.dujiong.net/2016/12/08/String/</id>
+    <published>2016-12-08T13:10:07.000Z</published>
+    <updated>2016-12-07T08:33:13.404Z</updated>
+    
+    <content type="html">&lt;p&gt;字符串是C++标准库的一个重要组成部分，本文参照《C++编程思想》中字符串的相关内容，对该部分进行简单总结。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&quot;C字符型数组和C-字符串&quot;&gt;&lt;a href=&quot;#C字符型数组和C-字符串&quot; class=&quot;headerlink&quot; title=&quot;C字符型数组和C++字符串&quot;&gt;&lt;/a&gt;C字符型数组和C++字符串&lt;/h3&gt;&lt;p&gt;在C语言中，字符串基本上就是字符串数组，并且总是以二进制零（空结束符）作为最末元素。C++ string与它们在C语言中的前身截然不同。首先，也是最重要的不同点，C++隐藏了它所包含的字符序列的物理表示。程序设计人员不必关心数组的维数或空结束符方面的问题。C++ string对象知道自己在内存中的开始位置、包含的内容、包含的字符长度以及在必需重新调整内部缓冲区的大小之前自己可以增长到的最大字符长度。C++字符串极大地减少了C语言编程中最常见且最具破坏性的错误：（1）超越数组边界；（2）通过未被初始化或被赋以错误值的指针来访问数组元素；（3）在释放了某一数组原先所分配的存储单元后仍保留了“悬挂”指针。&lt;br&gt;C++标准没有定义字符串类内存布局的确切实现。采用这种体系结构是为了获得足够的灵活性，从而允许不同的编译器厂商能够提供不同的实现，并且向用户保证提供可预测的行为。&lt;/p&gt;
+&lt;h3 id=&quot;创建并初始化C-字符串&quot;&gt;&lt;a href=&quot;#创建并初始化C-字符串&quot; class=&quot;headerlink&quot; title=&quot;创建并初始化C++字符串&quot;&gt;&lt;/a&gt;创建并初始化C++字符串&lt;/h3&gt;&lt;p&gt;创建C++ string一般有以下几种方式：&lt;br&gt;（1）&lt;code&gt;string temp;&lt;/code&gt;  创建空string对象，且并不立即用字符数据对其初始化；&lt;br&gt;（2）&lt;code&gt;string temp(&amp;quot;hello world&amp;quot;);&lt;/code&gt;  将一个文字的引用数组作为参数传递给构造函数，以此来对一个string对象进行初始化；&lt;br&gt;（3）&lt;code&gt;string temp = &amp;quot;hello world&amp;quot;;&lt;/code&gt;  用等号来初始化一个string对象;&lt;br&gt;（4）&lt;code&gt;string temp(str);&lt;/code&gt;        用一个string对象看来初始化另一个string对象。&lt;br&gt;另外，还有一些相关的成员函数和特性：&lt;br&gt;（1）用operator+来将不同的初始化数据源结合在一起；&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;string s1(&amp;quot;hello&amp;quot;);
+std::cout &amp;lt;&amp;lt; s1 + &amp;quot; world&amp;quot; &amp;lt;&amp;lt; std::endl;        //hello world
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;（2）用string对象的成员函数substr()来创建一个子串。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;string s1(&amp;quot;hello world, hello&amp;quot;);
+std::cout &amp;lt;&amp;lt; s1.substr(0, 11) &amp;lt;&amp;lt; std::endl;        //hello world   \
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;string类对象的成员函数substr()将开始位置作为其第一个参数，而将待选字符的个数作为其第2个参数。&lt;br&gt;（3）将string看做容器对象，利用string类的迭代器string::begin()和string::end()。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;string s1(&amp;quot;hello world&amp;quot;);
+string s2(s1.begin(), s2.end());
+std::cout &amp;lt;&amp;lt; s2 &amp;lt;&amp;lt; std::endl;        //hello world
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;不可以使用单个的字符、ASCII码或其他整数值来初始化C++字符串。&lt;/p&gt;
+&lt;h3 id=&quot;字符串的操作&quot;&gt;&lt;a href=&quot;#字符串的操作&quot; class=&quot;headerlink&quot; title=&quot;字符串的操作&quot;&gt;&lt;/a&gt;字符串的操作&lt;/h3&gt;&lt;p&gt;标准C语言的char型数组工具中存在着其固有的误区，那就是它们都显示地依赖一种假设：字符数组包括一个空结束符。若由于疏忽或是其他差错，这个空结束符被忽略或重写，这个小小的差错就会使C语言的char数组处理函数几乎不可避免地操作其已分配空间之外的内存，有时会带来灾难性后果。&lt;br&gt;C++提供的string类对象，在使用的便利性和安全性上都有很大的提高。     &lt;/p&gt;
+&lt;h4 id=&quot;追加、插入和连接字符串&quot;&gt;&lt;a href=&quot;#追加、插入和连接字符串&quot; class=&quot;headerlink&quot; title=&quot;追加、插入和连接字符串&quot;&gt;&lt;/a&gt;追加、插入和连接字符串&lt;/h4&gt;&lt;p&gt;C++字符串一个便于使用的特色是：无需程序员干预，可根据需要自行扩充规模。这样程序员不再需要跟踪字符串的存储边界。此外，当字符串增长时，字符串成员函数append()–(追加)和insert()–(插入)很明显地重新分配了存储空间。&lt;br&gt;此外，还有一些成员函数：capacity()返回当前分配的存储空间的规模；reserve(int size)提供一种优化机制，按照程序员的意图，预留一定数量的存储空间，以便将来使用。而如果要生成的新字符串的规模比当前的字符串大或者需要截断原字符串，resize()函数就会在字符串的末尾追加空格或是指定的字符。&lt;/p&gt;
+&lt;h4 id=&quot;替换字符串的字符&quot;&gt;&lt;a href=&quot;#替换字符串的字符&quot; class=&quot;headerlink&quot; title=&quot;替换字符串的字符&quot;&gt;&lt;/a&gt;替换字符串的字符&lt;/h4&gt;&lt;p&gt;insert()使程序员放心地向字符串中插入字符，而不必担心会使存储空间越界，或者会改写插入点之后紧跟的字符。存储空间增大了，原有的字符会该改变其存储位置，以便安置新元素。&lt;br&gt;replace()用于替换（删除）字符串中的字符，如果对replace()的调用使“替换”超出了原有序列的边界，这与追加操作是等价的，这样replace()也会增加存储空间。&lt;br&gt;此外，我们知道，STL中的算法功能很强大，由于string类几乎可以与STL容器等价，因此，string的很多解决方案可以由标准库的算法完成。比如，使用&lt;code&gt;std::replace(s.begin(), s.end(), &amp;#39;X&amp;#39;, &amp;#39;Y&amp;#39;)&lt;/code&gt;将字符串中出现的某个字符（’X’）全部用另一个字符(‘Y’)替换掉。这里的replace()是STL通用算法，不是string的成员函数。&lt;/p&gt;
+&lt;h4 id=&quot;使用非成员重载运算符连接&quot;&gt;&lt;a href=&quot;#使用非成员重载运算符连接&quot; class=&quot;headerlink&quot; title=&quot;使用非成员重载运算符连接&quot;&gt;&lt;/a&gt;使用非成员重载运算符连接&lt;/h4&gt;&lt;p&gt;C++ string类另一个令人欣喜的特性是可以借助operator+和operator+=来轻易地实现字符串的合并与追加操作。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;string str(&amp;quot;hello&amp;quot;);
+str += &amp;quot; world&amp;quot;;
+cout &amp;lt;&amp;lt; str &amp;lt;&amp;lt; endl;        //hello world
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;字符串的查找&quot;&gt;&lt;a href=&quot;#字符串的查找&quot; class=&quot;headerlink&quot; title=&quot;字符串的查找&quot;&gt;&lt;/a&gt;字符串的查找&lt;/h3&gt;&lt;p&gt;string成员函数中的find族是用来在给定字符串中定位某个或某组字符的。包括：&lt;br&gt;（1）find()：在字符串中查找一个指定的单个字符或字符组；&lt;br&gt;（2）find_first_of()：查找第一个与指定字符组任何字符匹配的字符位置；&lt;br&gt;（3）find_first_not_of()：查找第一个与指定字符组任何字符都不匹配的字符位置；&lt;br&gt;（4）find_last_of();&lt;br&gt;（5）find_last_not_of();&lt;br&gt;（6）rfind()：对一个字符串从尾到头查找指定的字符或字符组，返回首次匹配的开始位置。&lt;br&gt;string类中没有改变字符串大小写的函数，可以借助于标准C语言的toupper()和tolower()实现，这两个函数以此只能改变一个字符的大小写。&lt;/p&gt;
+&lt;h3 id=&quot;字符串的删除&quot;&gt;&lt;a href=&quot;#字符串的删除&quot; class=&quot;headerlink&quot; title=&quot;字符串的删除&quot;&gt;&lt;/a&gt;字符串的删除&lt;/h3&gt;&lt;p&gt;使用erase()成员函数删除字符串中的字符，该函数有两个参数：一个参数表示开始删除字符的位置（默认值是0）；另一个表示要删除多少个字符（默认值是string::npos）。如果指定删除的字符个数比字符串中剩余的字符还多，那么剩余的字符将全部删除，所以，调用不含参数的erase()函数将删除字符串中的所有字符。&lt;/p&gt;
+&lt;h3 id=&quot;字符串的比较&quot;&gt;&lt;a href=&quot;#字符串的比较&quot; class=&quot;headerlink&quot; title=&quot;字符串的比较&quot;&gt;&lt;/a&gt;字符串的比较&lt;/h3&gt;&lt;p&gt;字符串的比较，简而言之就是：当两个字符串比较遇到第一对不同的字符时，字符串s1中第一个不同的字符比字符串s2中同样位置的字符在ASCII表中的位置更靠后，那么s1“大于”s2。&lt;br&gt;C++提供了多种字符串比较方法，它们各具特色。其中最简单的就是使用非成员的重载运算符函数：operator==、operator!=、operator&amp;gt;、operator&amp;lt;、operator&amp;gt;=、operator&amp;lt;=。&lt;br&gt;此外，string类还提供compare()成员函数，用以提供更复杂紧密的比较手段。用多种重载版本来对比较的字串做控制。&lt;br&gt;C语言中获取字符串中的某个字符都是采用数组索引法（[]）,C++ string提供一种s[n]表示法的替代方法：at()成员函数。如果不出异常，这两种索引机制在C++中产生的结果是一样的。而有异常的情况时，比如程序员引用了一个超过边界的数组元素，at()将会友好地抛出一个异常，而普通的[]下标语法将让程序员自行决策。at()成员函数抛出的是一个out_of_range类对象，它(最终)派生于std::exception。程序可在一个异常处理器中捕获该对象，并采取适当的补救措施，比如重新计算越界下标或扩充数组。而string::operator&lt;a href=&quot;&quot;&gt;&lt;/a&gt;不会有那样的保护性，它的危险性等同于C语言中国对char型数组的处理。    &lt;/p&gt;
+&lt;h3 id=&quot;C语言函数处理时的转换&quot;&gt;&lt;a href=&quot;#C语言函数处理时的转换&quot; class=&quot;headerlink&quot; title=&quot;C语言函数处理时的转换&quot;&gt;&lt;/a&gt;C语言函数处理时的转换&lt;/h3&gt;&lt;p&gt;C++ string提供了c_str()函数返回一个const char*，它指向一个C语言风格的具有“空结束符”的字符串，此字符串与string对象的内容等价。当想将一个字符串传送给一个标准C语言函数时，比如atoi()、printf()，const char*可派上用场。不过，用c_str()的返回值作为非const参数应用于任一函数都是错误的。    &lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;字符串是C++标准库的一个重要组成部分，本文参照《C++编程思想》中字符串的相关内容，对该部分进行简单总结。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
+    
+  </entry>
   
   <entry>
     <title>协程</title>
@@ -2388,206 +2432,6 @@ void Delete(int start, int end, Node* root)
     
     
       <category term="数据结构与算法" scheme="http://blog.dujiong.net/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Spin lock与Mutex</title>
-    <link href="http://blog.dujiong.net/2016/09/18/spinlock-vs-mutex/"/>
-    <id>http://blog.dujiong.net/2016/09/18/spinlock-vs-mutex/</id>
-    <published>2016-09-18T13:34:32.000Z</published>
-    <updated>2016-11-30T10:38:14.506Z</updated>
-    
-    <content type="html">&lt;p&gt;线程同步是多线程编程中最重要的问题之一，Linux下的POSIX threads库(Pthreads)是在Linux平台下进行多线程编程的一套API，其中线程同步最典型的应用就是用Pthreads提供的锁机制(lock)来对多个线程共享的临界区进行保护。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;br&gt;Pthreads提供了多种线程同步锁机制：&lt;br&gt;（1）Mutex（互斥量）：pthread_mutex_xxx&lt;br&gt;（2）Spin lock(自旋锁)：pthread_spin_xxx&lt;br&gt;（3）Condition Variable（条件变量）：pthread_cond_xxx&lt;br&gt;（4）Read/Write lock（读写锁）：pthread_rwlock_xxx&lt;br&gt;本文主要讲解Spin lock和其与Mutex（Mutex的用法很常见、也很简单，若还不熟悉，可参考&lt;a href=&quot;http://blog.dujiong.net/2016/07/08/muduo-5/&quot;&gt;muduo中的封装&lt;/a&gt;）之间的区别。     &lt;/p&gt;
-&lt;h3 id=&quot;Spin-lock&quot;&gt;&lt;a href=&quot;#Spin-lock&quot; class=&quot;headerlink&quot; title=&quot;Spin lock&quot;&gt;&lt;/a&gt;Spin lock&lt;/h3&gt;&lt;p&gt;Spin lock又称自旋锁，线程通过busy-wait-loop的方式来获取锁，任何时刻都只有一个线程能够获得锁，其他线程忙等待直到获得锁。Spin lock在多处理器多线程环境的场景中有很广泛的使用。   &lt;/p&gt;
-&lt;h4 id=&quot;Spin-lock和Mutex&quot;&gt;&lt;a href=&quot;#Spin-lock和Mutex&quot; class=&quot;headerlink&quot; title=&quot;Spin lock和Mutex&quot;&gt;&lt;/a&gt;Spin lock和Mutex&lt;/h4&gt;&lt;p&gt;Spin lock有如下特点：&lt;br&gt;（1）Spin lock是一种死等的锁机制。当发生访问资源冲突的时候，可以有两种机制：一个是死等，一个是挂起当前进程，调度其他线程执行（Mutex）。线程会一直进行忙等待而不停的进行锁清秋，直到得到这个锁为止。&lt;br&gt;（2）执行时间短。由于Spin lock死等这种特性，因此它使用在那些代码不是非常复杂的临界区（当然也不能太简单，否则使用原子操作或者其他适用简单场景的同步机制就可以了），如果临界区执行时间太长，那么不断在临界区门口进行死等的线程十分浪费CPU资源。&lt;br&gt;（3）可以在中断上下文执行。由于不睡眠，因此Spin lock可以在中断上下文中使用。&lt;br&gt;从上述总结的Spin lock的特点，已经可以看出其与Mutex的不同之处了，下面再以一个实例进行说明。&lt;br&gt;例如在一个双核的机器上有两个线程(线程A和线程B)，它们分别运行在Core 0和Core 1上，假设线程A想要通过pthread_mutex_lock操作去得到一个临界区的锁，而此时这个锁正被线程B所持有，那么线程A就会被阻塞，Core 0会在此时进行上下文切换将线程A置于等待队列中，此时Core 0就可以运行其他的任务(例如另一个线程C)而不必进行忙等待。而Spin lock则不然，它属于busy-waiting类型的锁，如果线程A是使用pthread_spin_lock操作去请求锁，那么线程A就会一直在Core 0上进行忙等待并不停的进行锁请求，直到得到这个锁为止。&lt;/p&gt;
-&lt;h4 id=&quot;使用Spin-lock和Mutex&quot;&gt;&lt;a href=&quot;#使用Spin-lock和Mutex&quot; class=&quot;headerlink&quot; title=&quot;使用Spin lock和Mutex&quot;&gt;&lt;/a&gt;使用Spin lock和Mutex&lt;/h4&gt;&lt;p&gt;下面通过实际的代码来进一步比较说明Spin lock和Mutex。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;#include &amp;lt;cstdio&amp;gt;
-#include &amp;lt;unistd.h&amp;gt;
-#include &amp;lt;sys/syscall.h&amp;gt;
-#include &amp;lt;errno.h&amp;gt;
-#include &amp;lt;sys/time.h&amp;gt;
-#include &amp;lt;pthread.h&amp;gt;
-#include &amp;lt;list&amp;gt;
-
-using namespace std;
-
-const int LOOPS = 50000000;
-
-list&amp;lt;int&amp;gt; ilist;
-
-#ifdef USE_SPINLOCK
-    pthread_spinlock_t spinlock;
-#else
-    pthread_mutex_t mutex;
-#endif
-
-pid_t gettid() 
-{
-    return syscall( __NR_gettid );
-}
-
-void *consumer(void *ptr)
-{
-    int i;
-
-    printf(&amp;quot;Consumer TID %lun&amp;quot;, (unsigned long)gettid());
-
-    while (1)
-    {
-#ifdef USE_SPINLOCK
-        pthread_spin_lock(&amp;amp;spinlock);
-#else
-        pthread_mutex_lock(&amp;amp;mutex);
-#endif
-
-        if (ilist.empty())
-        {
-#ifdef USE_SPINLOCK
-            pthread_spin_unlock(&amp;amp;spinlock);
-#else
-            pthread_mutex_unlock(&amp;amp;mutex);
-#endif
-            break;
-        }
-
-        i = ilist.front();
-        ilist.pop_front();
-
-#ifdef USE_SPINLOCK
-        pthread_spin_unlock(&amp;amp;spinlock);
-#else
-        pthread_mutex_unlock(&amp;amp;mutex);
-#endif
-      }
-
-    return NULL;
-}
-
-int main()
-{
-    int i;
-       pthread_t thr1, thr2;
-    struct timeval tv1, tv2;
-
-#ifdef USE_SPINLOCK
-    pthread_spin_init(&amp;amp;spinlock, 0);
-#else
-    pthread_mutex_init(&amp;amp;mutex, NULL);
-#endif
-
-    for (i = 0; i &amp;lt; LOOPS; i++)
-        ilist.push_back(i);
-
-    gettimeofday(&amp;amp;tv1, NULL);
-
-    pthread_create(&amp;amp;thr1, NULL, consumer, NULL);
-    pthread_create(&amp;amp;thr2, NULL, consumer, NULL);
-
-    pthread_join(thr1, NULL);
-    pthread_join(thr2, NULL);
-
-    gettimeofday(&amp;amp;tv2, NULL);
-
-    if (tv1.tv_usec &amp;gt; tv2.tv_usec)
-    {
-        tv2.tv_sec--;
-        tv2.tv_usec += 1000000;
-    }
-    printf(&amp;quot;Result - %ld.%ld\n&amp;quot;, tv2.tv_sec - tv1.tv_sec,
-    tv2.tv_usec - tv1.tv_usec);
-
-#ifdef USE_SPINLOCK
-    pthread_spin_destroy(&amp;amp;spinlock);
-#else
-    pthread_mutex_destroy(&amp;amp;mutex);
-#endif
-
-    return 0;
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;该程序的逻辑是：主线程先初始化一个list结构，并根据LOOPS的值将对应数量的i插入该list，之后创建两个新线程，它们都执行consumer()这个任务。两个被创建的新线程同时对这个list进行pop()操作。主线程会计算从创建两个新线程到新线程结束之间所用的时间。&lt;br&gt;代码执行平台参数：&lt;br&gt;Ubuntu14.04 X86&lt;br&gt;Inter i5-2430M @ 2.40GHz, Dual Core&lt;br&gt;4.0GB Memory&lt;br&gt;下面是代码执行结果：&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/7dmwgzS.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;从结果中可以看出Spin lock表现出的性能更好，另外，sys时间是所花费的系统掉头时间，可以看出，Mutex将消耗更多的系统调用时间，这是因为Mutex会在锁冲突时调用System Wait造成的。&lt;br&gt;但是，当临界区很大时，两个线程的锁进程会非常的激烈。这时，Spin lock的“死等”策略效率将会急剧下降。       &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;#include &amp;lt;cstdio&amp;gt;
-#include &amp;lt;stdlib.h&amp;gt;
-#include &amp;lt;pthread.h&amp;gt;
-#include &amp;lt;unistd.h&amp;gt;
-#include &amp;lt;sys/syscall.h&amp;gt;
-
-using namespace std;
-
-const int THREAD_NUM = 2;
-
-pthread_t g_thread[THREAD_NUM];
-#ifdef USE_SPINLOCK
-pthread_spinlock_t g_spin;
-#else
-pthread_mutex_t g_mutex;
-#endif
-
-__uint64_t g_count;
-
-pid_t gettid()
-{
-    return syscall(SYS_gettid);
-}
-
-void* run_amuck(void* arg)
-{
-   int i, j;
-
-   printf(&amp;quot;Thread %lu started.n&amp;quot;, (unsigned long)gettid());
-
-   for (i = 0; i &amp;lt; 10000; i++) 
-   {
-#ifdef USE_SPINLOCK
-       pthread_spin_lock(&amp;amp;g_spin);
-#else
-       pthread_mutex_lock(&amp;amp;g_mutex);
-#endif
-       for (j = 0; j &amp;lt; 100000; j++) 
-       {
-           if (g_count++ == 123456789)
-              printf(&amp;quot;Thread %lu wins!n&amp;quot;, (unsigned long)gettid());
-       }
-#ifdef USE_SPINLOCK
-       pthread_spin_unlock(&amp;amp;g_spin);
-#else
-       pthread_mutex_unlock(&amp;amp;g_mutex);
-#endif
-   }
-   printf(&amp;quot;Thread %lu finished!n&amp;quot;, (unsigned long)gettid());
-
-   return NULL;
-}
-
-int main(int argc, char *argv[])
-{
-   int i, threads = THREAD_NUM;
-   printf(&amp;quot;Creating %d threads...n&amp;quot;, threads);
-#ifdef USE_SPINLOCK
-   pthread_spin_init(&amp;amp;g_spin, 0);
-#else
-   pthread_mutex_init(&amp;amp;g_mutex, NULL);
-#endif
-   for (i = 0; i &amp;lt; threads; i++)
-           pthread_create(&amp;amp;g_thread[i], NULL, run_amuck, (void *) i);
-   for (i = 0; i &amp;lt; threads; i++)
-           pthread_join(g_thread[i], NULL);
-
-   return 0;
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;}&lt;/p&gt;
-&lt;p&gt;代码执行结果：&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/mZQYF49.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;果然，在我们选择使临界区变得很大时，锁竞争也变得很激烈。这样，Spin lock的性能急剧下降，Mutex的性能更好。同样地，可以看出，这种情况下，Spin lock消耗了很多的user time。原因是两个线程分别运行在两个核上，大部分时间只有一个线程能拿到锁，所以另一个线程就一直在它运行的core上进行忙等待，CPU占有率一直是100%；Mutex则不同，当对锁的请求失败后，上下文切换就会发生，这样就能空出一个核来运行别的计算任务。&lt;/p&gt;
-&lt;h3 id=&quot;总结&quot;&gt;&lt;a href=&quot;#总结&quot; class=&quot;headerlink&quot; title=&quot;总结&quot;&gt;&lt;/a&gt;总结&lt;/h3&gt;&lt;p&gt;根据以上的分析和测试：&lt;br&gt;（1）Mutex适合对锁操作非常频繁的场景，并且具有更好的适应性。尽管相比Spin lock会花费更多的开销（上下文切换），但是它能适合实际开发中复杂的应用场景，在保证一定性能的前提下提供更大的灵活度。&lt;br&gt;（2）spin lock的lock/unlock性能更好(花费更少的cpu指令)，但是它只适应用于临界区运行时间很短的场景。而在实际软件开发中，除非程序员对自己的程序的锁操作行为非常的了解，否则使用spin lock不是一个好主意，实际中的多线程程序对锁的操作一般会很多。&lt;br&gt;（3）最好的方式是先使用Mutex，然后如果对性能还有进一步的需求，可以尝试使用spin lock进行调优。毕竟，需要先保证程序的正确性，再考虑提升性能。    &lt;/p&gt;
-&lt;p&gt;参考：&lt;br&gt;&lt;a href=&quot;http://www.parallellabs.com/2010/01/31/pthreads-programming-spin-lock-vs-mutex-performance-analysis/&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://www.parallellabs.com/2010/01/31/pthreads-programming-spin-lock-vs-mutex-performance-analysis/&lt;/a&gt;  &lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;线程同步是多线程编程中最重要的问题之一，Linux下的POSIX threads库(Pthreads)是在Linux平台下进行多线程编程的一套API，其中线程同步最典型的应用就是用Pthreads提供的锁机制(lock)来对多个线程共享的临界区进行保护。&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="进程/线程/并发" scheme="http://blog.dujiong.net/tags/%E8%BF%9B%E7%A8%8B-%E7%BA%BF%E7%A8%8B-%E5%B9%B6%E5%8F%91/"/>
     
   </entry>
   
