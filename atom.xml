@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-12-07T08:33:13.404Z</updated>
+  <updated>2016-12-22T07:45:18.167Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -14,6 +14,69 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>CongestionNotification</title>
+    <link href="http://blog.dujiong.net/2016/12/22/CongestionNotification/"/>
+    <id>http://blog.dujiong.net/2016/12/22/CongestionNotification/</id>
+    <published>2016-12-22T11:42:43.000Z</published>
+    <updated>2016-12-22T07:45:18.167Z</updated>
+    
+    <content type="html"></content>
+    
+    <summary type="html">
+    
+    </summary>
+    
+    
+      <category term="network/linux" scheme="http://blog.dujiong.net/tags/network-linux/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>使用vector和string时需注意的问题</title>
+    <link href="http://blog.dujiong.net/2016/12/15/Effective-STL-1/"/>
+    <id>http://blog.dujiong.net/2016/12/15/Effective-STL-1/</id>
+    <published>2016-12-15T09:39:38.000Z</published>
+    <updated>2016-12-22T10:45:11.646Z</updated>
+    
+    <content type="html">&lt;p&gt;随着对STL的频繁使用和着迷，越发意识到更深层次理解STL的重要性。使用STL正确得到结果是一回事，而高效地使用STL得到结果又是另一回事。因此，拿起了Scott Meyers大神的《Effective STL》，结合自己平时遇到的问题，作一些总结和记录。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&quot;使用reserve避免不必要的重新分配&quot;&gt;&lt;a href=&quot;#使用reserve避免不必要的重新分配&quot; class=&quot;headerlink&quot; title=&quot;使用reserve避免不必要的重新分配&quot;&gt;&lt;/a&gt;使用reserve避免不必要的重新分配&lt;/h3&gt;&lt;p&gt;我们知道，STL容器最大的进步之一是它们会自动增长以便容纳下所放入的数据，只要没有超出它们的最大限制（可以使用max_size()成员函数查看）就可以。vector和string的增长过程是：&lt;br&gt;（1）分配一块大小为当前容量的某个倍数的新内存，在大多数实现中，vector和string的容量每次以2的倍数增长，即每当容器需要扩张时，它们的容量即加倍。&lt;br&gt;（2）把容器的所有元素从旧的内存复制到新的内存中。&lt;br&gt;（3）析构掉旧内存中的对象。&lt;br&gt;（4）释放旧内存。&lt;br&gt;可以看出，这个过程会非常耗时。因此，可以使用reserve成员函数来讲重新分配的次数减少到最低限度，从而避免了重新分配和迭代器/引用失效带来的开销。&lt;br&gt;因此，当一个元素需要被插入而容器的容量不够时，就会发生重新分配过程。比如：创建一个1到1000之间的vector&lt;int&gt;，如果采用这样的方式：&lt;/int&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;vector&amp;lt;int&amp;gt; ivec;
+for(int i=1;i&amp;lt;=1000;i++)
+    ivec.push_back(i);
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;对于大多数STL实现，该循环在进行过程中将导致2到10次重新分配。而如果改用reserve。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;vector&amp;lt;int&amp;gt; v;
+v.reserve(1000);
+for(int i=1;i&amp;lt;=1000;++i)
+    v.push_back(i);
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;那么，在循环过程中，将不会再发生重新分配。&lt;br&gt;所以，当能确切知道或大致预计容器中最终会有多少元素时，使用reserve。如果不知道，可以先预留足够大的空间，然后，当所有数据都加入以后，再去除多余的容量。   &lt;/p&gt;
+&lt;h3 id=&quot;把vector和string数据传递给旧的C-API&quot;&gt;&lt;a href=&quot;#把vector和string数据传递给旧的C-API&quot; class=&quot;headerlink&quot; title=&quot;把vector和string数据传递给旧的C API&quot;&gt;&lt;/a&gt;把vector和string数据传递给旧的C API&lt;/h3&gt;&lt;p&gt;在使用C/C++时，我们发现很多时候还有旧的C API的身影，它们使用数组和char*指针而不是vector或string对象来进行数据交换。因此，在使用STL时，也必须处理好与旧的C API之间的关系。&lt;br&gt;比如，有一个vector v，而需要得到一个指向v中数据的指针，从而可把v中的数据作为数组来对待，那么只需要使用&amp;amp;v[0]就可以了。而对于string s,对应的形式是s.c_str()。&lt;br&gt;所以，对于给定的C API：        &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;void doSomething(const int* pInts, size_t numInts);
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;可以这样使用：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;if(!v.empty()){
+    doSomething(&amp;amp;v[0], v.size());
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;请注意，不要使用v.begin()来代替&amp;amp;v[0]，因为begin的返回值是一个迭代器，不是指针；当需要一个指向vector中的数据的指针时，永远不应该使用begin()。（可以使用&amp;amp;*v.begin()）&lt;br&gt;但是，上述方法对string却是不可靠的。原因如下：&lt;br&gt;（1）string中的数据不一定存储在连续的内存中；&lt;br&gt;（2）string的内部表示不一定是以空字符结尾的。&lt;br&gt;所以，对于给定的C API：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;void doSomething(const char* pString)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;可以这样使用： &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;doSomething(s.c_str())    
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;避免使用vector&quot;&gt;&lt;a href=&quot;#避免使用vector&quot; class=&quot;headerlink&quot; title=&quot;避免使用vector&quot;&gt;&lt;/a&gt;避免使用vector&lt;bool&gt;&lt;/bool&gt;&lt;/h3&gt;&lt;p&gt;作为一个STL容器，vector&lt;bool&gt;有两点问题。首先，它不是一个STL容器。其次，它并不存储bool。除此之外，一切正常。&lt;br&gt;vector&lt;bool&gt;不是一个STL容器，原因是一个对象要成为STL容器，必须满足的一个条件是，支持operator[]。也就是当使用operator[]取得了容器Container&lt;t&gt;中的一个T对象，那么可以通过取它的地址得到一个指向该对象的指针。&lt;br&gt;因此，如果vector&lt;bool&gt;是一个容器，那么下面这段代码必须可以被编译：&lt;/bool&gt;&lt;/t&gt;&lt;/bool&gt;&lt;/bool&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;vector&amp;lt;bool&amp;gt; v;
+bool *p = &amp;amp;v[0];
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;但是，它不能通过编译。原因是，vector&lt;bool&gt;是一个假的容器，它并不真的储存bool，相反，为了节省空间，它储存的是bool的紧凑表示。在一个典型的实现中，储存在”vector”中的每个”bool”仅占一个二进制位，一个8位的字节可容纳8个”bool”。在内部，vector&lt;bool&gt;使用了与位域一样的思想，来表示它所存储的那些bool；实际上它只是假装存储了这些bool。&lt;br&gt;位域与bool相似，它只能表示两个可能的值，但是在bool与看似bool的位域之间有一个重要的区别：可以创建一个指向bool的指针，而指向单个位的指针则是不允许的。&lt;br&gt;所以，在上述的实验中，vector&lt;bool&gt;::operator[]需要返回一个指向单个位的引用，而这样的引用却不存在。&lt;br&gt;那么。当需要vector&lt;bool&gt;的时候，应该使用什么呢？&lt;br&gt;标准库提供了两种选择，可以满足绝大多数的需求。第一种是deque&lt;bool&gt;。deque几乎提供了vector所提供的一切，而deque&lt;bool&gt;是一个STL容器，并且确实存储bool。只是需要注意的是，deque中的元素的内存不是连续的，所以不能把deque&lt;bool&gt;中的数据传递给一个期望bool数组的C API。&lt;br&gt;第二种方案时bitset。bitset不是STL容器，但它是标准C++库的一部分。与STL容器不同的是，它的大小（即元素的个数）在编译时就确定了，所以它不支持插入和删除元素。而且，它不支持迭代器。但是，与vector&lt;bool&gt;一样，它使用了一种紧凑表示，只为包含所包含的每个值提高一位空间，它提供了vector&lt;bool&gt;所特有的flip成员函数，以及其他一些特有的、对位的集合有意义的成员函数。在不需要迭代器和动态改变大小的环境下，bitset很适合需要。&lt;/bool&gt;&lt;/bool&gt;&lt;/bool&gt;&lt;/bool&gt;&lt;/bool&gt;&lt;/bool&gt;&lt;/bool&gt;&lt;/bool&gt;&lt;/bool&gt;&lt;/p&gt;
+&lt;h3 id=&quot;string实现的多样性&quot;&gt;&lt;a href=&quot;#string实现的多样性&quot; class=&quot;headerlink&quot; title=&quot;string实现的多样性&quot;&gt;&lt;/a&gt;string实现的多样性&lt;/h3&gt;</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;随着对STL的频繁使用和着迷，越发意识到更深层次理解STL的重要性。使用STL正确得到结果是一回事，而高效地使用STL得到结果又是另一回事。因此，拿起了Scott Meyers大神的《Effective STL》，结合自己平时遇到的问题，作一些总结和记录。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
+    
+  </entry>
   
   <entry>
     <title>《C++编程思想》之字符串学习笔记</title>
@@ -2294,144 +2357,6 @@ protected:
     
     
       <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>浅谈tcp backlog</title>
-    <link href="http://blog.dujiong.net/2016/09/28/tcp-backlog/"/>
-    <id>http://blog.dujiong.net/2016/09/28/tcp-backlog/</id>
-    <published>2016-09-28T13:42:51.000Z</published>
-    <updated>2016-09-20T15:49:44.450Z</updated>
-    
-    <content type="html">&lt;p&gt;熟悉Linux网络(socket)编程的同学应该都记得，在服务端建立监听套接字的API &lt;code&gt;int listen(int sockfd, int backlog)；&lt;/code&gt;中有一个参数backlog，通常称之为积压值。积压值用来描述一个固定长度的连接队列的大小，该队列用于TCP连接建立的过程中。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;h3 id=&quot;backlog的两种实现&quot;&gt;&lt;a href=&quot;#backlog的两种实现&quot; class=&quot;headerlink&quot; title=&quot;backlog的两种实现&quot;&gt;&lt;/a&gt;backlog的两种实现&lt;/h3&gt;&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/Ymk1keA.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;首先通过上图回顾一下TCP建立连接时的状态变化。由于TCP建立连接时使用三次握手，所以监听的服务端在回给客户端SYN+ACK之后，会进入SYN RECEIVED状态，这称之为半连接状态，而只有当收到客户端回送的ACK之后，才完成连接，进入ESTABLISHED状态，等待应用层处理。所以，TCP/IP协议栈有两种方式来实现这个连接队列：&lt;br&gt;（1）第一种是使用一个单一的队列，队列的大小由应用层listen函数的backlog参数确定，当收到一个SYN请求，服务端就回发给客户端SYN+ACK，并且将该连接加入到队列中。当客户端最后的ACK到来时，该连接的状态变为ESTABLISHED，并等待应用层处理。所以，这种实现方式下，队列中包含了两种状态的连接：SYN RECEIVED和ESTABLISHED。只有后一种状态的连接才可以从acception中返回，被应用层处理。&lt;br&gt;（2）另一种实现方式是使用两个队列，一个SYN队列（即半连接队列）和一个全连接队列（ACCEPT队列）。处于SYN RECEIVED状态的连接被加入到SYN队列中，当最后一个ACK到来时，改变状态并移动到全连接队列。所以，accept系统调用直接从全连接队列中取已完成的连接交给应用层处理。这时，listen函数中的backlog值决定了全连接队列的大小。&lt;br&gt;传统的基于BSD的TCP实现采用的是第一种方式，这种实现方式意味着，当队列满的时候，系统再收到SYN，将不会回发SYN+ACK。通常，TCP实现采用的是简单地丢弃SYN，让客户端重传，而不是回发RST。&lt;br&gt;在Linux系统中，backlog的实现形式分为两个阶段，在Linux2.2之前，内核采用的也是上述的方式，队列满之后，服务端再收到SYN时，将不会返回SYN/ACK，也不返回RST，让客户端重试。而在Linux2.2之后，内核选择第二种方式实现，SYN_RECEIVED队列的大小由/proc/sys/net/ipv4/tcp_max_syn_backlog系统参数指定，ESTABLISHED队列由backlog和/proc/sys/net/core/somaxconn中较小的指定。    &lt;/p&gt;
-&lt;h3 id=&quot;SYN队列和ACCEPT队列&quot;&gt;&lt;a href=&quot;#SYN队列和ACCEPT队列&quot; class=&quot;headerlink&quot; title=&quot;SYN队列和ACCEPT队列&quot;&gt;&lt;/a&gt;SYN队列和ACCEPT队列&lt;/h3&gt;&lt;p&gt;以下是操作系统维护两种队列处理TCP连接的示意图。 &lt;/p&gt;
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/sGEPFN7.jpg&quot; alt=&quot;&quot;&gt;&lt;br&gt;SYN队列和已完成队列是内核实现的，当服务器绑定、监听了某个端口后，这个端口的SYN队列和ACCEPT队列就建立好了。客户端使用connect向服务器发起TCP连接时，当SYN包到达服务器之后，内核会把这一报文放入SYN队列，同时回发一个SYN+ACK包给客户端。一段时间后，当三次握手最后的ACK到达服务器，内核会把连接从SYN队列中取出，再把这个连接放入ACCEPT队列（已完成队列）中。所以，服务器调用accept，其实就是直接从ACCEPT队列中取出已经建立成功的连接套接字。&lt;br&gt;当然，随之也产生了一些问题。因为SYN和ACCEPT队列都是有大小限制的，所以，二者都会存在队列满的时候。上图中，如果第一步执行的速度大于第二步执行的速度，SYN队列就会不断增大直到队列满；如果第二步执行的速度大于第三步执行的速度，ACCEPT队列同样会满。&lt;br&gt;当ACCEPT队列已满，这时SYN队列中的一个连接收到最后的ACK，需要移动到ACCEPT队列，会发生什么呢？&lt;br&gt;通过查看内核源码(net/ipv4/tcp_ipv4.c)可知，如果/proc/sys/net/ipv4/tcp_abort_on_overflow被置为1，内核将会回送RST包，否则，将会丢弃ACK，什么都不做。进一步地，当一定时间服务端还没有收到ACK（包括丢弃掉的ACK），将会重发SYN+ACK包（“指数退避”算法）。当客户端收到重发的SYN+ACK时，它便知道ACK包丢失了，需要重传。另一方面，当ACCEPT队列已满的时候，内核将会限制SYN队列的处理速度，如果收到太多的SYN队列，将会丢弃一些。这样，丢弃的SYN对应的客户端将会重发SYN包。&lt;br&gt;另一种情况，当SYN队列满的时候，会发生什么呢？上面已经阐述了，服务器端将会直接丢弃请求，即丢弃SYN网络包。       &lt;/p&gt;
-&lt;h3 id=&quot;TCP连接的一些异常情况&quot;&gt;&lt;a href=&quot;#TCP连接的一些异常情况&quot; class=&quot;headerlink&quot; title=&quot;TCP连接的一些异常情况&quot;&gt;&lt;/a&gt;TCP连接的一些异常情况&lt;/h3&gt;&lt;p&gt;针对上述的两个连接队列，有一些常见的连接异常情况。下面做一个简单总结。     &lt;/p&gt;
-&lt;h4 id=&quot;服务端SYN超时&quot;&gt;&lt;a href=&quot;#服务端SYN超时&quot; class=&quot;headerlink&quot; title=&quot;服务端SYN超时&quot;&gt;&lt;/a&gt;服务端SYN超时&lt;/h4&gt;&lt;p&gt;当客户端给服务端发送SYN报文时，如果服务端没有返回SYN+ACK报文，那么客户端会重发SYN报文给服务端，重发的次数由参数tcp_syn_retries参数设置，该值默认是5，超过5次服务端还是不返回SYN+ACK报文，那么本次连接失败。服务端没有返回SYN+ACK主要有两种情况，一种是由于网络问题SYN包丢失；另一种是服务端SYN队列满，导致SYN包被丢弃。                &lt;/p&gt;
-&lt;h4 id=&quot;客户端ACK超时&quot;&gt;&lt;a href=&quot;#客户端ACK超时&quot; class=&quot;headerlink&quot; title=&quot;客户端ACK超时&quot;&gt;&lt;/a&gt;客户端ACK超时&lt;/h4&gt;&lt;p&gt;如果服务端接到了客户端发的SYN并回发SYN+ACK后，客户端掉线了，这时，服务端没有收到客户端回来的ACK，那么，这个连接处于一个中间状态，既没成功也没失败。于是，服务端端如果在一定时间内没有收到客户端端的ACK，那么服务端端会重发SYN+ACK。在Linux下，默认重试次数为5次，重发的间隔时间从1s开始每次都翻番（指数退避），5次的重发的时间间隔分别1s, 2s, 4s, 8s, 16s，总共31s，第5次发出后还要等32s都知道第5次也超时了，所以，总共需要 1s+2s+4s+8s+16s+32s = 2^6-1 = 63s，TCP才会把断开这个连接。              &lt;/p&gt;
-&lt;h4 id=&quot;SYN-Flood&quot;&gt;&lt;a href=&quot;#SYN-Flood&quot; class=&quot;headerlink&quot; title=&quot;SYN Flood&quot;&gt;&lt;/a&gt;SYN Flood&lt;/h4&gt;&lt;p&gt;这时一种恶意攻击。客户端给服务器发一个SYN后就下线，这样服务器需要默认等待63s才会断开连接，这样攻击者就可以把服务器的SYN连接队列耗尽，让正常的连接请求不能处理。为了应对SYN Flood攻击，Linux实现了一种称为SYN cookie的机制，通过net.ipv4.tcp_syncookies来设置。当SYN队列满了后，TCP会通过源地址端口、目标地址端口和时间戳打造出一个特别的Sequence Number发回去（又叫cookie），如果是攻击者则不会有响应，如果是正常连接，则会把这个 SYN Cookie发回来，然后服务端可以通过cookie建连接（即使不在SYN队列中）。&lt;/p&gt;
-&lt;h3 id=&quot;TCP连接过程参数调优&quot;&gt;&lt;a href=&quot;#TCP连接过程参数调优&quot; class=&quot;headerlink&quot; title=&quot;TCP连接过程参数调优&quot;&gt;&lt;/a&gt;TCP连接过程参数调优&lt;/h3&gt;&lt;p&gt;下面罗列一些常用于TCP连接过程优化的参数。&lt;/p&gt;
-&lt;h4 id=&quot;tcp-max-syn-backlog&quot;&gt;&lt;a href=&quot;#tcp-max-syn-backlog&quot; class=&quot;headerlink&quot; title=&quot;tcp_max_syn_backlog&quot;&gt;&lt;/a&gt;tcp_max_syn_backlog&lt;/h4&gt;&lt;p&gt;SYN队列长度。如果服务器经常出现过载，可以尝试增加这个数字。   &lt;/p&gt;
-&lt;h4 id=&quot;tcp-synack-retries&quot;&gt;&lt;a href=&quot;#tcp-synack-retries&quot; class=&quot;headerlink&quot; title=&quot;tcp_synack_retries&quot;&gt;&lt;/a&gt;tcp_synack_retries&lt;/h4&gt;&lt;p&gt;连接被动打开方的确认连接的应答最大重试次数。对于一个新建连接，内核要发送多少SYN连接请求才决定放弃。&lt;/p&gt;
-&lt;h4 id=&quot;tcp-syn-retries&quot;&gt;&lt;a href=&quot;#tcp-syn-retries&quot; class=&quot;headerlink&quot; title=&quot;tcp_syn_retries&quot;&gt;&lt;/a&gt;tcp_syn_retries&lt;/h4&gt;&lt;p&gt;连接主动打开方的syn尝试次数。&lt;/p&gt;
-&lt;h4 id=&quot;tcp-syncookies&quot;&gt;&lt;a href=&quot;#tcp-syncookies&quot; class=&quot;headerlink&quot; title=&quot;tcp_syncookies&quot;&gt;&lt;/a&gt;tcp_syncookies&lt;/h4&gt;&lt;p&gt;防止SYN Flood攻击。    &lt;/p&gt;
-&lt;h4 id=&quot;tcp-abort-on-overflos&quot;&gt;&lt;a href=&quot;#tcp-abort-on-overflos&quot; class=&quot;headerlink&quot; title=&quot;tcp_abort_on_overflos&quot;&gt;&lt;/a&gt;tcp_abort_on_overflos&lt;/h4&gt;&lt;p&gt;ACCEPT队列满，处理不过来的时候，如果设置了该参数，内核将会回发RST包。&lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;熟悉Linux网络(socket)编程的同学应该都记得，在服务端建立监听套接字的API &lt;code&gt;int listen(int sockfd, int backlog)；&lt;/code&gt;中有一个参数backlog，通常称之为积压值。积压值用来描述一个固定长度的连接队列的大小，该队列用于TCP连接建立的过程中。&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="network/linux" scheme="http://blog.dujiong.net/tags/network-linux/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>数据结构之线段树</title>
-    <link href="http://blog.dujiong.net/2016/09/23/SegmentTree/"/>
-    <id>http://blog.dujiong.net/2016/09/23/SegmentTree/</id>
-    <published>2016-09-23T13:28:16.000Z</published>
-    <updated>2016-09-17T02:46:29.535Z</updated>
-    
-    <content type="html">&lt;p&gt;线段树，又称为区间数，是一种二叉搜索树，它将一个区间划分成一些单元区间，每个单元区间对应线段树中的一个叶节点。而对于线段树中的每一个非叶节点[a,b]，它的左子树表示的区间为[a,(a+b)/2]，右子树表示的区间为[(a+b)/2+1,b]，因此线段树是平衡二叉树（结构平衡的二叉搜索树，即叶节点的深度差不超过1）。叶节点数目为N，即整个线段区间的长度。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;br&gt;线段树具有如下性质：&lt;br&gt;（1）线段树是一棵平衡树，使用线段树可以快速地查找某一个节点在若干条线段中出现的次数，时间复杂度为O(logN)。&lt;br&gt;（2）线段树同一层的节点所代表的区间，相互不会重叠。&lt;br&gt;（3）线段树任两节点要么是包含关系要么是没有公共部分，不可能部分重叠。&lt;br&gt;（4）给定一个叶子l，从根到l路径上所有节点代表的区间都包含l，且其他节点代表的区间都不包含l。&lt;br&gt;一棵[1,10]的线段树表示如下。注意，线段树的构造在各区间的端点处的处理方式不一样，会导致线段树最终的表示有些差别，但是本质上是一样的。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/JEkWmlu.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
-&lt;h3 id=&quot;线段树的基本操作&quot;&gt;&lt;a href=&quot;#线段树的基本操作&quot; class=&quot;headerlink&quot; title=&quot;线段树的基本操作&quot;&gt;&lt;/a&gt;线段树的基本操作&lt;/h3&gt;&lt;p&gt;线段树的基本操作和普通二叉树很类似，只不过线段树的节点上存储的是一个区间（左右端点值）。下面以线段树的建立、插入线段和删除线段为例简要说明线段树的基本操作。&lt;/p&gt;
-&lt;h4 id=&quot;线段树的构建&quot;&gt;&lt;a href=&quot;#线段树的构建&quot; class=&quot;headerlink&quot; title=&quot;线段树的构建&quot;&gt;&lt;/a&gt;线段树的构建&lt;/h4&gt;&lt;p&gt;首先定义线段树的结构，这里采用链表的方式组织。     &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;struct Node
-{
-    int left,right;
-    int cover;            
-    Node* leftChild;
-    Node* rightChild;    
-};
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;其中，cover字段用于计算一条线段被覆盖的次数。接下来，以递归的方式构建线段树。     &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;Node* build(int l, int r)
-{
-    Node* root = new Node();
-    root-&amp;gt;left = l;
-    root-&amp;gt;right = r;
-    root-&amp;gt;cover = 0;
-    root-&amp;gt;leftChild = NULL;
-    root-&amp;gt;rightChild = NULL;
-    if(r-l &amp;gt; 1)
-    {
-        int mid = (l+r) &amp;gt;&amp;gt; 1;
-        root-&amp;gt;leftChild = build(l,mid);
-        root-&amp;gt;rightChild = build(mid,r);        //build(mid+1,r)
-    }
-    return root;
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&quot;线段插入与删除&quot;&gt;&lt;a href=&quot;#线段插入与删除&quot; class=&quot;headerlink&quot; title=&quot;线段插入与删除&quot;&gt;&lt;/a&gt;线段插入与删除&lt;/h4&gt;&lt;p&gt;如上所述，通过cover字段来计算一条线段被覆盖的次数。插入与删除时更新相应线段的cover。     &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;void Insert(int start, int end, Node* root)
-{
-    if(root==NULL || start&amp;gt;root-&amp;gt;right || end&amp;lt;root-&amp;gt;left)
-    {
-        cout &amp;lt;&amp;lt; &amp;quot;error&amp;quot; &amp;lt;&amp;lt; endl;
-        return;
-    }
-    if(start&amp;lt;=root-&amp;gt;left &amp;amp;&amp;amp; end&amp;gt;=root-&amp;gt;right)
-    {
-        root-&amp;gt;cover++;
-        return;
-    }
-    int mid=(root-&amp;gt;left+root-&amp;gt;right)&amp;gt;&amp;gt;1;
-    if(end&amp;lt;=mid)
-    {
-        Insert(start,end,root-&amp;gt;leftChild);
-    }
-    else if(start&amp;gt;=mid)
-    {
-        Insert(start,end,root-&amp;gt;rightChild);
-    }
-    else
-    {
-        Insert(start,mid,root-&amp;gt;leftChild);
-        Insert(mid,end,root-&amp;gt;rightChild); 
-    }
-}
-
-void Delete(int start, int end, Node* root)
-{
-    if(root==NULL || start&amp;gt;root-&amp;gt;right || end&amp;lt;root-&amp;gt;left)
-    {
-        cout &amp;lt;&amp;lt; &amp;quot;error&amp;quot; &amp;lt;&amp;lt; endl;
-        return;
-    }
-    if(start&amp;lt;=root-&amp;gt;left &amp;amp;&amp;amp; end&amp;gt;=root-&amp;gt;right)
-    {
-        root-&amp;gt;cover--;
-        return;
-    }
-    int mid=(root-&amp;gt;left+root-&amp;gt;right)&amp;gt;&amp;gt;1;
-    if(end&amp;lt;=mid)
-    {
-        Delete(start,end,root-&amp;gt;leftChild);
-    }
-    else if(start&amp;gt;=mid)
-    {
-        Delete(start,end,root-&amp;gt;rightChild);
-    }
-    else
-    {
-        Delete(start,mid,root-&amp;gt;leftChild);
-        Delete(mid,end,root-&amp;gt;rightChild);
-    }
-}    
-&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;线段树的应用&quot;&gt;&lt;a href=&quot;#线段树的应用&quot; class=&quot;headerlink&quot; title=&quot;线段树的应用&quot;&gt;&lt;/a&gt;线段树的应用&lt;/h3&gt;&lt;p&gt;TODO&lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;线段树，又称为区间数，是一种二叉搜索树，它将一个区间划分成一些单元区间，每个单元区间对应线段树中的一个叶节点。而对于线段树中的每一个非叶节点[a,b]，它的左子树表示的区间为[a,(a+b)/2]，右子树表示的区间为[(a+b)/2+1,b]，因此线段树是平衡二叉树（结构平衡的二叉搜索树，即叶节点的深度差不超过1）。叶节点数目为N，即整个线段区间的长度。&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="数据结构与算法" scheme="http://blog.dujiong.net/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/"/>
     
   </entry>
   
