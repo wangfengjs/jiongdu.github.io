@@ -65,10 +65,15 @@
 <meta property="og:url" content="http://blog.dujiong.net/2016/12/15/Effective-STL-1/index.html">
 <meta property="og:site_name" content="一期一会">
 <meta property="og:description" content="随着对STL的频繁使用和着迷，越发意识到更深层次理解STL的重要性。使用STL正确得到结果是一回事，而高效地使用STL得到结果又是另一回事。因此，拿起了Scott Meyers大神的《Effective STL》，结合自己平时遇到的问题，作一些总结和记录。">
-<meta property="og:updated_time" content="2016-12-22T10:45:11.646Z">
+<meta property="og:image" content="http://i.imgur.com/5ySzRwe.png">
+<meta property="og:image" content="http://i.imgur.com/NhnOLNi.png">
+<meta property="og:image" content="http://i.imgur.com/pdowvMe.png">
+<meta property="og:image" content="http://i.imgur.com/dD1svMe.png">
+<meta property="og:updated_time" content="2016-12-23T08:37:26.081Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="使用vector和string时需注意的问题">
 <meta name="twitter:description" content="随着对STL的频繁使用和着迷，越发意识到更深层次理解STL的重要性。使用STL正确得到结果是一回事，而高效地使用STL得到结果又是另一回事。因此，拿起了Scott Meyers大神的《Effective STL》，结合自己平时遇到的问题，作一些总结和记录。">
+<meta name="twitter:image" content="http://i.imgur.com/5ySzRwe.png">
 
 
 
@@ -317,7 +322,13 @@ for(int i=1;i&lt;=1000;++i)
 <pre><code>vector&lt;bool&gt; v;
 bool *p = &amp;v[0];
 </code></pre><p>但是，它不能通过编译。原因是，vector<bool>是一个假的容器，它并不真的储存bool，相反，为了节省空间，它储存的是bool的紧凑表示。在一个典型的实现中，储存在”vector”中的每个”bool”仅占一个二进制位，一个8位的字节可容纳8个”bool”。在内部，vector<bool>使用了与位域一样的思想，来表示它所存储的那些bool；实际上它只是假装存储了这些bool。<br>位域与bool相似，它只能表示两个可能的值，但是在bool与看似bool的位域之间有一个重要的区别：可以创建一个指向bool的指针，而指向单个位的指针则是不允许的。<br>所以，在上述的实验中，vector<bool>::operator[]需要返回一个指向单个位的引用，而这样的引用却不存在。<br>那么。当需要vector<bool>的时候，应该使用什么呢？<br>标准库提供了两种选择，可以满足绝大多数的需求。第一种是deque<bool>。deque几乎提供了vector所提供的一切，而deque<bool>是一个STL容器，并且确实存储bool。只是需要注意的是，deque中的元素的内存不是连续的，所以不能把deque<bool>中的数据传递给一个期望bool数组的C API。<br>第二种方案时bitset。bitset不是STL容器，但它是标准C++库的一部分。与STL容器不同的是，它的大小（即元素的个数）在编译时就确定了，所以它不支持插入和删除元素。而且，它不支持迭代器。但是，与vector<bool>一样，它使用了一种紧凑表示，只为包含所包含的每个值提高一位空间，它提供了vector<bool>所特有的flip成员函数，以及其他一些特有的、对位的集合有意义的成员函数。在不需要迭代器和动态改变大小的环境下，bitset很适合需要。</bool></bool></bool></bool></bool></bool></bool></bool></bool></p>
-<h3 id="string实现的多样性"><a href="#string实现的多样性" class="headerlink" title="string实现的多样性"></a>string实现的多样性</h3>
+<h3 id="string实现的多样性"><a href="#string实现的多样性" class="headerlink" title="string实现的多样性"></a>string实现的多样性</h3><p>几乎每个string实现都包含如下信息：<br>（1）字符串的大小，即所包含的字符的个数。<br>（2）用于存储该字符串中字符的内存的容量。<br>（3）字符串的值。<br>除此之外，一个string可能还包含：<br>（1）它的分配子的一份拷贝。<br>（2）对值的引用计数。<br>不同的string实现以不同的方式来组织这些信息。下面以4种不同的string实现方式来说明。它们来源于四种STL实现。    </p>
+<h4 id="实现A"><a href="#实现A" class="headerlink" title="实现A"></a>实现A</h4><p>每个string对象包含其分配子的一份拷贝、该字符串的大小、它的容量以及一个指针，该指针指向一块动态分配的内存，其中包含了引用计数和字符串的值。<br><img src="http://i.imgur.com/5ySzRwe.png" alt=""><br>在该实现中，使用默认分配子的string对象是一个指针的4倍。若使用了自定义的分配子，则string对象会更大一些，多出的部分取决于分配子对象的大小。    </p>
+<h4 id="实现B"><a href="#实现B" class="headerlink" title="实现B"></a>实现B</h4><p>在实现B中，string对象与指针大小相同，因为它只包含一个指向结构的指针。B的string所指向的对象中包含了该字符串的大小、容量和引用计数，以及一个指向动态分配的内存的指针，该内存中存放了字符串的值。<br><img src="http://i.imgur.com/NhnOLNi.png" alt="">      </p>
+<h4 id="实现C"><a href="#实现C" class="headerlink" title="实现C"></a>实现C</h4><p>在实现C中，string对象的大小总是与指针的相同，该指针指向一块动态分配的内存，其中包含了与该字符串相关的一切数据：它的大小、容量、引用计数和值。<br><img src="http://i.imgur.com/pdowvMe.png" alt="">    </p>
+<h4 id="实现D"><a href="#实现D" class="headerlink" title="实现D"></a>实现D</h4><p>实现D的string对象是指针大小的7倍（仍然假定使用的是默认的分配子）。这一实现不使用引用计数，但是每个string对象内部包含一块内存，最大可容纳15个字符的字符串。因此，小的字符串可以完整地存放在string对象中，这通常被称为“小字符串优化”特性。而当一个string的容量超过15时，该内存的起始部分被当做一个指向一块动态分配的内存的指针，而该string的值就在这块内存中。<br><img src="http://i.imgur.com/dD1svMe.png" alt=""></p>
+<h4 id="比较"><a href="#比较" class="headerlink" title="比较"></a>比较</h4><p>（1）在以引用计数为基础的设计方案中，string对象之外的一切可以被多个string对象（如果它们有同样的值）。所以，实现A比实现B或C提供了较小的共享能力。尤其是，实现B和C可以共享string的大小和容量，从而减少每个对象存储这些数据的平均开销。<br>（2）创建一个新的字符串值可能需要零次、一次或两次动态分配。      </p>
+
       
     </div>
 
@@ -491,7 +502,7 @@ bool *p = &amp;v[0];
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#使用reserve避免不必要的重新分配"><span class="nav-number">1.</span> <span class="nav-text">使用reserve避免不必要的重新分配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#把vector和string数据传递给旧的C-API"><span class="nav-number">2.</span> <span class="nav-text">把vector和string数据传递给旧的C API</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#避免使用vector"><span class="nav-number">3.</span> <span class="nav-text">避免使用vector</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#string实现的多样性"><span class="nav-number">4.</span> <span class="nav-text">string实现的多样性</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#使用reserve避免不必要的重新分配"><span class="nav-number">1.</span> <span class="nav-text">使用reserve避免不必要的重新分配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#把vector和string数据传递给旧的C-API"><span class="nav-number">2.</span> <span class="nav-text">把vector和string数据传递给旧的C API</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#避免使用vector"><span class="nav-number">3.</span> <span class="nav-text">避免使用vector</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#string实现的多样性"><span class="nav-number">4.</span> <span class="nav-text">string实现的多样性</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#实现A"><span class="nav-number">4.1.</span> <span class="nav-text">实现A</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#实现B"><span class="nav-number">4.2.</span> <span class="nav-text">实现B</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#实现C"><span class="nav-number">4.3.</span> <span class="nav-text">实现C</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#实现D"><span class="nav-number">4.4.</span> <span class="nav-text">实现D</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#比较"><span class="nav-number">4.5.</span> <span class="nav-text">比较</span></a></li></ol></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">
