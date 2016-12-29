@@ -41,7 +41,7 @@
 <link href="/css/main.css?v=0.5.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="muduo," />
+  <meta name="keywords" content="C++," />
 
 
 
@@ -59,16 +59,19 @@
 
 
 
-<meta name="description" content="EventLoop类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。">
+<meta name="description" content="接着上一篇，对STL中非常有用而又容易犯错的一些算法做总结和记录。希望在后面的使用中更加注重STL算法。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="muduo源码阅读之EventLoop类">
-<meta property="og:url" content="http://blog.dujiong.net/2016/05/03/muduo-3/index.html">
+<meta property="og:title" content="使用STL算法时需注意的问题">
+<meta property="og:url" content="http://blog.dujiong.net/2016/12/19/Effective-STL-2/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="EventLoop类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。">
-<meta property="og:updated_time" content="2016-07-16T07:38:55.800Z">
+<meta property="og:description" content="接着上一篇，对STL中非常有用而又容易犯错的一些算法做总结和记录。希望在后面的使用中更加注重STL算法。">
+<meta property="og:image" content="http://i.imgur.com/5BIVF20.png">
+<meta property="og:image" content="http://i.imgur.com/aZpaEcc.png">
+<meta property="og:updated_time" content="2016-12-29T13:46:36.245Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="muduo源码阅读之EventLoop类">
-<meta name="twitter:description" content="EventLoop类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。">
+<meta name="twitter:title" content="使用STL算法时需注意的问题">
+<meta name="twitter:description" content="接着上一篇，对STL中非常有用而又容易犯错的一些算法做总结和记录。希望在后面的使用中更加注重STL算法。">
+<meta name="twitter:image" content="http://i.imgur.com/5BIVF20.png">
 
 
 
@@ -86,7 +89,7 @@
   };
 </script>
 
-  <title> muduo源码阅读之EventLoop类 | 一期一会 </title>
+  <title> 使用STL算法时需注意的问题 | 一期一会 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -246,7 +249,7 @@
             
             
               
-                muduo源码阅读之EventLoop类
+                使用STL算法时需注意的问题
               
             
           </h1>
@@ -258,8 +261,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-05-03T21:13:47+08:00" content="2016-05-03">
-              2016-05-03
+            <time itemprop="dateCreated" datetime="2016-12-19T20:21:14+08:00" content="2016-12-19">
+              2016-12-19
             </time>
           </span>
 
@@ -269,8 +272,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/05/03/muduo-3/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/05/03/muduo-3/" itemprop="commentsCount"></span>
+                <a href="/2016/12/19/Effective-STL-2/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/12/19/Effective-STL-2/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -292,87 +295,56 @@
       
 
       
-        <p>EventLoop类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。<br><a id="more"></a>  </p>
-<h3 id="EventLoop继承自boost-noncopyale"><a href="#EventLoop继承自boost-noncopyale" class="headerlink" title="EventLoop继承自boost::noncopyale"></a>EventLoop继承自boost::noncopyale</h3><p>EventLoop是不可拷贝的，所以源码中继承了boost::noncopyable。boost::noncopyable的思想是把构造函数和析构函数设置成protected权限，这样子类可以调用，但是外面的类不能调用，那么当子类需要定义构造函数的时候不至于通不过编译。但是更关键的是noncopyable把复制构造函数和复制赋值函数都做成了private，这就意味着除非子类定义自己的复制构造和赋值函数，否则在子类没有定义的情况下，外面的调用者是不能够通过复制构造和赋值等手段来产生一个新的子类对象的。<br>one loop per thread模型意味着每个线程只能有一个EventLoop对象，因此EventLoop的构造函数会检查当前线程是否已经创建了其他EventLoop对象。EventLoop的构造函数会记住本对象所属的线程。</p>
-<pre><code>EventLoop::EventLoop()    
-    :looping(false),
-     threadId_(CurrentThread::tid())
-     ...
-{
-    if(t_loopInthisThread)
-        LOG_FATAL &lt;&lt; ...
-}
-</code></pre><h3 id="Event-Hander的注册与删除"><a href="#Event-Hander的注册与删除" class="headerlink" title="Event Hander的注册与删除"></a>Event Hander的注册与删除</h3><p>在初始状态，一个EventLoop只是一个框架，其中并没有包含具体需要处理的事件及相应的资源。所以，要处理一个事件，必须要将相应的Handler信息注册到EventLoop中，muduo中，这个用于注册的函数就是EventLoop::updateChannel()。</p>
-<pre><code>void EventLoop::updateChannel(Channel* channel)
-{
-    assert(channel_-&gt;ownerLoop() == this);
-    asserInLoopThread();
-    poller_-&gt;updateChannel(channel);
-}
-</code></pre><p>函数形参为Channel*类型，如前所述，Channel类似Reactor模式中的Handle。通过Channel类型的变量，Event Handler的相关信息被注册到了EventLoop中。具体的注册过程由形参为poller_成员变量完成，这是muduo的多路复用机制。Poller在muduo中是个抽象基类，因为muduo同时支持poll()和epoll()两种IO复用机制。Poller::updateChannel()的主要功能就是负责维护和更新pollfds数组。                                                                                                                                </p>
-<pre><code>void EventLoop::removeChannel(Channel* channel)
-{
-    ...
-    poller_-&gt;removeChannel(channel);
-}
-</code></pre><p>同样，Event Handler的删除与注册很相似，具体过程也通过poller_完成。</p>
-<h3 id="事件循环中的事件分发"><a href="#事件循环中的事件分发" class="headerlink" title="事件循环中的事件分发"></a>事件循环中的事件分发</h3><p>loop函数是EventLoop类的核心，用于事件循环的运行。在循环返回时，通过Demultiplexer获得已注册到EventLoop中Event Handler的就绪通知。然后Demultiplexer将所有就绪的事件Channel保存到容器activeChannels_中，接着一一处理其中所有activeChannel的callback。EventLoop只提供框架，对要处理的事件一无所知，Channel中包含感兴趣的事件和对事件的处理方法(注册的回调函数)。    </p>
-<pre><code>void EventLoop::loop()
-{
-    while(!quit)
-    {
-        pollReturnTime=poller_-&gt;poll(kPollTimeMs, &amp;activeChannels_);
-        for(ChannelList::iterator it=activeChannels_.begin();
-                it!=activeChannels_.end();++it)
-        {
-            currentActiveChannel_ = *it;
-            currentActiveChannel_-&gt;handleEvent(pollReturnTime_);
-        }
-        doPendingFunctors();
-    }
-}
-</code></pre><p>EventLoop在它的IO线程里执行某个用户任务回调，即EventLoop::runInLoop(const Functor&amp; cb),如果用户在当前IO线程调用这个函数，回调会同步进行，如果用户在其他线程调用runInLoop()，cb会被加入队列(queueInLoop(std::move(cb)))，IO线程会被唤醒来调用Functor。唤醒IO线程传统的方法是用pipe()，IO线程始终监视此管道的readable事件，在需要唤醒的时候，其他线程往管道里写一个字节，这样IO线程就从IO复用阻塞调用中返回。而muudo中使用了Linux新增的eventfd，可以更高效的唤醒。</p>
-<pre><code>void EventLoop::runInLoop(Functor&amp;&amp; cb)
-{
-    if(isInLoopThread())
-    {
-        cb();
-    }
-    else
-    {
-        queueInLoop(std::move(cb));
-    }
-}
-void EventLoop::queueInLoop(Functor&amp;&amp; cb)
-{
-    {
-        MutexLockGuard lock(mutex_);
-        pendingFunctors_.push_back(std::move(cb));
-    }
-    if(!isInLoopThread() || callingPendingFunctors_)
-    {
-        wakeup();
-    }
-}
-</code></pre><h3 id="几个定时运行函数"><a href="#几个定时运行函数" class="headerlink" title="几个定时运行函数"></a>几个定时运行函数</h3><p>muduo EventLoop中有三个定时函数。runAt(…)指在指定的时间调用TimerCallback, runAfter(…)指等一段时间调用TimerCallback, runEvery(…)指以固定时间间隔反复调用TimerCallbck。</p>
-<pre><code>TimerId EventLoop::runAt(const Timestamp&amp; time, const TimerCallback&amp; cb)
-{
-      return timerQueue_-&gt;addTimer(cb, time, 0.0);
+        <p>接着上一篇，对STL中非常有用而又容易犯错的一些算法做总结和记录。希望在后面的使用中更加注重STL算法。<br><a id="more"></a></p>
+<h3 id="确保目标空间足够大"><a href="#确保目标空间足够大" class="headerlink" title="确保目标空间足够大"></a>确保目标空间足够大</h3><p>如上篇所述，当有新的对象加入容器时，STL容器会自动扩充存储空间以容纳这些对象。但是，需要注意的是，STL容器并不总是能够正确地管理其存储空间。比如下面这个例子：     </p>
+<pre><code>int trans(int x){
+    return -x;
 }
 
-TimerId EventLoop::runAfter(double delay, const TimerCallback&amp; cb)
-{
-       Timestamp time(addTime(Timestamp::now(), delay));
-       return runAt(time, cb);
+vector&lt;int&gt; ivec{1,2};
+vector&lt;int&gt; res;
+
+std::transform(ivec.begin(), ivec.end(), res.begin(), trans);    // error
+</code></pre><p>这段代码中，transform首先以ivec[0]为参数调用trans，并将结果赋给<em>\res.end()。然后，再以ivec[1]为参数调用trans，并将结果赋给\</em>(res.end()+1)。这可能会引起灾难性的后果，因为在*res.end()中并没有对象，*(res.end()+1)就更没有对象了。这种transform调用时错误的，因为导致了对无效对象的赋值操作。<br>犯这种错误的程序员总是希望他们所调用的算法的结果会被插入到目标容器中。事实上，必须向STL明确表达意图。所以，上面的例子需要通过调用back_insert生成一个迭代器来指定目标区间的起始位置：      </p>
+<pre><code>int trans(int x){
+    return -x;    
 }
 
-TimerId EventLoop::runEvery(double interval, const TimerCallback&amp; cb)
-{
-       Timestamp time(addTime(Timestamp::now(), interval));
-       return timerQueue_-&gt;addTimer(cb, time, interval);
+vector&lt;int&gt; ivec{1,2};
+vector&lt;int&gt; res;
+
+std::transform(ivec.begin(), ivec.end(), back_inserter(res), trans);
+</code></pre><p>在内部，back_insert返回的迭代器将使得push_back被调用，所以back_insert可使用于所有提供push_back方法的容器。而如果想让一个算法在容器的头部而不是尾部插入对象可以使用front_inserter。<br>因此，无论何时，如果所使用的算法需要指定一个目标区间，那么必须确保目标区间足够大，或者确保它会随着算法的运行而增大。要么在算法执行过程中增大目标区间，请使用插入型迭代器，比如ostream_iterator，或者由back_inserter、front_inserter返回的迭代器。</p>
+<h3 id="与排序有关的选择"><a href="#与排序有关的选择" class="headerlink" title="与排序有关的选择"></a>与排序有关的选择</h3><p>提到排序，首先想到的是std::sort。但需要注意的是，std::sort并非在任何场合下都是完美无缺的。有些场景并不需要完全的排序操作。比如使用partial_sort来选择前n个最好的商品送给n个最重要的客户，或者当只需要将最好的20个商品送给最重要的20个客户，而不关心哪个商品送给哪位客户的时候选用nth_element。   </p>
+<pre><code>vector&lt;int&gt; ivec{2,5,10,23,12,56,34,100};
+
+std::partial_sort(ivec.begin(), ivec.begin()+4, ivec.end(), greater&lt;int&gt;());
+for(auto n : ivec){
+    cout &lt;&lt; n &lt;&lt; endl
 }
-</code></pre><p>muduo中的TimerQueue的公有接口很简单，只有两个函数addTimer()和cancel()，TimerQueue使用二叉搜索树，以pair<timestamp,timer*>为key(即使两个Timer到期时间相同，地址也必定不同)，能快速根据当前时间找到已到期的定时器，也要高效的添加和删除Timer。TimerQueue关注最早的定时器，getExpired返回所有的超时定时器列表，使用stl算法lower_bound()返回第一个值&gt;=超时定时器的迭代器。</timestamp,timer*></p>
-<h3 id="在事件循环中运行回调函数"><a href="#在事件循环中运行回调函数" class="headerlink" title="在事件循环中运行回调函数"></a>在事件循环中运行回调函数</h3><p>前面已经叙述过，EventLoop::runInLoop()用于在一个事件循环中运行回调函数。如果事件循环在当前线程中，那么可以直接运行回调函数。但如果不在当前线程，那么将回调函数放入待完成事件集合中，在loop()函数中的doPendingFunctors()完成处理。在上文中可以看到loop函数的每次while()循环在最后都会运行doPendingFunctors()。<br>pendingFunctors保存了待完成的事件，doPendingFunctors()函数很简单，就是顺序调用pendingFunctors各个回调函数。</p>
+</code></pre><p>运行结果：<br><img src="http://i.imgur.com/5BIVF20.png" alt="">   </p>
+<pre><code>vector&lt;int&gt; ivec{2,5,10,23,12,56,34,100};
+
+std::nth_element(ivec.begin(), ivec.begin()+3, ivec.end(), greater&lt;int&gt;());
+for(auto n : ivec){
+    cout &lt;&lt; n &lt;&lt; endl
+}
+</code></pre><p>运行结果:<br><img src="http://i.imgur.com/aZpaEcc.png" alt=""><br>可以看出，对nth_element的调用与partial_sort几乎一样。在效果上唯一不同之处在于，partial_sort对前20个元素进行了排序，而nth_element没有对他们进行排序。<br>sort、partial_sort、nth_element和stable_sort都属于非稳定的排序算法，有一个名为stable_sort的算法可以提供稳定排序特性。<br>另外，sort、partial_sort、nth_element和stable_sort算法都要求随机访问迭代器，所以这些算法只能被应用于vector、string、deque和数组。对标准关联容器中的元素进行排序并没有实际意义，因为这样的容器总是使用比较函数来维护内部元素的有序性。list是唯一需要排序却无法使用这些排序算法的容器，为此，list特别提供了sort成员函数（稳定排序）。    </p>
+<h3 id="remove算法后调用erase删除元素"><a href="#remove算法后调用erase删除元素" class="headerlink" title="remove算法后调用erase删除元素"></a>remove算法后调用erase删除元素</h3><p>我们需要知道，从容器中删除元素唯一的办法是调用容器的成员函数，几乎总是erase的某种形式。因此，remove并不知道它操作的元素所在的容器，所以remove不可能从容器中删除元素。那么remove究竟做了什么？<br>其实，remove移动了区间中的元素，其结果是，“不用背删除”的元素移到了区间的前部（保持原来的相对顺序）。返回的是一个迭代器指向最后一个“不用背删除”的元素之后的元素。这个返回值相当于该区间“新的逻辑结尾”。但是，需要注意的是，通常来说，当调用了remove以后，从区间中被删除的那些元素可能在也可能不在区间中，这是算法操作的附带结果。<br>所以，如果真想删除元素，那就必须在remove之后使用erase。要删除的元素的位置从“新的逻辑结尾”一直到原区间的结尾。比如:</p>
+<pre><code>vector&lt;int&gt; ivec;
+...
+v.erase(remove(v.begin(), v.end(), 99), v.end());    
+</code></pre><p>此外，remove并不是唯一一个适用于这种情形的算法，其他还有两个属于“remove类”的算法：remove_if和unique。</p>
+<h3 id="使用accumulate或者for-each进行区间统计"><a href="#使用accumulate或者for-each进行区间统计" class="headerlink" title="使用accumulate或者for_each进行区间统计"></a>使用accumulate或者for_each进行区间统计</h3><p>有时候，我们需要按照某种自定义的方式对区间进行统计处理。这个时候，必须自己定义统计方法。STL通过算法accumulate来提供。<br>accumulate有两种形式：第一种形式有两个迭代器和一个初始值，它返回该初始值加上由迭代器标识的区间中的值的总和。如下面的例子：      </p>
+<pre><code>vector&lt;int&gt; ivec{1,2,3};
+
+std::accumulate(ivec.begin(), ivec.end(), 0);
+</code></pre><p>而另一种形式是accumulate带一个初始值和一个任意的统计函数。</p>
+<pre><code>vector&lt;int&gt; ivec{2,2,3};
+
+std::accumulate(ivec.begin(), ivec.end(), 2, multiplies&lt;int&gt;());  //24    
+</code></pre><p>另一个可用来统计区间的算法时for_each，如图accumulate一样，for_each也带两个参数：一个是区间，另一个是函数（通常是函数对象）—对区间中的每个元素都要调用这个函数，但是，传给for_each的这个函数只接受一个实参（即当前的区间元素）；for_each执行完毕后会返回它的函数。</p>
+<h3 id="使用排序的区间作为参数的算法"><a href="#使用排序的区间作为参数的算法" class="headerlink" title="使用排序的区间作为参数的算法"></a>使用排序的区间作为参数的算法</h3><p>有些算法既可以与排序的区间一起工作，也可以与未排序的区间一起工作，但是当它们作用在排序的区间上时，算法会更加有效。<br>首先，罗列出要求排序区间的STL算法:<br>binary_search, lower_bound, upper_bound, equal_range, set_union, set_intersection, set_difference, set_symmetric_difference, merge, inplace_merge, includes<br>还有一些算法并不一定要求排序的区间，但通常情况下会与排序区间一起使用。<br>unique, unique_copy<br>这其中，用于查找的算法binary_search, lower_bound, upper_bound, equal_range要求排序的区间，因为它们用二分法查找数据。<br>set_union, set_intersection, set_difference, set_symmetric_difference这四个算法提供了线性时间效率的集合操作。它们要求排序的区间，因为如果不满足，它们就无法在线性时间内完成工作。<br>merge和inplace_merge实际上实现了合并和排序的联合操作：它们读入两个排序的区间，然后合并成一个新的排序区间。如果源区间没有排过序，就不可能在线性时间内完成。<br>同样，includes也要求两个区间是排序的，承诺线性时间的效率。<br>而unique和unique_copy与上述讨论过的算法有所不同，它们即使对于未排序的区间也有很好的行为。以unique为例，unique用于删除区间中所有重复的元素，所以必须保证所有相等的元素都是连续存放的。因此，总是要确保传给unique的区间是排序的。<br>顺便提一下，unique使用了与remove类似的办法来删除区间中的元素，而并非真正意义上的删除。</p>
 
       
     </div>
@@ -387,7 +359,7 @@ TimerId EventLoop::runEvery(double interval, const TimerCallback&amp; cb)
       
         <div class="post-tags">
           
-            <a href="/tags/muduo/" rel="tag">#muduo</a>
+            <a href="/tags/C/" rel="tag">#C++</a>
           
         </div>
       
@@ -396,17 +368,13 @@ TimerId EventLoop::runEvery(double interval, const TimerCallback&amp; cb)
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/04/28/muduo-2/" rel="next" title="muduo源码阅读之muduo的回调函数机制">
-                <i class="fa fa-chevron-left"></i> muduo源码阅读之muduo的回调函数机制
+              <a href="/2016/12/19/Effective-STL-1/" rel="next" title="使用vector和string时需注意的问题">
+                <i class="fa fa-chevron-left"></i> 使用vector和string时需注意的问题
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/05/06/muduo-4/" rel="prev" title="muduo源码阅读之Channel与Poller">
-                muduo源码阅读之Channel与Poller <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -432,8 +400,8 @@ TimerId EventLoop::runEvery(double interval, const TimerCallback&amp; cb)
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/05/03/muduo-3/"
-           data-title="muduo源码阅读之EventLoop类" data-url="http://blog.dujiong.net/2016/05/03/muduo-3/">
+      <div class="ds-thread" data-thread-key="2016/12/19/Effective-STL-2/"
+           data-title="使用STL算法时需注意的问题" data-url="http://blog.dujiong.net/2016/12/19/Effective-STL-2/">
       </div>
     
   </div>
@@ -547,7 +515,7 @@ TimerId EventLoop::runEvery(double interval, const TimerCallback&amp; cb)
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#EventLoop继承自boost-noncopyale"><span class="nav-number">1.</span> <span class="nav-text">EventLoop继承自boost::noncopyale</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Event-Hander的注册与删除"><span class="nav-number">2.</span> <span class="nav-text">Event Hander的注册与删除</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#事件循环中的事件分发"><span class="nav-number">3.</span> <span class="nav-text">事件循环中的事件分发</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#几个定时运行函数"><span class="nav-number">4.</span> <span class="nav-text">几个定时运行函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#在事件循环中运行回调函数"><span class="nav-number">5.</span> <span class="nav-text">在事件循环中运行回调函数</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#确保目标空间足够大"><span class="nav-number">1.</span> <span class="nav-text">确保目标空间足够大</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#与排序有关的选择"><span class="nav-number">2.</span> <span class="nav-text">与排序有关的选择</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#remove算法后调用erase删除元素"><span class="nav-number">3.</span> <span class="nav-text">remove算法后调用erase删除元素</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用accumulate或者for-each进行区间统计"><span class="nav-number">4.</span> <span class="nav-text">使用accumulate或者for_each进行区间统计</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用排序的区间作为参数的算法"><span class="nav-number">5.</span> <span class="nav-text">使用排序的区间作为参数的算法</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">

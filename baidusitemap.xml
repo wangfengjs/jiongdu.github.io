@@ -4,12 +4,29 @@
 
     
   <url>
-    <loc>http://blog.dujiong.net/2016/12/15/Effective-STL-1/</loc>
-    <lastmod>2016-12-23T08:37:26.081Z</lastmod>
+    <loc>http://blog.dujiong.net/2016/12/19/Effective-STL-2/</loc>
+    <lastmod>2016-12-29T13:46:36.245Z</lastmod>
+    <data>
+        <display>
+        <title>使用STL算法时需注意的问题</title>
+        <pubTime>2016-12-19T12:21:14.000Z</pubTime>
+        
+        <tag>C++</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://blog.dujiong.net/2016/12/19/Effective-STL-1/</loc>
+    <lastmod>2016-12-29T07:24:51.233Z</lastmod>
     <data>
         <display>
         <title>使用vector和string时需注意的问题</title>
-        <pubTime>2016-12-15T09:39:38.000Z</pubTime>
+        <pubTime>2016-12-19T09:39:38.000Z</pubTime>
         
         <tag>C++</tag>
          

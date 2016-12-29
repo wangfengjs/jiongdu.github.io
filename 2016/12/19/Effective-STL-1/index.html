@@ -41,7 +41,7 @@
 <link href="/css/main.css?v=0.5.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="muduo," />
+  <meta name="keywords" content="C++," />
 
 
 
@@ -59,16 +59,21 @@
 
 
 
-<meta name="description" content="EventLoop类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。">
+<meta name="description" content="随着对STL的频繁使用和着迷，越发意识到更深层次理解STL的重要性。使用STL正确得到结果是一回事，而高效地使用STL得到结果又是另一回事。因此，拿起了Scott Meyers大神的《Effective STL》，结合自己平时遇到的问题，作一些总结和记录。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="muduo源码阅读之EventLoop类">
-<meta property="og:url" content="http://blog.dujiong.net/2016/05/03/muduo-3/index.html">
+<meta property="og:title" content="使用vector和string时需注意的问题">
+<meta property="og:url" content="http://blog.dujiong.net/2016/12/19/Effective-STL-1/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="EventLoop类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。">
-<meta property="og:updated_time" content="2016-07-16T07:38:55.800Z">
+<meta property="og:description" content="随着对STL的频繁使用和着迷，越发意识到更深层次理解STL的重要性。使用STL正确得到结果是一回事，而高效地使用STL得到结果又是另一回事。因此，拿起了Scott Meyers大神的《Effective STL》，结合自己平时遇到的问题，作一些总结和记录。">
+<meta property="og:image" content="http://i.imgur.com/5ySzRwe.png">
+<meta property="og:image" content="http://i.imgur.com/NhnOLNi.png">
+<meta property="og:image" content="http://i.imgur.com/pdowvMe.png">
+<meta property="og:image" content="http://i.imgur.com/dD1svMe.png">
+<meta property="og:updated_time" content="2016-12-29T07:24:51.233Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="muduo源码阅读之EventLoop类">
-<meta name="twitter:description" content="EventLoop类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。">
+<meta name="twitter:title" content="使用vector和string时需注意的问题">
+<meta name="twitter:description" content="随着对STL的频繁使用和着迷，越发意识到更深层次理解STL的重要性。使用STL正确得到结果是一回事，而高效地使用STL得到结果又是另一回事。因此，拿起了Scott Meyers大神的《Effective STL》，结合自己平时遇到的问题，作一些总结和记录。">
+<meta name="twitter:image" content="http://i.imgur.com/5ySzRwe.png">
 
 
 
@@ -86,7 +91,7 @@
   };
 </script>
 
-  <title> muduo源码阅读之EventLoop类 | 一期一会 </title>
+  <title> 使用vector和string时需注意的问题 | 一期一会 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -246,7 +251,7 @@
             
             
               
-                muduo源码阅读之EventLoop类
+                使用vector和string时需注意的问题
               
             
           </h1>
@@ -258,8 +263,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-05-03T21:13:47+08:00" content="2016-05-03">
-              2016-05-03
+            <time itemprop="dateCreated" datetime="2016-12-19T17:39:38+08:00" content="2016-12-19">
+              2016-12-19
             </time>
           </span>
 
@@ -269,8 +274,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/05/03/muduo-3/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/05/03/muduo-3/" itemprop="commentsCount"></span>
+                <a href="/2016/12/19/Effective-STL-1/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/12/19/Effective-STL-1/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -292,87 +297,37 @@
       
 
       
-        <p>EventLoop类似于前面所述的Reactor模式中的Initiation Dispatcher，是用于驱动的主模块，完成与其他模块的调用和交互。EventLoop类提供的主要是一个框架，事件的分发由Demultiplexer提供，事件的处理由Event Handler提供，但事件的循环、怎样将事件的分发与调用结合起来则是由EventLoop类决定的。<br><a id="more"></a>  </p>
-<h3 id="EventLoop继承自boost-noncopyale"><a href="#EventLoop继承自boost-noncopyale" class="headerlink" title="EventLoop继承自boost::noncopyale"></a>EventLoop继承自boost::noncopyale</h3><p>EventLoop是不可拷贝的，所以源码中继承了boost::noncopyable。boost::noncopyable的思想是把构造函数和析构函数设置成protected权限，这样子类可以调用，但是外面的类不能调用，那么当子类需要定义构造函数的时候不至于通不过编译。但是更关键的是noncopyable把复制构造函数和复制赋值函数都做成了private，这就意味着除非子类定义自己的复制构造和赋值函数，否则在子类没有定义的情况下，外面的调用者是不能够通过复制构造和赋值等手段来产生一个新的子类对象的。<br>one loop per thread模型意味着每个线程只能有一个EventLoop对象，因此EventLoop的构造函数会检查当前线程是否已经创建了其他EventLoop对象。EventLoop的构造函数会记住本对象所属的线程。</p>
-<pre><code>EventLoop::EventLoop()    
-    :looping(false),
-     threadId_(CurrentThread::tid())
-     ...
-{
-    if(t_loopInthisThread)
-        LOG_FATAL &lt;&lt; ...
+        <p>随着对STL的频繁使用和着迷，越发意识到更深层次理解STL的重要性。使用STL正确得到结果是一回事，而高效地使用STL得到结果又是另一回事。因此，拿起了Scott Meyers大神的《Effective STL》，结合自己平时遇到的问题，作一些总结和记录。<br><a id="more"></a></p>
+<h3 id="使用reserve避免不必要的重新分配"><a href="#使用reserve避免不必要的重新分配" class="headerlink" title="使用reserve避免不必要的重新分配"></a>使用reserve避免不必要的重新分配</h3><p>我们知道，STL容器最大的进步之一是它们会自动增长以便容纳下所放入的数据，只要没有超出它们的最大限制（可以使用max_size()成员函数查看）就可以。vector和string的增长过程是：<br>（1）分配一块大小为当前容量的某个倍数的新内存，在大多数实现中，vector和string的容量每次以2的倍数增长，即每当容器需要扩张时，它们的容量即加倍。<br>（2）把容器的所有元素从旧的内存复制到新的内存中。<br>（3）析构掉旧内存中的对象。<br>（4）释放旧内存。<br>可以看出，这个过程会非常耗时。因此，可以使用reserve成员函数来讲重新分配的次数减少到最低限度，从而避免了重新分配和迭代器/引用失效带来的开销。<br>因此，当一个元素需要被插入而容器的容量不够时，就会发生重新分配过程。比如：创建一个1到1000之间的vector<int>，如果采用这样的方式：</int></p>
+<pre><code>vector&lt;int&gt; ivec;
+for(int i=1;i&lt;=1000;i++)
+    ivec.push_back(i);
+</code></pre><p>对于大多数STL实现，该循环在进行过程中将导致2到10次重新分配。而如果改用reserve。</p>
+<pre><code>vector&lt;int&gt; v;
+v.reserve(1000);
+for(int i=1;i&lt;=1000;++i)
+    v.push_back(i);
+</code></pre><p>那么，在循环过程中，将不会再发生重新分配。<br>所以，当能确切知道或大致预计容器中最终会有多少元素时，使用reserve。如果不知道，可以先预留足够大的空间，然后，当所有数据都加入以后，再去除多余的容量。   </p>
+<h3 id="把vector和string数据传递给旧的C-API"><a href="#把vector和string数据传递给旧的C-API" class="headerlink" title="把vector和string数据传递给旧的C API"></a>把vector和string数据传递给旧的C API</h3><p>在使用C/C++时，我们发现很多时候还有旧的C API的身影，它们使用数组和char*指针而不是vector或string对象来进行数据交换。因此，在使用STL时，也必须处理好与旧的C API之间的关系。<br>比如，有一个vector v，而需要得到一个指向v中数据的指针，从而可把v中的数据作为数组来对待，那么只需要使用&amp;v[0]就可以了。而对于string s,对应的形式是s.c_str()。<br>所以，对于给定的C API：        </p>
+<pre><code>void doSomething(const int* pInts, size_t numInts);
+</code></pre><p>可以这样使用：</p>
+<pre><code>if(!v.empty()){
+    doSomething(&amp;v[0], v.size());
 }
-</code></pre><h3 id="Event-Hander的注册与删除"><a href="#Event-Hander的注册与删除" class="headerlink" title="Event Hander的注册与删除"></a>Event Hander的注册与删除</h3><p>在初始状态，一个EventLoop只是一个框架，其中并没有包含具体需要处理的事件及相应的资源。所以，要处理一个事件，必须要将相应的Handler信息注册到EventLoop中，muduo中，这个用于注册的函数就是EventLoop::updateChannel()。</p>
-<pre><code>void EventLoop::updateChannel(Channel* channel)
-{
-    assert(channel_-&gt;ownerLoop() == this);
-    asserInLoopThread();
-    poller_-&gt;updateChannel(channel);
-}
-</code></pre><p>函数形参为Channel*类型，如前所述，Channel类似Reactor模式中的Handle。通过Channel类型的变量，Event Handler的相关信息被注册到了EventLoop中。具体的注册过程由形参为poller_成员变量完成，这是muduo的多路复用机制。Poller在muduo中是个抽象基类，因为muduo同时支持poll()和epoll()两种IO复用机制。Poller::updateChannel()的主要功能就是负责维护和更新pollfds数组。                                                                                                                                </p>
-<pre><code>void EventLoop::removeChannel(Channel* channel)
-{
-    ...
-    poller_-&gt;removeChannel(channel);
-}
-</code></pre><p>同样，Event Handler的删除与注册很相似，具体过程也通过poller_完成。</p>
-<h3 id="事件循环中的事件分发"><a href="#事件循环中的事件分发" class="headerlink" title="事件循环中的事件分发"></a>事件循环中的事件分发</h3><p>loop函数是EventLoop类的核心，用于事件循环的运行。在循环返回时，通过Demultiplexer获得已注册到EventLoop中Event Handler的就绪通知。然后Demultiplexer将所有就绪的事件Channel保存到容器activeChannels_中，接着一一处理其中所有activeChannel的callback。EventLoop只提供框架，对要处理的事件一无所知，Channel中包含感兴趣的事件和对事件的处理方法(注册的回调函数)。    </p>
-<pre><code>void EventLoop::loop()
-{
-    while(!quit)
-    {
-        pollReturnTime=poller_-&gt;poll(kPollTimeMs, &amp;activeChannels_);
-        for(ChannelList::iterator it=activeChannels_.begin();
-                it!=activeChannels_.end();++it)
-        {
-            currentActiveChannel_ = *it;
-            currentActiveChannel_-&gt;handleEvent(pollReturnTime_);
-        }
-        doPendingFunctors();
-    }
-}
-</code></pre><p>EventLoop在它的IO线程里执行某个用户任务回调，即EventLoop::runInLoop(const Functor&amp; cb),如果用户在当前IO线程调用这个函数，回调会同步进行，如果用户在其他线程调用runInLoop()，cb会被加入队列(queueInLoop(std::move(cb)))，IO线程会被唤醒来调用Functor。唤醒IO线程传统的方法是用pipe()，IO线程始终监视此管道的readable事件，在需要唤醒的时候，其他线程往管道里写一个字节，这样IO线程就从IO复用阻塞调用中返回。而muudo中使用了Linux新增的eventfd，可以更高效的唤醒。</p>
-<pre><code>void EventLoop::runInLoop(Functor&amp;&amp; cb)
-{
-    if(isInLoopThread())
-    {
-        cb();
-    }
-    else
-    {
-        queueInLoop(std::move(cb));
-    }
-}
-void EventLoop::queueInLoop(Functor&amp;&amp; cb)
-{
-    {
-        MutexLockGuard lock(mutex_);
-        pendingFunctors_.push_back(std::move(cb));
-    }
-    if(!isInLoopThread() || callingPendingFunctors_)
-    {
-        wakeup();
-    }
-}
-</code></pre><h3 id="几个定时运行函数"><a href="#几个定时运行函数" class="headerlink" title="几个定时运行函数"></a>几个定时运行函数</h3><p>muduo EventLoop中有三个定时函数。runAt(…)指在指定的时间调用TimerCallback, runAfter(…)指等一段时间调用TimerCallback, runEvery(…)指以固定时间间隔反复调用TimerCallbck。</p>
-<pre><code>TimerId EventLoop::runAt(const Timestamp&amp; time, const TimerCallback&amp; cb)
-{
-      return timerQueue_-&gt;addTimer(cb, time, 0.0);
-}
-
-TimerId EventLoop::runAfter(double delay, const TimerCallback&amp; cb)
-{
-       Timestamp time(addTime(Timestamp::now(), delay));
-       return runAt(time, cb);
-}
-
-TimerId EventLoop::runEvery(double interval, const TimerCallback&amp; cb)
-{
-       Timestamp time(addTime(Timestamp::now(), interval));
-       return timerQueue_-&gt;addTimer(cb, time, interval);
-}
-</code></pre><p>muduo中的TimerQueue的公有接口很简单，只有两个函数addTimer()和cancel()，TimerQueue使用二叉搜索树，以pair<timestamp,timer*>为key(即使两个Timer到期时间相同，地址也必定不同)，能快速根据当前时间找到已到期的定时器，也要高效的添加和删除Timer。TimerQueue关注最早的定时器，getExpired返回所有的超时定时器列表，使用stl算法lower_bound()返回第一个值&gt;=超时定时器的迭代器。</timestamp,timer*></p>
-<h3 id="在事件循环中运行回调函数"><a href="#在事件循环中运行回调函数" class="headerlink" title="在事件循环中运行回调函数"></a>在事件循环中运行回调函数</h3><p>前面已经叙述过，EventLoop::runInLoop()用于在一个事件循环中运行回调函数。如果事件循环在当前线程中，那么可以直接运行回调函数。但如果不在当前线程，那么将回调函数放入待完成事件集合中，在loop()函数中的doPendingFunctors()完成处理。在上文中可以看到loop函数的每次while()循环在最后都会运行doPendingFunctors()。<br>pendingFunctors保存了待完成的事件，doPendingFunctors()函数很简单，就是顺序调用pendingFunctors各个回调函数。</p>
+</code></pre><p>请注意，不要使用v.begin()来代替&amp;v[0]，因为begin的返回值是一个迭代器，不是指针；当需要一个指向vector中的数据的指针时，永远不应该使用begin()。（可以使用&amp;*v.begin()）<br>但是，上述方法对string却是不可靠的。原因如下：<br>（1）string中的数据不一定存储在连续的内存中；<br>（2）string的内部表示不一定是以空字符结尾的。<br>所以，对于给定的C API：</p>
+<pre><code>void doSomething(const char* pString)
+</code></pre><p>可以这样使用： </p>
+<pre><code>doSomething(s.c_str())    
+</code></pre><h3 id="避免使用vector"><a href="#避免使用vector" class="headerlink" title="避免使用vector"></a>避免使用vector<bool></bool></h3><p>作为一个STL容器，vector<bool>有两点问题。首先，它不是一个STL容器。其次，它并不存储bool。除此之外，一切正常。<br>vector<bool>不是一个STL容器，原因是一个对象要成为STL容器，必须满足的一个条件是，支持operator[]。也就是当使用operator[]取得了容器Container<t>中的一个T对象，那么可以通过取它的地址得到一个指向该对象的指针。<br>因此，如果vector<bool>是一个容器，那么下面这段代码必须可以被编译：</bool></t></bool></bool></p>
+<pre><code>vector&lt;bool&gt; v;
+bool *p = &amp;v[0];
+</code></pre><p>但是，它不能通过编译。原因是，vector<bool>是一个假的容器，它并不真的储存bool，相反，为了节省空间，它储存的是bool的紧凑表示。在一个典型的实现中，储存在”vector”中的每个”bool”仅占一个二进制位，一个8位的字节可容纳8个”bool”。在内部，vector<bool>使用了与位域一样的思想，来表示它所存储的那些bool；实际上它只是假装存储了这些bool。<br>位域与bool相似，它只能表示两个可能的值，但是在bool与看似bool的位域之间有一个重要的区别：可以创建一个指向bool的指针，而指向单个位的指针则是不允许的。<br>所以，在上述的实验中，vector<bool>::operator[]需要返回一个指向单个位的引用，而这样的引用却不存在。<br>那么。当需要vector<bool>的时候，应该使用什么呢？<br>标准库提供了两种选择，可以满足绝大多数的需求。第一种是deque<bool>。deque几乎提供了vector所提供的一切，而deque<bool>是一个STL容器，并且确实存储bool。只是需要注意的是，deque中的元素的内存不是连续的，所以不能把deque<bool>中的数据传递给一个期望bool数组的C API。<br>第二种方案时bitset。bitset不是STL容器，但它是标准C++库的一部分。与STL容器不同的是，它的大小（即元素的个数）在编译时就确定了，所以它不支持插入和删除元素。而且，它不支持迭代器。但是，与vector<bool>一样，它使用了一种紧凑表示，只为包含所包含的每个值提高一位空间，它提供了vector<bool>所特有的flip成员函数，以及其他一些特有的、对位的集合有意义的成员函数。在不需要迭代器和动态改变大小的环境下，bitset很适合需要。</bool></bool></bool></bool></bool></bool></bool></bool></bool></p>
+<h3 id="string实现的多样性"><a href="#string实现的多样性" class="headerlink" title="string实现的多样性"></a>string实现的多样性</h3><p>几乎每个string实现都包含如下信息：<br>（1）字符串的大小，即所包含的字符的个数。<br>（2）用于存储该字符串中字符的内存的容量。<br>（3）字符串的值。<br>除此之外，一个string可能还包含：<br>（1）它的分配子的一份拷贝。<br>（2）对值的引用计数。<br>不同的string实现以不同的方式来组织这些信息。下面以4种不同的string实现方式来说明。它们来源于四种STL实现。    </p>
+<h4 id="实现A"><a href="#实现A" class="headerlink" title="实现A"></a>实现A</h4><p>每个string对象包含其分配子的一份拷贝、该字符串的大小、它的容量以及一个指针，该指针指向一块动态分配的内存，其中包含了引用计数和字符串的值。<br><img src="http://i.imgur.com/5ySzRwe.png" alt=""><br>在该实现中，使用默认分配子的string对象是一个指针的4倍。若使用了自定义的分配子，则string对象会更大一些，多出的部分取决于分配子对象的大小。    </p>
+<h4 id="实现B"><a href="#实现B" class="headerlink" title="实现B"></a>实现B</h4><p>在实现B中，string对象与指针大小相同，因为它只包含一个指向结构的指针。B的string所指向的对象中包含了该字符串的大小、容量和引用计数，以及一个指向动态分配的内存的指针，该内存中存放了字符串的值。<br><img src="http://i.imgur.com/NhnOLNi.png" alt="">      </p>
+<h4 id="实现C"><a href="#实现C" class="headerlink" title="实现C"></a>实现C</h4><p>在实现C中，string对象的大小总是与指针的相同，该指针指向一块动态分配的内存，其中包含了与该字符串相关的一切数据：它的大小、容量、引用计数和值。<br><img src="http://i.imgur.com/pdowvMe.png" alt="">    </p>
+<h4 id="实现D"><a href="#实现D" class="headerlink" title="实现D"></a>实现D</h4><p>实现D的string对象是指针大小的7倍（仍然假定使用的是默认的分配子）。这一实现不使用引用计数，但是每个string对象内部包含一块内存，最大可容纳15个字符的字符串。因此，小的字符串可以完整地存放在string对象中，这通常被称为“小字符串优化”特性。而当一个string的容量超过15时，该内存的起始部分被当做一个指向一块动态分配的内存的指针，而该string的值就在这块内存中。<br><img src="http://i.imgur.com/dD1svMe.png" alt=""></p>
+<h4 id="比较"><a href="#比较" class="headerlink" title="比较"></a>比较</h4><p>（1）在以引用计数为基础的设计方案中，string对象之外的一切可以被多个string对象（如果它们有同样的值）。所以，实现A比实现B或C提供了较小的共享能力。尤其是，实现B和C可以共享string的大小和容量，从而减少每个对象存储这些数据的平均开销。<br>（2）创建一个新的字符串值可能需要零次、一次或两次动态分配。      </p>
 
       
     </div>
@@ -387,7 +342,7 @@ TimerId EventLoop::runEvery(double interval, const TimerCallback&amp; cb)
       
         <div class="post-tags">
           
-            <a href="/tags/muduo/" rel="tag">#muduo</a>
+            <a href="/tags/C/" rel="tag">#C++</a>
           
         </div>
       
@@ -396,16 +351,16 @@ TimerId EventLoop::runEvery(double interval, const TimerCallback&amp; cb)
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/04/28/muduo-2/" rel="next" title="muduo源码阅读之muduo的回调函数机制">
-                <i class="fa fa-chevron-left"></i> muduo源码阅读之muduo的回调函数机制
+              <a href="/2016/12/08/String/" rel="next" title="《C++编程思想》之字符串学习笔记">
+                <i class="fa fa-chevron-left"></i> 《C++编程思想》之字符串学习笔记
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2016/05/06/muduo-4/" rel="prev" title="muduo源码阅读之Channel与Poller">
-                muduo源码阅读之Channel与Poller <i class="fa fa-chevron-right"></i>
+              <a href="/2016/12/19/Effective-STL-2/" rel="prev" title="使用STL算法时需注意的问题">
+                使用STL算法时需注意的问题 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -432,8 +387,8 @@ TimerId EventLoop::runEvery(double interval, const TimerCallback&amp; cb)
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/05/03/muduo-3/"
-           data-title="muduo源码阅读之EventLoop类" data-url="http://blog.dujiong.net/2016/05/03/muduo-3/">
+      <div class="ds-thread" data-thread-key="2016/12/19/Effective-STL-1/"
+           data-title="使用vector和string时需注意的问题" data-url="http://blog.dujiong.net/2016/12/19/Effective-STL-1/">
       </div>
     
   </div>
@@ -547,7 +502,7 @@ TimerId EventLoop::runEvery(double interval, const TimerCallback&amp; cb)
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#EventLoop继承自boost-noncopyale"><span class="nav-number">1.</span> <span class="nav-text">EventLoop继承自boost::noncopyale</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Event-Hander的注册与删除"><span class="nav-number">2.</span> <span class="nav-text">Event Hander的注册与删除</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#事件循环中的事件分发"><span class="nav-number">3.</span> <span class="nav-text">事件循环中的事件分发</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#几个定时运行函数"><span class="nav-number">4.</span> <span class="nav-text">几个定时运行函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#在事件循环中运行回调函数"><span class="nav-number">5.</span> <span class="nav-text">在事件循环中运行回调函数</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#使用reserve避免不必要的重新分配"><span class="nav-number">1.</span> <span class="nav-text">使用reserve避免不必要的重新分配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#把vector和string数据传递给旧的C-API"><span class="nav-number">2.</span> <span class="nav-text">把vector和string数据传递给旧的C API</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#避免使用vector"><span class="nav-number">3.</span> <span class="nav-text">避免使用vector</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#string实现的多样性"><span class="nav-number">4.</span> <span class="nav-text">string实现的多样性</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#实现A"><span class="nav-number">4.1.</span> <span class="nav-text">实现A</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#实现B"><span class="nav-number">4.2.</span> <span class="nav-text">实现B</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#实现C"><span class="nav-number">4.3.</span> <span class="nav-text">实现C</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#实现D"><span class="nav-number">4.4.</span> <span class="nav-text">实现D</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#比较"><span class="nav-number">4.5.</span> <span class="nav-text">比较</span></a></li></ol></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">

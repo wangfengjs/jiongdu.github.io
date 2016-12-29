@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-12-23T08:37:26.081Z</updated>
+  <updated>2016-12-29T13:46:36.245Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -16,11 +16,81 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>使用STL算法时需注意的问题</title>
+    <link href="http://blog.dujiong.net/2016/12/19/Effective-STL-2/"/>
+    <id>http://blog.dujiong.net/2016/12/19/Effective-STL-2/</id>
+    <published>2016-12-19T12:21:14.000Z</published>
+    <updated>2016-12-29T13:46:36.245Z</updated>
+    
+    <content type="html">&lt;p&gt;接着上一篇，对STL中非常有用而又容易犯错的一些算法做总结和记录。希望在后面的使用中更加注重STL算法。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&quot;确保目标空间足够大&quot;&gt;&lt;a href=&quot;#确保目标空间足够大&quot; class=&quot;headerlink&quot; title=&quot;确保目标空间足够大&quot;&gt;&lt;/a&gt;确保目标空间足够大&lt;/h3&gt;&lt;p&gt;如上篇所述，当有新的对象加入容器时，STL容器会自动扩充存储空间以容纳这些对象。但是，需要注意的是，STL容器并不总是能够正确地管理其存储空间。比如下面这个例子：     &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;int trans(int x){
+    return -x;
+}
+
+vector&amp;lt;int&amp;gt; ivec{1,2};
+vector&amp;lt;int&amp;gt; res;
+
+std::transform(ivec.begin(), ivec.end(), res.begin(), trans);    // error
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这段代码中，transform首先以ivec[0]为参数调用trans，并将结果赋给&lt;em&gt;\res.end()。然后，再以ivec[1]为参数调用trans，并将结果赋给\&lt;/em&gt;(res.end()+1)。这可能会引起灾难性的后果，因为在*res.end()中并没有对象，*(res.end()+1)就更没有对象了。这种transform调用时错误的，因为导致了对无效对象的赋值操作。&lt;br&gt;犯这种错误的程序员总是希望他们所调用的算法的结果会被插入到目标容器中。事实上，必须向STL明确表达意图。所以，上面的例子需要通过调用back_insert生成一个迭代器来指定目标区间的起始位置：      &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;int trans(int x){
+    return -x;    
+}
+
+vector&amp;lt;int&amp;gt; ivec{1,2};
+vector&amp;lt;int&amp;gt; res;
+
+std::transform(ivec.begin(), ivec.end(), back_inserter(res), trans);
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;在内部，back_insert返回的迭代器将使得push_back被调用，所以back_insert可使用于所有提供push_back方法的容器。而如果想让一个算法在容器的头部而不是尾部插入对象可以使用front_inserter。&lt;br&gt;因此，无论何时，如果所使用的算法需要指定一个目标区间，那么必须确保目标区间足够大，或者确保它会随着算法的运行而增大。要么在算法执行过程中增大目标区间，请使用插入型迭代器，比如ostream_iterator，或者由back_inserter、front_inserter返回的迭代器。&lt;/p&gt;
+&lt;h3 id=&quot;与排序有关的选择&quot;&gt;&lt;a href=&quot;#与排序有关的选择&quot; class=&quot;headerlink&quot; title=&quot;与排序有关的选择&quot;&gt;&lt;/a&gt;与排序有关的选择&lt;/h3&gt;&lt;p&gt;提到排序，首先想到的是std::sort。但需要注意的是，std::sort并非在任何场合下都是完美无缺的。有些场景并不需要完全的排序操作。比如使用partial_sort来选择前n个最好的商品送给n个最重要的客户，或者当只需要将最好的20个商品送给最重要的20个客户，而不关心哪个商品送给哪位客户的时候选用nth_element。   &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;vector&amp;lt;int&amp;gt; ivec{2,5,10,23,12,56,34,100};
+
+std::partial_sort(ivec.begin(), ivec.begin()+4, ivec.end(), greater&amp;lt;int&amp;gt;());
+for(auto n : ivec){
+    cout &amp;lt;&amp;lt; n &amp;lt;&amp;lt; endl
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;运行结果：&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/5BIVF20.png&quot; alt=&quot;&quot;&gt;   &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;vector&amp;lt;int&amp;gt; ivec{2,5,10,23,12,56,34,100};
+
+std::nth_element(ivec.begin(), ivec.begin()+3, ivec.end(), greater&amp;lt;int&amp;gt;());
+for(auto n : ivec){
+    cout &amp;lt;&amp;lt; n &amp;lt;&amp;lt; endl
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;运行结果:&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/aZpaEcc.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;可以看出，对nth_element的调用与partial_sort几乎一样。在效果上唯一不同之处在于，partial_sort对前20个元素进行了排序，而nth_element没有对他们进行排序。&lt;br&gt;sort、partial_sort、nth_element和stable_sort都属于非稳定的排序算法，有一个名为stable_sort的算法可以提供稳定排序特性。&lt;br&gt;另外，sort、partial_sort、nth_element和stable_sort算法都要求随机访问迭代器，所以这些算法只能被应用于vector、string、deque和数组。对标准关联容器中的元素进行排序并没有实际意义，因为这样的容器总是使用比较函数来维护内部元素的有序性。list是唯一需要排序却无法使用这些排序算法的容器，为此，list特别提供了sort成员函数（稳定排序）。    &lt;/p&gt;
+&lt;h3 id=&quot;remove算法后调用erase删除元素&quot;&gt;&lt;a href=&quot;#remove算法后调用erase删除元素&quot; class=&quot;headerlink&quot; title=&quot;remove算法后调用erase删除元素&quot;&gt;&lt;/a&gt;remove算法后调用erase删除元素&lt;/h3&gt;&lt;p&gt;我们需要知道，从容器中删除元素唯一的办法是调用容器的成员函数，几乎总是erase的某种形式。因此，remove并不知道它操作的元素所在的容器，所以remove不可能从容器中删除元素。那么remove究竟做了什么？&lt;br&gt;其实，remove移动了区间中的元素，其结果是，“不用背删除”的元素移到了区间的前部（保持原来的相对顺序）。返回的是一个迭代器指向最后一个“不用背删除”的元素之后的元素。这个返回值相当于该区间“新的逻辑结尾”。但是，需要注意的是，通常来说，当调用了remove以后，从区间中被删除的那些元素可能在也可能不在区间中，这是算法操作的附带结果。&lt;br&gt;所以，如果真想删除元素，那就必须在remove之后使用erase。要删除的元素的位置从“新的逻辑结尾”一直到原区间的结尾。比如:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;vector&amp;lt;int&amp;gt; ivec;
+...
+v.erase(remove(v.begin(), v.end(), 99), v.end());    
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;此外，remove并不是唯一一个适用于这种情形的算法，其他还有两个属于“remove类”的算法：remove_if和unique。&lt;/p&gt;
+&lt;h3 id=&quot;使用accumulate或者for-each进行区间统计&quot;&gt;&lt;a href=&quot;#使用accumulate或者for-each进行区间统计&quot; class=&quot;headerlink&quot; title=&quot;使用accumulate或者for_each进行区间统计&quot;&gt;&lt;/a&gt;使用accumulate或者for_each进行区间统计&lt;/h3&gt;&lt;p&gt;有时候，我们需要按照某种自定义的方式对区间进行统计处理。这个时候，必须自己定义统计方法。STL通过算法accumulate来提供。&lt;br&gt;accumulate有两种形式：第一种形式有两个迭代器和一个初始值，它返回该初始值加上由迭代器标识的区间中的值的总和。如下面的例子：      &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;vector&amp;lt;int&amp;gt; ivec{1,2,3};
+
+std::accumulate(ivec.begin(), ivec.end(), 0);
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;而另一种形式是accumulate带一个初始值和一个任意的统计函数。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;vector&amp;lt;int&amp;gt; ivec{2,2,3};
+
+std::accumulate(ivec.begin(), ivec.end(), 2, multiplies&amp;lt;int&amp;gt;());  //24    
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;另一个可用来统计区间的算法时for_each，如图accumulate一样，for_each也带两个参数：一个是区间，另一个是函数（通常是函数对象）—对区间中的每个元素都要调用这个函数，但是，传给for_each的这个函数只接受一个实参（即当前的区间元素）；for_each执行完毕后会返回它的函数。&lt;/p&gt;
+&lt;h3 id=&quot;使用排序的区间作为参数的算法&quot;&gt;&lt;a href=&quot;#使用排序的区间作为参数的算法&quot; class=&quot;headerlink&quot; title=&quot;使用排序的区间作为参数的算法&quot;&gt;&lt;/a&gt;使用排序的区间作为参数的算法&lt;/h3&gt;&lt;p&gt;有些算法既可以与排序的区间一起工作，也可以与未排序的区间一起工作，但是当它们作用在排序的区间上时，算法会更加有效。&lt;br&gt;首先，罗列出要求排序区间的STL算法:&lt;br&gt;binary_search, lower_bound, upper_bound, equal_range, set_union, set_intersection, set_difference, set_symmetric_difference, merge, inplace_merge, includes&lt;br&gt;还有一些算法并不一定要求排序的区间，但通常情况下会与排序区间一起使用。&lt;br&gt;unique, unique_copy&lt;br&gt;这其中，用于查找的算法binary_search, lower_bound, upper_bound, equal_range要求排序的区间，因为它们用二分法查找数据。&lt;br&gt;set_union, set_intersection, set_difference, set_symmetric_difference这四个算法提供了线性时间效率的集合操作。它们要求排序的区间，因为如果不满足，它们就无法在线性时间内完成工作。&lt;br&gt;merge和inplace_merge实际上实现了合并和排序的联合操作：它们读入两个排序的区间，然后合并成一个新的排序区间。如果源区间没有排过序，就不可能在线性时间内完成。&lt;br&gt;同样，includes也要求两个区间是排序的，承诺线性时间的效率。&lt;br&gt;而unique和unique_copy与上述讨论过的算法有所不同，它们即使对于未排序的区间也有很好的行为。以unique为例，unique用于删除区间中所有重复的元素，所以必须保证所有相等的元素都是连续存放的。因此，总是要确保传给unique的区间是排序的。&lt;br&gt;顺便提一下，unique使用了与remove类似的办法来删除区间中的元素，而并非真正意义上的删除。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;接着上一篇，对STL中非常有用而又容易犯错的一些算法做总结和记录。希望在后面的使用中更加注重STL算法。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
+    
+  </entry>
+  
+  <entry>
     <title>使用vector和string时需注意的问题</title>
-    <link href="http://blog.dujiong.net/2016/12/15/Effective-STL-1/"/>
-    <id>http://blog.dujiong.net/2016/12/15/Effective-STL-1/</id>
-    <published>2016-12-15T09:39:38.000Z</published>
-    <updated>2016-12-23T08:37:26.081Z</updated>
+    <link href="http://blog.dujiong.net/2016/12/19/Effective-STL-1/"/>
+    <id>http://blog.dujiong.net/2016/12/19/Effective-STL-1/</id>
+    <published>2016-12-19T09:39:38.000Z</published>
+    <updated>2016-12-29T07:24:51.233Z</updated>
     
     <content type="html">&lt;p&gt;随着对STL的频繁使用和着迷，越发意识到更深层次理解STL的重要性。使用STL正确得到结果是一回事，而高效地使用STL得到结果又是另一回事。因此，拿起了Scott Meyers大神的《Effective STL》，结合自己平时遇到的问题，作一些总结和记录。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h3 id=&quot;使用reserve避免不必要的重新分配&quot;&gt;&lt;a href=&quot;#使用reserve避免不必要的重新分配&quot; class=&quot;headerlink&quot; title=&quot;使用reserve避免不必要的重新分配&quot;&gt;&lt;/a&gt;使用reserve避免不必要的重新分配&lt;/h3&gt;&lt;p&gt;我们知道，STL容器最大的进步之一是它们会自动增长以便容纳下所放入的数据，只要没有超出它们的最大限制（可以使用max_size()成员函数查看）就可以。vector和string的增长过程是：&lt;br&gt;（1）分配一块大小为当前容量的某个倍数的新内存，在大多数实现中，vector和string的容量每次以2的倍数增长，即每当容器需要扩张时，它们的容量即加倍。&lt;br&gt;（2）把容器的所有元素从旧的内存复制到新的内存中。&lt;br&gt;（3）析构掉旧内存中的对象。&lt;br&gt;（4）释放旧内存。&lt;br&gt;可以看出，这个过程会非常耗时。因此，可以使用reserve成员函数来讲重新分配的次数减少到最低限度，从而避免了重新分配和迭代器/引用失效带来的开销。&lt;br&gt;因此，当一个元素需要被插入而容器的容量不够时，就会发生重新分配过程。比如：创建一个1到1000之间的vector&lt;int&gt;，如果采用这样的方式：&lt;/int&gt;&lt;/p&gt;
@@ -2345,40 +2415,6 @@ protected:
     
     
       <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>浅谈tcp backlog</title>
-    <link href="http://blog.dujiong.net/2016/09/28/tcp-backlog/"/>
-    <id>http://blog.dujiong.net/2016/09/28/tcp-backlog/</id>
-    <published>2016-09-28T13:42:51.000Z</published>
-    <updated>2016-09-20T15:49:44.450Z</updated>
-    
-    <content type="html">&lt;p&gt;熟悉Linux网络(socket)编程的同学应该都记得，在服务端建立监听套接字的API &lt;code&gt;int listen(int sockfd, int backlog)；&lt;/code&gt;中有一个参数backlog，通常称之为积压值。积压值用来描述一个固定长度的连接队列的大小，该队列用于TCP连接建立的过程中。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;h3 id=&quot;backlog的两种实现&quot;&gt;&lt;a href=&quot;#backlog的两种实现&quot; class=&quot;headerlink&quot; title=&quot;backlog的两种实现&quot;&gt;&lt;/a&gt;backlog的两种实现&lt;/h3&gt;&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/Ymk1keA.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;首先通过上图回顾一下TCP建立连接时的状态变化。由于TCP建立连接时使用三次握手，所以监听的服务端在回给客户端SYN+ACK之后，会进入SYN RECEIVED状态，这称之为半连接状态，而只有当收到客户端回送的ACK之后，才完成连接，进入ESTABLISHED状态，等待应用层处理。所以，TCP/IP协议栈有两种方式来实现这个连接队列：&lt;br&gt;（1）第一种是使用一个单一的队列，队列的大小由应用层listen函数的backlog参数确定，当收到一个SYN请求，服务端就回发给客户端SYN+ACK，并且将该连接加入到队列中。当客户端最后的ACK到来时，该连接的状态变为ESTABLISHED，并等待应用层处理。所以，这种实现方式下，队列中包含了两种状态的连接：SYN RECEIVED和ESTABLISHED。只有后一种状态的连接才可以从acception中返回，被应用层处理。&lt;br&gt;（2）另一种实现方式是使用两个队列，一个SYN队列（即半连接队列）和一个全连接队列（ACCEPT队列）。处于SYN RECEIVED状态的连接被加入到SYN队列中，当最后一个ACK到来时，改变状态并移动到全连接队列。所以，accept系统调用直接从全连接队列中取已完成的连接交给应用层处理。这时，listen函数中的backlog值决定了全连接队列的大小。&lt;br&gt;传统的基于BSD的TCP实现采用的是第一种方式，这种实现方式意味着，当队列满的时候，系统再收到SYN，将不会回发SYN+ACK。通常，TCP实现采用的是简单地丢弃SYN，让客户端重传，而不是回发RST。&lt;br&gt;在Linux系统中，backlog的实现形式分为两个阶段，在Linux2.2之前，内核采用的也是上述的方式，队列满之后，服务端再收到SYN时，将不会返回SYN/ACK，也不返回RST，让客户端重试。而在Linux2.2之后，内核选择第二种方式实现，SYN_RECEIVED队列的大小由/proc/sys/net/ipv4/tcp_max_syn_backlog系统参数指定，ESTABLISHED队列由backlog和/proc/sys/net/core/somaxconn中较小的指定。    &lt;/p&gt;
-&lt;h3 id=&quot;SYN队列和ACCEPT队列&quot;&gt;&lt;a href=&quot;#SYN队列和ACCEPT队列&quot; class=&quot;headerlink&quot; title=&quot;SYN队列和ACCEPT队列&quot;&gt;&lt;/a&gt;SYN队列和ACCEPT队列&lt;/h3&gt;&lt;p&gt;以下是操作系统维护两种队列处理TCP连接的示意图。 &lt;/p&gt;
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/sGEPFN7.jpg&quot; alt=&quot;&quot;&gt;&lt;br&gt;SYN队列和已完成队列是内核实现的，当服务器绑定、监听了某个端口后，这个端口的SYN队列和ACCEPT队列就建立好了。客户端使用connect向服务器发起TCP连接时，当SYN包到达服务器之后，内核会把这一报文放入SYN队列，同时回发一个SYN+ACK包给客户端。一段时间后，当三次握手最后的ACK到达服务器，内核会把连接从SYN队列中取出，再把这个连接放入ACCEPT队列（已完成队列）中。所以，服务器调用accept，其实就是直接从ACCEPT队列中取出已经建立成功的连接套接字。&lt;br&gt;当然，随之也产生了一些问题。因为SYN和ACCEPT队列都是有大小限制的，所以，二者都会存在队列满的时候。上图中，如果第一步执行的速度大于第二步执行的速度，SYN队列就会不断增大直到队列满；如果第二步执行的速度大于第三步执行的速度，ACCEPT队列同样会满。&lt;br&gt;当ACCEPT队列已满，这时SYN队列中的一个连接收到最后的ACK，需要移动到ACCEPT队列，会发生什么呢？&lt;br&gt;通过查看内核源码(net/ipv4/tcp_ipv4.c)可知，如果/proc/sys/net/ipv4/tcp_abort_on_overflow被置为1，内核将会回送RST包，否则，将会丢弃ACK，什么都不做。进一步地，当一定时间服务端还没有收到ACK（包括丢弃掉的ACK），将会重发SYN+ACK包（“指数退避”算法）。当客户端收到重发的SYN+ACK时，它便知道ACK包丢失了，需要重传。另一方面，当ACCEPT队列已满的时候，内核将会限制SYN队列的处理速度，如果收到太多的SYN队列，将会丢弃一些。这样，丢弃的SYN对应的客户端将会重发SYN包。&lt;br&gt;另一种情况，当SYN队列满的时候，会发生什么呢？上面已经阐述了，服务器端将会直接丢弃请求，即丢弃SYN网络包。       &lt;/p&gt;
-&lt;h3 id=&quot;TCP连接的一些异常情况&quot;&gt;&lt;a href=&quot;#TCP连接的一些异常情况&quot; class=&quot;headerlink&quot; title=&quot;TCP连接的一些异常情况&quot;&gt;&lt;/a&gt;TCP连接的一些异常情况&lt;/h3&gt;&lt;p&gt;针对上述的两个连接队列，有一些常见的连接异常情况。下面做一个简单总结。     &lt;/p&gt;
-&lt;h4 id=&quot;服务端SYN超时&quot;&gt;&lt;a href=&quot;#服务端SYN超时&quot; class=&quot;headerlink&quot; title=&quot;服务端SYN超时&quot;&gt;&lt;/a&gt;服务端SYN超时&lt;/h4&gt;&lt;p&gt;当客户端给服务端发送SYN报文时，如果服务端没有返回SYN+ACK报文，那么客户端会重发SYN报文给服务端，重发的次数由参数tcp_syn_retries参数设置，该值默认是5，超过5次服务端还是不返回SYN+ACK报文，那么本次连接失败。服务端没有返回SYN+ACK主要有两种情况，一种是由于网络问题SYN包丢失；另一种是服务端SYN队列满，导致SYN包被丢弃。                &lt;/p&gt;
-&lt;h4 id=&quot;客户端ACK超时&quot;&gt;&lt;a href=&quot;#客户端ACK超时&quot; class=&quot;headerlink&quot; title=&quot;客户端ACK超时&quot;&gt;&lt;/a&gt;客户端ACK超时&lt;/h4&gt;&lt;p&gt;如果服务端接到了客户端发的SYN并回发SYN+ACK后，客户端掉线了，这时，服务端没有收到客户端回来的ACK，那么，这个连接处于一个中间状态，既没成功也没失败。于是，服务端端如果在一定时间内没有收到客户端端的ACK，那么服务端端会重发SYN+ACK。在Linux下，默认重试次数为5次，重发的间隔时间从1s开始每次都翻番（指数退避），5次的重发的时间间隔分别1s, 2s, 4s, 8s, 16s，总共31s，第5次发出后还要等32s都知道第5次也超时了，所以，总共需要 1s+2s+4s+8s+16s+32s = 2^6-1 = 63s，TCP才会把断开这个连接。              &lt;/p&gt;
-&lt;h4 id=&quot;SYN-Flood&quot;&gt;&lt;a href=&quot;#SYN-Flood&quot; class=&quot;headerlink&quot; title=&quot;SYN Flood&quot;&gt;&lt;/a&gt;SYN Flood&lt;/h4&gt;&lt;p&gt;这时一种恶意攻击。客户端给服务器发一个SYN后就下线，这样服务器需要默认等待63s才会断开连接，这样攻击者就可以把服务器的SYN连接队列耗尽，让正常的连接请求不能处理。为了应对SYN Flood攻击，Linux实现了一种称为SYN cookie的机制，通过net.ipv4.tcp_syncookies来设置。当SYN队列满了后，TCP会通过源地址端口、目标地址端口和时间戳打造出一个特别的Sequence Number发回去（又叫cookie），如果是攻击者则不会有响应，如果是正常连接，则会把这个 SYN Cookie发回来，然后服务端可以通过cookie建连接（即使不在SYN队列中）。&lt;/p&gt;
-&lt;h3 id=&quot;TCP连接过程参数调优&quot;&gt;&lt;a href=&quot;#TCP连接过程参数调优&quot; class=&quot;headerlink&quot; title=&quot;TCP连接过程参数调优&quot;&gt;&lt;/a&gt;TCP连接过程参数调优&lt;/h3&gt;&lt;p&gt;下面罗列一些常用于TCP连接过程优化的参数。&lt;/p&gt;
-&lt;h4 id=&quot;tcp-max-syn-backlog&quot;&gt;&lt;a href=&quot;#tcp-max-syn-backlog&quot; class=&quot;headerlink&quot; title=&quot;tcp_max_syn_backlog&quot;&gt;&lt;/a&gt;tcp_max_syn_backlog&lt;/h4&gt;&lt;p&gt;SYN队列长度。如果服务器经常出现过载，可以尝试增加这个数字。   &lt;/p&gt;
-&lt;h4 id=&quot;tcp-synack-retries&quot;&gt;&lt;a href=&quot;#tcp-synack-retries&quot; class=&quot;headerlink&quot; title=&quot;tcp_synack_retries&quot;&gt;&lt;/a&gt;tcp_synack_retries&lt;/h4&gt;&lt;p&gt;连接被动打开方的确认连接的应答最大重试次数。对于一个新建连接，内核要发送多少SYN连接请求才决定放弃。&lt;/p&gt;
-&lt;h4 id=&quot;tcp-syn-retries&quot;&gt;&lt;a href=&quot;#tcp-syn-retries&quot; class=&quot;headerlink&quot; title=&quot;tcp_syn_retries&quot;&gt;&lt;/a&gt;tcp_syn_retries&lt;/h4&gt;&lt;p&gt;连接主动打开方的syn尝试次数。&lt;/p&gt;
-&lt;h4 id=&quot;tcp-syncookies&quot;&gt;&lt;a href=&quot;#tcp-syncookies&quot; class=&quot;headerlink&quot; title=&quot;tcp_syncookies&quot;&gt;&lt;/a&gt;tcp_syncookies&lt;/h4&gt;&lt;p&gt;防止SYN Flood攻击。    &lt;/p&gt;
-&lt;h4 id=&quot;tcp-abort-on-overflos&quot;&gt;&lt;a href=&quot;#tcp-abort-on-overflos&quot; class=&quot;headerlink&quot; title=&quot;tcp_abort_on_overflos&quot;&gt;&lt;/a&gt;tcp_abort_on_overflos&lt;/h4&gt;&lt;p&gt;ACCEPT队列满，处理不过来的时候，如果设置了该参数，内核将会回发RST包。&lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;熟悉Linux网络(socket)编程的同学应该都记得，在服务端建立监听套接字的API &lt;code&gt;int listen(int sockfd, int backlog)；&lt;/code&gt;中有一个参数backlog，通常称之为积压值。积压值用来描述一个固定长度的连接队列的大小，该队列用于TCP连接建立的过程中。&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="network/linux" scheme="http://blog.dujiong.net/tags/network-linux/"/>
     
   </entry>
   
