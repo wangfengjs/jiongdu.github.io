@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2016-12-29T13:46:36.245Z</updated>
+  <updated>2017-01-03T06:05:53.135Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -14,6 +14,115 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>更好地使用STL关联容器</title>
+    <link href="http://blog.dujiong.net/2016/12/23/Effective-STL-3/"/>
+    <id>http://blog.dujiong.net/2016/12/23/Effective-STL-3/</id>
+    <published>2016-12-23T02:13:50.000Z</published>
+    <updated>2017-01-03T06:05:53.135Z</updated>
+    
+    <content type="html">&lt;p&gt;在STL的使用过程中，一直对关联容器掌握的不够熟练。这一篇就来总结下使用关联容器时的一些注意问题。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&quot;理解等价关系&quot;&gt;&lt;a href=&quot;#理解等价关系&quot; class=&quot;headerlink&quot; title=&quot;理解等价关系&quot;&gt;&lt;/a&gt;理解等价关系&lt;/h3&gt;&lt;p&gt;在STL中，对两个对象进行比较，看它们的值是否相等，这样的操作随处可见。在实际操作中，相等的概念是基于operator==的。如果表达式“x==y”返回真，则x和y的值相等。&lt;br&gt;等价关系是以“在以排序的区间中对象值的相对顺序”为基础的。如果从每个标准关联容器的排列顺序来考虑等价关系，那么这将是非常有意义的。对于两个对象x和y，如果按照关联容器c的排列顺序，每个都不在另一个的前面，那么称这两个对象按照c的排列顺序由等价的值。&lt;br&gt;下面以一个实例进行说明：    &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;bool ciCharLess(char c1, char c2){
+    return tolower(static_cast&amp;lt;unsigned char&amp;gt;(c1))&amp;lt;tolower(static_cast&amp;lt;unsigned char&amp;gt;(c2));
+}
+
+bool ciStringCompare(const string&amp;amp; s1, const string&amp;amp; s2){
+    return lexicographical_compare(s1.begin(), s1.end(), s2.begin(), s2.end(), ciCharLess);
+}
+
+struct CIStringCompare : public binary_function&amp;lt;string, string, bool&amp;gt;{
+    bool operator()(const string&amp;amp; lhs, const string&amp;amp; rhs){
+        return ciStringCompare(lhs, rhs); 
+    }
+}
+
+int main()
+{
+    set&amp;lt;string, CIStringCompare&amp;gt; s;
+    s.insert(&amp;quot;STL&amp;quot;);
+    s.insert(&amp;quot;stl&amp;quot;);
+
+    for(auto n:s){
+        cout &amp;lt;&amp;lt; n &amp;lt;&amp;lt; endl;            //STL
+    }
+
+    if(s.find(&amp;quot;stl&amp;quot;)!=s.end()){
+        cout &amp;lt;&amp;lt; &amp;quot;success&amp;quot; &amp;lt;&amp;lt; endl;        //success
+    }else{
+        cout &amp;lt;&amp;lt; &amp;quot;fail&amp;quot; &amp;lt;&amp;lt; endl;
+    }
+    if(std::find(s.begin(), s.end(), &amp;quot;stl&amp;quot;)!=s.end()){
+        cout &amp;lt;&amp;lt; &amp;quot;success&amp;quot; &amp;lt;&amp;lt; endl;
+    }else{
+        cout &amp;lt;&amp;lt; &amp;quot;fail&amp;quot; &amp;lt;&amp;lt; endl;            //fail
+    }
+    return 0;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;s是一个不区分大小写的set&lt;string&gt;，即当set的比较函数忽略字符串中字符的大小写时的set&lt;string&gt;。这样一个比较函数将把“STL”和“stl”看做是等价的。因此，在先后插入“STL”和“stl”时，只有“STL”会成功插入。如果使用set的find成员函数来查找“stl”时，该查找会成功；而如果是使用非成员的find算法，则查找将失败。因为“STL”和“stl”是等价的。顺便说一句，该例子从一个方面解释了为什么应该优先选用成员函数而不是与之对应的非成员函数。&lt;/string&gt;&lt;/string&gt;&lt;/p&gt;
+&lt;h3 id=&quot;为包含指针的关联容器指定比较类型&quot;&gt;&lt;a href=&quot;#为包含指针的关联容器指定比较类型&quot; class=&quot;headerlink&quot; title=&quot;为包含指针的关联容器指定比较类型&quot;&gt;&lt;/a&gt;为包含指针的关联容器指定比较类型&lt;/h3&gt;&lt;p&gt;假如有一个包含string*指针的set，把一些动物的名字插入到该集合中：     &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;set&amp;lt;string*&amp;gt; ssp;
+ssp.insert(new string(&amp;quot;Anteater&amp;quot;));
+ssp.insert(new string(&amp;quot;Wombat&amp;quot;));
+ssp.insert(new string(&amp;quot;Lemur&amp;quot;));
+ssp.insert(new string(&amp;quot;Penguin&amp;quot;));
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;因为集合中所包含的是指针，所以，可能会想到使用下面的代码来打印出动物的名字：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;for(set&amp;lt;string*&amp;gt;::const_iterator i=ssp.begin(); i!=ssp.end(); ++i){
+    cout &amp;lt;&amp;lt; **i &amp;lt;&amp;lt; endl;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;没错，动物的名称会被打印出来，但它们以字母顺序出现的概率仅为1/24。ssp会按顺序保存它的内容，但因为它包含的是指针，所以会按指针的值而不是按字符串的值进行排序，4个指针的值共有24个可能的排列方式，所以对要存储的指针会有24种可能的排列。&lt;br&gt;为了解决这个问题，需要知道set&lt;string\*&gt; ssp是如下代码set&lt;string\*,less&lt;string*&gt;&amp;gt; ssp的缩写，当然，更精确的讲是set&lt;string\*,less&lt;string\*&gt;,allocator&lt;string\*&gt;&amp;gt;的缩写，只是这里不考虑分配子的影响。&lt;br&gt;因此，如果想让string*指针在集合中按字符串的值排序，那么不能使用默认的比较函数子类。必须自己编写比较函数子类。        &lt;/string\*&gt;&lt;/string\*,less&lt;string\*&gt;&lt;/string\*,less&lt;string*&gt;&lt;/string\*&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;struct StringPtrLess : public binary_function&amp;lt;const string*, const string*, bool&amp;gt;{
+    bool operator() (const string* s1, const string* s2) const{
+        return *s1 &amp;lt; *s2;
+    }
+};  
+
+set&amp;lt;string*, StringPtrLess&amp;gt; ssp;
+
+/*
+void print(const string* ps){
+    cout &amp;lt;&amp;lt; *ps &amp;lt;&amp;lt; endl;
+}
+
+for_each(ssp.begin(), ssp.end(), print);
+*/
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;现在上述的打印循环可以做到预期的事情了。&lt;br&gt;所以，当需要创建包含指针的关联容器时，容器将会按照指针的值进行排序。绝大多数情况下，这不会是所希望的，这种情况下，几乎肯定要创建自己的函数子类作为该关联容器的比较类型。&lt;/p&gt;
+&lt;h3 id=&quot;考虑用排序的vector替代关联容器&quot;&gt;&lt;a href=&quot;#考虑用排序的vector替代关联容器&quot; class=&quot;headerlink&quot; title=&quot;考虑用排序的vector替代关联容器&quot;&gt;&lt;/a&gt;考虑用排序的vector替代关联容器&lt;/h3&gt;&lt;p&gt;个人使用STL的经历中，当需要一个可提供快速查找功能的数据结构时，都会立刻想到标准关联容器，即set、multiset、map和multimap。但是，它们并不总是适合的。比如，如果查找速度真的很重要，那么，非标准的散列容器（unordered_map等）几乎是值得考虑的。因为通过适当的散列函数，散列容器几乎能提供常数时间的查找能力，优于set、multiset、map和multimap的确定的对数时间查找能力。&lt;br&gt;但是，即使确定的对数时间查找能力满足需求，标准关联容器可能也不是最好的选择。标准关联容器的效率比vector还低的情况并不少见。标准关联容器通常被实现为平衡的二叉查找树。二叉查找树这种数据结构对插入、删除和查找的混合操作做了优化，也就是，它所适合的那些应用程序的主要特征是插入、删除和查找混在一起。即没办法预测出针对这棵树的下一个操作是什么。&lt;br&gt;而还有很多应用程序使用其数据结构的方式并不这么混乱。它们使用其数据结构的过程可以明显地分为三个阶段：&lt;br&gt;（1）设置阶段。创建新的数据结构，并插入大量元素。&lt;br&gt;（2）查找阶段。查询该数据结构以找到特定的信息。&lt;br&gt;（3）重组阶段。改变该数据结构的内容。&lt;br&gt;对于以这种方式使用其数据结构的应用程序来说，vector可能比关联容器提供了更好的性能。但是不是任意的vector，而必须是排序的vector，因为只有对排序的容器才能够正确地使用查找算法binary_search、lower_bound和equal_range等。&lt;br&gt;那么，为什么通过排序的vector执行的二分搜索，比通过二叉查找树执行的二分搜索具有更好的性能呢？&lt;br&gt;其原因主要是：关联容器几乎肯定在使用平衡二叉树。这就意味着在一个关联容器中存储一个类型所伴随的空间开销至少是三个指针（父指针，左儿子，右儿子）。相反，存储在vector中则不会有任何的额外开销；只是简单地存储一个类型。&lt;br&gt;当然，对于排序的vector，最不利的地方在于它必须保持有序！当一个新的元素被插入时，新元素之后的所有元素都必须向后移动一个元素的位置。当一个元素从vector中删除了，则在它之后的所有元素也都要向前移动。插入和删除操作对于vector来说是昂贵的，但对于关联容器却是廉价的。这就是为什么当“对数据结构的使用方式是：查找操作几乎从不跟插入和删除操作混在一起”时，再考虑使用排序的vector而不是关联容器才是合理的。     &lt;/p&gt;
+&lt;h3 id=&quot;在map-operator-和map-insert之间选择&quot;&gt;&lt;a href=&quot;#在map-operator-和map-insert之间选择&quot; class=&quot;headerlink&quot; title=&quot;在map::operator[]和map::insert之间选择&quot;&gt;&lt;/a&gt;在map::operator[]和map::insert之间选择&lt;/h3&gt;&lt;p&gt;map的operator[]函数与众不同。它与vector、deque和string的operator[]函数无关，与用于数组的内置operator[]也没有关系。相反，map::operator[]的设计目的是为了提供“添加和更新”的功能，也就是说，对于map&lt;k,v&gt; m；来说，表达式m[k]=v;检查键k是否已经在map中了，如果没有，它就被加入，并以v作为相应的值。如果k已经在映射表中了，则与之关联的值被更新为v。&lt;br&gt;下面以一个例子来说明：      &lt;/k,v&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;class Widget {
+    public:
+        Widget();
+        Widget(double weight);
+        Widget&amp;amp; operator=(double weight);
+    private:
+        double weight_;
+    ...        
+};
+
+map&amp;lt;int, Widget&amp;gt; m;
+m[1]=1.50;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;表达式m[1]是m.operator[](1)的缩写形式，即对map::operator[]的调用。该函数必须返回一个指向Widget的引用，因为m所映射的值类型是Widget。这时，m中什么都没有，所以键1没有对应的值对象。因此，operator[]默认构造了一个Widget，作为与1相关联的值，然后返回一个指向该Widget的引用。最后，这个Widget成了赋值的目标。因此，m[1]=1.50在功能上等价于以下代码：      &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;typedef map&amp;lt;int, Widget&amp;gt; IntWidgetMap;
+
+pair&amp;lt;IntWidgetMap::iterator, bool&amp;gt; result = m.insert(IntWidgetMap::value_type(1, Widget()));
+
+result.first-&amp;gt;second = 1.50;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;因此，使用operator[]会降低效率。因为我们先默认构造了一个Widget，然后立刻赋给它新的值。而如果我们换成对insert的直接调用：    &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;m.insert(IntWidgetMap::value_type(1, 1.50));
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;最终效果和前面相同，但是它通常会节省三个函数调用：一个用于创建默认构造的临时Widget对象，一个用于析构该临时对象，还有一个是调用Widget的赋值描述符。&lt;br&gt;而operator[]的设计目的是为了提供“添加和更新”的功能，现在我们已经知道，当做为“添加”操作时，insert比operator[]效率更高，而当我们做更新操作时，即当一个等价的键已经在映射表中时，形势就反过来了。因为调用insert时，必须构造和析构一个pair类型的对象，需要付出一个pair构造函数和一个pair析构函数的代价。而这又会导致对Widget的构造和析构动作。而operator[]不使用pair对象，所以它不会构造和析构任何pair或Widget。&lt;br&gt;总结：当向映射表中添加元素时，优先选用insert而不是operator[]；而当更新已经在映射表中的元素的值时，要优先选择operator[]。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在STL的使用过程中，一直对关联容器掌握的不够熟练。这一篇就来总结下使用关联容器时的一些注意问题。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
+    
+  </entry>
   
   <entry>
     <title>使用STL算法时需注意的问题</title>
@@ -2198,218 +2307,6 @@ struct iterator_traits&amp;lt;T*&amp;gt;{
     <summary type="html">
     
       &lt;p&gt;我们知道，STL的中心思想在于：将数据容器和算法分开，彼此独立设计，最后再以一帖胶着剂将他们撮合在一起。容器和算法的泛型化，可分别通过C++的class templates和function templates达成目标，而如何设计出两者之间的良好胶着剂，是一个值得深究的问题。本文所要学习的迭代器（iterator）就是在STL中扮演粘胶的角色。&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>C++ STL空间配置器</title>
-    <link href="http://blog.dujiong.net/2016/10/09/STL-allocator/"/>
-    <id>http://blog.dujiong.net/2016/10/09/STL-allocator/</id>
-    <published>2016-10-09T05:54:15.000Z</published>
-    <updated>2016-10-13T11:18:08.167Z</updated>
-    
-    <content type="html">&lt;p&gt;最近准备结合《STL源码剖析》把学习的STL知识整理一遍，加深自己的理解的同时，也方便以后需要的时候查看。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;br&gt;首先总结的是STL中的内存分配—空间配置器，从STL的运用角度而言，空间配置器是最不需要介绍的东西，因为用户使用过程中不会直接与其打交道，但是，从STL的实现角度看，空间配置器又是最重要的知识点之一，因为整个STL的操作对象都存放在容器之内，而容器一定需要配置空间以放置数据。&lt;br&gt;C++ STL配置器分为两层配置器，当请求的内存大于128bytes时，视为“足够大”，用第一层配置器分配内存，当请求的内存小于128bytes时，视为“过小”，调用第二级配置器，第二级配置器采用复杂的内存池整理方式，而不再求助于第一级配置器。&lt;/p&gt;
-&lt;h3 id=&quot;第一级配置器&quot;&gt;&lt;a href=&quot;#第一级配置器&quot; class=&quot;headerlink&quot; title=&quot;第一级配置器&quot;&gt;&lt;/a&gt;第一级配置器&lt;/h3&gt;&lt;p&gt;首先来看下主要的源代码：     &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;template &amp;lt;int inst&amp;gt;
-class __malloc_alloc_template{
-private:
-    static void *oom_malloc(size_t);    //malloc调用内存不足
-    static void *oom_realloc(void*, size_t);    //realloc调用内存不足
-    static void (*__malloc_alloc_oom_handler)();    //错误处理函数
-public:
-    static void* allocate(size_t){
-        void *result = malloc(n);        //第一级配置器直接调用malloc()
-        if(0 == result) result = oom_malloc(n);
-        return result;
-    }
-    static void* deallocate(void *p, size_t){
-        free(p);            
-    }
-    static void *reallocate(void *p, size_t/* old_sz */, size_t new_sz){
-        void *result = realloc(p, new_sz);    //第一级配置器直接调用realloc()
-        if(0 == result) result = oom_realloc(p, new_sz);
-        return result;    
-    }
-    static void (*set_malloc_handler(void (*f)()))(){    //设置错误处理函数
-        void (* old)() = __malloc_alloc_oom_handler;
-        __malloc_alloc_oom_handler = f;
-        return(old);    
-    }
-};
-
-template &amp;lt;int inst&amp;gt;
-void* __malloc_alloc_template&amp;lt;inst&amp;gt;::oom_alloc(size_t n){
-    void (* my_alloc_handler)();     //声明函数指针
-    void *result;                     //返回的内存指针
-    for(;;){                          //循环，直到成功
-        my_alloc_handler = __malloc_alloc_oom_handler;    
-        if(0 == my_alloc_handler){ __THROW_BAD_ALLOC; }        //抛出异常
-        (*my_alloc_handler)();
-        result = malloc(n);            //再重新分配内存
-        if(result) return(result);        
-    }
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;第一级配置器相对简单，其使用malloc(), free(), realloc()等C函数执行实际的内存分配，释放，重新配置等操作。此外，这个配置器提供了当内存配置错误时的处理函数oom&lt;em&gt;malloc，这个函数会调用\&lt;/em&gt;_malloc_alloc_oom_handler()这个错误处理函数，去企图释放内存，然后重新调用malloc分配内存。如此循环，直到分配成功，返回指针。&lt;/p&gt;
-&lt;h3 id=&quot;第二级配置器&quot;&gt;&lt;a href=&quot;#第二级配置器&quot; class=&quot;headerlink&quot; title=&quot;第二级配置器&quot;&gt;&lt;/a&gt;第二级配置器&lt;/h3&gt;&lt;p&gt;STL第二级配置器的做法是，如果区块够大，超过128bytes时，就移交第一级配置器处理。当区块小于128bytes时，则以内存池管理，即每次配置一大块内存，并维护对应之自由链表，下次若再有相同大小的内存需求，就直接从free lists中拔出，而如果客户端释还小额区块，就由配置器回收到free lists中。&lt;br&gt;为了方便管理，SGI第二级配置器会主动将任何小额区块的内存需求量上调至8的倍数（例如客端要求30bytes，就会自动调整为32bytes），并维护16个free lists，各自管理大小分别为8,16,24,32,40,48,56,64,72,80,88,96,104,112,120,128的小额区块。&lt;br&gt;free-lists的节点结构定义如下：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;union obj {
-    union obj *free_list_link;     //指向下一个内存的地址
-    char client_data[1];           //内存的首地址 
-};
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;根据union的特性，obj的内存布局应该如下所示：&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/IE7fZAU.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;从起第一字段观之，obj被视为一个指针，指向相同形式的另一个obj，从其第二字段观之，obj可被视为一个指针，指向实际区块。这样一物二用的结果是，不会为了维护链表所必须的指针而造成内存的另一种浪费。&lt;br&gt;下面来看一下相关的源代码。   &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;enum {__ALIGN = 8}；
-enum {__MAX_BYTES = 128};
-enum {__NFREELISTS = __MAX_BYTES/__ALIGN};
-
-template &amp;lt;bool threads, int inst&amp;gt;
-class __default_alloc_template{
-    ...
-    static size_t ROUND_UP(size_t bytes){        //将bytes上调至8的倍数
-        return (((bytes)+__ALIGN-1) &amp;amp; ~(__ALIGN-1));
-    }
-    static obj* volatile free_list[__NFREELISTS];    //内存池链表
-    static size_t FREELIST_INDEX(size_t bytes){    
-        return (((bytes)+__ALIGN-1)/__ALIGN-1);        //根据区块大小，决定使用第n号free-list
-    }
-    ...    
-};
-
-static void* allocate(size_t n){
-    obj * volatile * my_free_list;
-    obj * result;
-    if(n &amp;gt; (size_t)__MAX_BYTES){
-        return (malloc_alloc::allocate(n));
-    }
-    my_free_list = free_list + FREELIST_INDEX(n);    //寻找合适的那个free_list
-    result = *my_free_list;
-    if(result == 0){        //没找到可用的free_list,准备重新填充free_list
-        void* r = refill(ROUND_UP(n));
-        return r;
-    }
-    *my_free_list = result-&amp;gt;free_list_link;        //调整free_list
-    return (result);
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;具体操作如下图所示（摘自《STL源码剖析》）。当有内存请求到达时（第二级配置器），先找到负责这个内存大小的数据元素指向的内存链表，取出第一块内存，然后把数据元素(obj指针)指向第二块内存的首地址。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/VrO5VMA.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;此外，当程序释放这块内存时，第二级配置器还负责回收这块内存，等下次有请求时，可以直接使用这块内存。示意图（摘自《STL源码剖析》）如下：&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/um5jnaS.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;先计算这块内存属于哪个数组元素负责，然后将这块回收的内存放置链表的第一个位置，这块内存的下一块内存为这个链表原先的第一块内存。源代码如下；&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;static void deallocate(void *p, size_t n){
-    obj *q = (obj *)p;
-    obj * volatile * my_free_list;
-
-    if(n &amp;gt; (size_t)__MAX_BYTES) {    //大于128bytes,调用第一级配置器回收
-        malloc_alloc::deallocate(p, n);
-        return;
-    }
-    my_free_list = free_list + FREELIST_INDEX(n);    //找到负责这块内存的数据元素
-    q -&amp;gt;free_list_link = *my_free_list;         
-    *my_free_list = q;
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;重新填充free-lists&quot;&gt;&lt;a href=&quot;#重新填充free-lists&quot; class=&quot;headerlink&quot; title=&quot;重新填充free lists&quot;&gt;&lt;/a&gt;重新填充free lists&lt;/h3&gt;&lt;p&gt;在上面的allocate()中，当发现free list中没有可用区块了时，就调用refill()，准备为free list重现填充空间。新的空间将取自内存池（经由chunk_alloc()完成）。缺省取得20个新节点（新区块），但万一内存池空间不足，获得的区块数可能小于20。例如，如果请求内存为32bytes，此时内存链表中没有足够的内存了，那么refill会分配20块32bytes的内存块，然后把第一块返回给程序，其他19块由数组相应链表管理。相应的源代码为：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;template &amp;lt;bool threads, int inst&amp;gt;
-void* __default_alloc_template&amp;lt;threads, inst&amp;gt;::refill(size_t n){
-    int nobjs = 20;
-    char *chunk = chunk_alloc(n, nobjs);   //nobjs: pass by reference
-    obj * volatile * my_free_list;
-    obj * result;
-    obj * current_obj, next_obj;
-    int i;
-
-    if(1 == nodejs) return chunk;    //如果只返回一块内存，直接返回
-    my_free_list = free_list + FREELIST_INDEX(n);
-
-    result = (obj*)chunk;        //不止一块内存，取出第一块内存
-    *my_free_list = next_obj = (obj *)(chunk + n );   //数组元素链表指针指向第二块内存
-    for(i=1; ;i++){
-        curent_obj = next_obj;
-        next_obj = (*obj)((char*)next_obj+n);
-        if(nobjs - 1 ==i){
-            current_obj-&amp;gt;free_list_link = 0;
-            break;
-        }else{
-            current_obj-&amp;gt;free_list_link = next_obj;
-        }
-    }
-    return(result);
-}            
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;接下来分析真正从内存池获取内存的函数chunk_alloc。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;template &amp;lt;bool threads, int inst&amp;gt;
-char* __default_alloc_template&amp;lt;threads, inst&amp;gt;::chunk_alloc(size_t size, int&amp;amp; nobjs){
-    char* result;
-    size_t total_bytes = size * nobjs;
-    size_t bytes_left = end_free - start_free;        //内存池剩余的内存
-
-    if(bytes_left &amp;gt;= total_bytes){        //当内存持内存足够时
-        result = start_free;
-        start_free += total_free;
-        return(result);
-    }else if(bytes_left &amp;gt;= size){        //内存池不能满足total，但是可以满足一块以上
-        nobjs = bytes_left/size;
-        total_bytes = size * nobjs;
-        result = start_free;
-        start_free += total_bytes;
-        return(result);
-    }else{                //试着让内存池的残余零头还有利用价值
-        size_t bytes_to_get = 2*total_bytes + ROUND_UP(heap_size &amp;gt;&amp;gt; 4);
-        if(bytes_left &amp;gt; 0){
-            obj * volatile * my_free_list = free_list + FREELIST_INDEX(bytes_left);
-            ((obj *)start_free) -&amp;gt; free_list_link = *my_free_list;    //调整free list，将内存池中的残余空间编入
-            *my_free_list = (*obj)start_free;
-        }
-        //调用malloc从内存分配
-        start_free = (char*)malloc(bytes_to_get);
-        if(0 == start_free){                //当系统内存不足时
-            int i;
-            obj * volatile * my_free_list, *p;
-            for(i=size;i&amp;lt;=__MAX_BYTES;i+=__ALIGN){
-                my_free_list = free_list + FREELIST_INDEX(i);
-                p = *my_free_list;
-                if(0 != p){
-                    *my_free_list = p-&amp;gt;free_list_link;
-                    start_free = (char*)p;
-                    end_free = start_free + i;
-                    return(chunk_alloc(size, nobjs));
-                }
-            }
-            end_free = 0;        //从其他链表也没获取到内存，到处都没内存可用了
-            start_free = (char*)malloc_alloc::allocate(byte_to_get);        //调用第一级配置器，因为有错误处理函数，最后的补救办法了
-        }
-        heap_size += bytes_to_get;
-        end_free = start_free + bytes_to_get;
-        return(chunk_alloc(size, nobjs));
-    }
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;chunk_alloc()函数以end_free-start_free来判断内存池的水量，如果水量充足，就直接调出20个区块返回给free list，如果水量不足以提供20个区块，但还足够供应一个以上的区块，就拨出这不足20个区块的空间出去，这时候pass by reference的nobjs参数被修改为实际能够供应的区块数。如果内存池连一个区块空间都无法供应，此时便利用malloc()从heap中配置内存，为内存注入源头活水以应付需求。其过程如下图所示：&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/SCDG2Gu.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
-&lt;h3 id=&quot;对象内容的构造与析构&quot;&gt;&lt;a href=&quot;#对象内容的构造与析构&quot; class=&quot;headerlink&quot; title=&quot;对象内容的构造与析构&quot;&gt;&lt;/a&gt;对象内容的构造与析构&lt;/h3&gt;&lt;p&gt;我们知道，C++中的new操作符包含两阶段的操作：（1）调用::operator new配置内存；（2）调用构造函数构造对象内容，所以，为了精密分工，STL allocator决定将这两阶段 操作区分开来，内存配置操作由alloc::allocate()负责，对象构造函数由::construct()负责。同理，对象的析构与内存释放也是由两部分操作组成。&lt;/p&gt;
-&lt;h3 id=&quot;使用配置器&quot;&gt;&lt;a href=&quot;#使用配置器&quot; class=&quot;headerlink&quot; title=&quot;使用配置器&quot;&gt;&lt;/a&gt;使用配置器&lt;/h3&gt;&lt;p&gt;最后，来看下配置器是如何使用的。      &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;template&amp;lt;class T, class Alloc&amp;gt;
-class simple_alloc {
-public:
-    static T *allocate(size_t n)
-        { return 0 == n ? 0 : (T*)Alloc::allocate(n * sizeof(T)); }
-    static T *allocate(void)
-        { return 0 == n ? 0 : (T*)Alloc::allocate(sizeof(T)); }
-    static void deallocate(T* p, size_t n)
-        { if(0 != n) Alloc::deallocate(p, n * sizeof(T)); }
-    static void deallocate(T* p)
-        { Alloc::deallocate(p, sizeof(T)); }
-};        
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;simple_alloc类封装了Alloc的分配和回收内存函数，并提供了四个用于内存操作的函数接口。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;template &amp;lt;class T, class Alloc = alloc&amp;gt;        //alloc被默认为第二级配置器
-class vector{
-public:
-    typedef T value_type;
-    ...
-protected:
-    typedef simple_alloc&amp;lt;value_type, Alloc&amp;gt; data_allocator;    
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;可以看出，vector内嵌了data_allocator类型，当需要分配内存时，调用simple_alloc的成员方法即可。&lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;最近准备结合《STL源码剖析》把学习的STL知识整理一遍，加深自己的理解的同时，也方便以后需要的时候查看。&lt;br&gt;
     
     </summary>
     
