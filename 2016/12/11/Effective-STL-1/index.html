@@ -41,7 +41,7 @@
 <link href="/css/main.css?v=0.5.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="openwrt/wifi," />
+  <meta name="keywords" content="C++," />
 
 
 
@@ -59,16 +59,21 @@
 
 
 
-<meta name="description" content="Dumb APDumb AP，简单说，就是将路由器作为一个纯接入点，没有路由转发，没有DHCP。这时的路由器相当于一台二层交换机，没有三层功能。所以，实验环境中，将Dumb AP连接在上级路由器下，子网段为192.168.1.1/24。">
+<meta name="description" content="随着对STL的频繁使用和着迷，越发意识到更深层次理解STL的重要性。使用STL正确得到结果是一回事，而高效地使用STL得到结果又是另一回事。因此，拿起了Scott Meyers大神的《Effective STL》，结合自己平时遇到的问题，作一些总结和记录。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="配置OpenWrt路由器为Dumb AP">
-<meta property="og:url" content="http://blog.dujiong.net/2016/03/15/dumbap/index.html">
+<meta property="og:title" content="使用vector和string时需注意的问题">
+<meta property="og:url" content="http://blog.dujiong.net/2016/12/11/Effective-STL-1/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="Dumb APDumb AP，简单说，就是将路由器作为一个纯接入点，没有路由转发，没有DHCP。这时的路由器相当于一台二层交换机，没有三层功能。所以，实验环境中，将Dumb AP连接在上级路由器下，子网段为192.168.1.1/24。">
-<meta property="og:updated_time" content="2016-07-21T08:44:05.172Z">
+<meta property="og:description" content="随着对STL的频繁使用和着迷，越发意识到更深层次理解STL的重要性。使用STL正确得到结果是一回事，而高效地使用STL得到结果又是另一回事。因此，拿起了Scott Meyers大神的《Effective STL》，结合自己平时遇到的问题，作一些总结和记录。">
+<meta property="og:image" content="http://i.imgur.com/5ySzRwe.png">
+<meta property="og:image" content="http://i.imgur.com/NhnOLNi.png">
+<meta property="og:image" content="http://i.imgur.com/pdowvMe.png">
+<meta property="og:image" content="http://i.imgur.com/dD1svMe.png">
+<meta property="og:updated_time" content="2017-01-03T02:05:31.993Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="配置OpenWrt路由器为Dumb AP">
-<meta name="twitter:description" content="Dumb APDumb AP，简单说，就是将路由器作为一个纯接入点，没有路由转发，没有DHCP。这时的路由器相当于一台二层交换机，没有三层功能。所以，实验环境中，将Dumb AP连接在上级路由器下，子网段为192.168.1.1/24。">
+<meta name="twitter:title" content="使用vector和string时需注意的问题">
+<meta name="twitter:description" content="随着对STL的频繁使用和着迷，越发意识到更深层次理解STL的重要性。使用STL正确得到结果是一回事，而高效地使用STL得到结果又是另一回事。因此，拿起了Scott Meyers大神的《Effective STL》，结合自己平时遇到的问题，作一些总结和记录。">
+<meta name="twitter:image" content="http://i.imgur.com/5ySzRwe.png">
 
 
 
@@ -86,7 +91,7 @@
   };
 </script>
 
-  <title> 配置OpenWrt路由器为Dumb AP | 一期一会 </title>
+  <title> 使用vector和string时需注意的问题 | 一期一会 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -246,7 +251,7 @@
             
             
               
-                配置OpenWrt路由器为Dumb AP
+                使用vector和string时需注意的问题
               
             
           </h1>
@@ -258,8 +263,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-03-15T21:21:29+08:00" content="2016-03-15">
-              2016-03-15
+            <time itemprop="dateCreated" datetime="2016-12-11T17:39:38+08:00" content="2016-12-11">
+              2016-12-11
             </time>
           </span>
 
@@ -269,8 +274,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/03/15/dumbap/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/03/15/dumbap/" itemprop="commentsCount"></span>
+                <a href="/2016/12/11/Effective-STL-1/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/12/11/Effective-STL-1/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -292,16 +297,37 @@
       
 
       
-        <h2 id="Dumb-AP"><a href="#Dumb-AP" class="headerlink" title="Dumb AP"></a>Dumb AP</h2><p>Dumb AP，简单说，就是将路由器作为一个纯接入点，没有路由转发，没有DHCP。这时的路由器相当于一台二层交换机，没有三层功能。所以，实验环境中，将Dumb AP连接在上级路由器下，子网段为192.168.1.1/24。<br><a id="more"></a></p>
-<h2 id="配置Dumb-AP"><a href="#配置Dumb-AP" class="headerlink" title="配置Dumb AP"></a>配置Dumb AP</h2><h3 id="修改网络配置文件-etc-config-network"><a href="#修改网络配置文件-etc-config-network" class="headerlink" title="修改网络配置文件(/etc/config/network)"></a>修改网络配置文件(/etc/config/network)</h3><p>修改OpenWrt的网络配置文件，将wan口和lan口桥接起来:<br><code>config interface lan</code><br>    <code>option type &#39;bridge&#39;</code><br>    <code>option ifname &#39;eth0.1 eth0.2&#39;</code>  ##将二者桥接<br>    <code>option proto static</code><br>    <code>option ipaddr &#39;192.168.1.196&#39;</code>  ##采用静态ip<br>    <code>option netmask 255.255.255.0</code><br>然后注释掉路由器关于wan口的设置，包括ipv4和ipv6。<br>需要说明的是，上述的配置文件中桥接的而是eth0.1和eth0.2，但事实上路由器的接口不尽相同，比如有的wan口事实上是eth1。所以，需要因地制宜。</p>
-<h3 id="关掉DHCP"><a href="#关掉DHCP" class="headerlink" title="关掉DHCP"></a>关掉DHCP</h3><p>因为这里将路由器作为Dumb AP使用，作为一个纯无线接入点和交换机使用，不再需要其DHCP功能，所以关掉DHCP。<br>可以通过uci或者是修改配置文件(/etc/config/dhcp)设置DHCP。这里采用的是后者，即注释掉文件中lan口dhcp配置相关的设置。<br><code>#config dhcp &#39;lan&#39;</code><br>    <code>#option interface &#39;lan&#39;</code><br>    <code>#option dhcpv6 &#39;server&#39;</code><br>    <code>#option ra &#39;server&#39;</code><br>    <code>#option ignore &#39;1&#39;</code><br>    <code>#option ra_management &#39;1&#39;</code> </p>
-<h3 id="关掉防火墙"><a href="#关掉防火墙" class="headerlink" title="关掉防火墙"></a>关掉防火墙</h3><p>某些情况下，需要关闭防火墙，同样的，修改配置文件/etc/config/firewall，将相应的REJECT改成ACCEPT即可，具体不再详述。<br>最后，载入新的配置即可。</p>
-<h2 id="附：完整的-etc-config-network文件"><a href="#附：完整的-etc-config-network文件" class="headerlink" title="附：完整的/etc/config/network文件"></a>附：完整的/etc/config/network文件</h2><p><code>config interface &#39;loopback&#39;</code><br><code>option ifname &#39;lo&#39;</code><br><code>option proto &#39;static&#39;</code><br><code>option ipaddr &#39;127.0.0.1&#39;</code><br><code>option netmask &#39;255.0.0.0&#39;</code></p>
-<p><code>config globals &#39;globals&#39;</code><br><code>option ula_prefix &#39;fd9f:91f8:3d14::/48&#39;</code></p>
-<p><code>config interface &#39;lan&#39;</code><br><code>option ifname &#39;eth0.1 eth0.2&#39;</code><br><code>option force_link &#39;1&#39;</code><br><code>option macaddr &#39;b0:68:b6:ff:d6:b8&#39;</code><br><code>option type &#39;bridge&#39;</code><br><code>option proto &#39;static&#39;</code><br><code>option ipaddr &#39;192.168.1.196&#39;</code><br><code>option netmask &#39;255.255.255.0&#39;</code><br><code>option ip6assign &#39;60&#39;</code></p>
-<p><code>#config interface &#39;wan&#39;</code><br><code>#option ifname &#39;eth0.2&#39;</code><br><code>#option force_link &#39;1&#39;</code><br><code>#option macaddr &#39;b0:68:b6:ff:d6:b9&#39;</code><br><code>#option proto &#39;dhcp&#39;</code></p>
-<p><code>#config interface &#39;wan6&#39;</code><br><code>#option ifname &#39;eth0.2&#39;</code><br><code>#option proto &#39;dhcpv6&#39;</code></p>
-<p><code>以下均保持原状</code><br><code>config switch</code><br><code>option name &#39;switch0&#39;</code><br><code>option reset &#39;1&#39;</code><br><code>option enable_vlan &#39;1&#39;</code><br><code>config switch_vlan</code><br><code>option device &#39;switch0&#39;</code><br><code>option vlan &#39;1&#39;</code><br><code>option ports &#39;0 1 2 3 6t&#39;</code><br><code>config switch_vlan</code><br><code>option device &#39;switch0&#39;</code><br><code>option vlan &#39;2&#39;</code><br><code>option ports &#39;4 6t</code></p>
+        <p>随着对STL的频繁使用和着迷，越发意识到更深层次理解STL的重要性。使用STL正确得到结果是一回事，而高效地使用STL得到结果又是另一回事。因此，拿起了Scott Meyers大神的《Effective STL》，结合自己平时遇到的问题，作一些总结和记录。<br><a id="more"></a></p>
+<h3 id="使用reserve避免不必要的重新分配"><a href="#使用reserve避免不必要的重新分配" class="headerlink" title="使用reserve避免不必要的重新分配"></a>使用reserve避免不必要的重新分配</h3><p>我们知道，STL容器最大的进步之一是它们会自动增长以便容纳下所放入的数据，只要没有超出它们的最大限制（可以使用max_size()成员函数查看）就可以。vector和string的增长过程是：<br>（1）分配一块大小为当前容量的某个倍数的新内存，在大多数实现中，vector和string的容量每次以2的倍数增长，即每当容器需要扩张时，它们的容量即加倍。<br>（2）把容器的所有元素从旧的内存复制到新的内存中。<br>（3）析构掉旧内存中的对象。<br>（4）释放旧内存。<br>可以看出，这个过程会非常耗时。因此，可以使用reserve成员函数来讲重新分配的次数减少到最低限度，从而避免了重新分配和迭代器/引用失效带来的开销。<br>因此，当一个元素需要被插入而容器的容量不够时，就会发生重新分配过程。比如：创建一个1到1000之间的vector<int>，如果采用这样的方式：</int></p>
+<pre><code>vector&lt;int&gt; ivec;
+for(int i=1;i&lt;=1000;i++)
+    ivec.push_back(i);
+</code></pre><p>对于大多数STL实现，该循环在进行过程中将导致2到10次重新分配。而如果改用reserve。</p>
+<pre><code>vector&lt;int&gt; v;
+v.reserve(1000);
+for(int i=1;i&lt;=1000;++i)
+    v.push_back(i);
+</code></pre><p>那么，在循环过程中，将不会再发生重新分配。<br>所以，当能确切知道或大致预计容器中最终会有多少元素时，使用reserve。如果不知道，可以先预留足够大的空间，然后，当所有数据都加入以后，再去除多余的容量。   </p>
+<h3 id="把vector和string数据传递给旧的C-API"><a href="#把vector和string数据传递给旧的C-API" class="headerlink" title="把vector和string数据传递给旧的C API"></a>把vector和string数据传递给旧的C API</h3><p>在使用C/C++时，我们发现很多时候还有旧的C API的身影，它们使用数组和char*指针而不是vector或string对象来进行数据交换。因此，在使用STL时，也必须处理好与旧的C API之间的关系。<br>比如，有一个vector v，而需要得到一个指向v中数据的指针，从而可把v中的数据作为数组来对待，那么只需要使用&amp;v[0]就可以了。而对于string s,对应的形式是s.c_str()。<br>所以，对于给定的C API：        </p>
+<pre><code>void doSomething(const int* pInts, size_t numInts);
+</code></pre><p>可以这样使用：</p>
+<pre><code>if(!v.empty()){
+    doSomething(&amp;v[0], v.size());
+}
+</code></pre><p>请注意，不要使用v.begin()来代替&amp;v[0]，因为begin的返回值是一个迭代器，不是指针；当需要一个指向vector中的数据的指针时，永远不应该使用begin()。（可以使用&amp;*v.begin()）<br>但是，上述方法对string却是不可靠的。原因如下：<br>（1）string中的数据不一定存储在连续的内存中；<br>（2）string的内部表示不一定是以空字符结尾的。<br>所以，对于给定的C API：</p>
+<pre><code>void doSomething(const char* pString)
+</code></pre><p>可以这样使用： </p>
+<pre><code>doSomething(s.c_str())    
+</code></pre><h3 id="避免使用vector"><a href="#避免使用vector" class="headerlink" title="避免使用vector"></a>避免使用vector<bool></bool></h3><p>作为一个STL容器，vector<bool>有两点问题。首先，它不是一个STL容器。其次，它并不存储bool。除此之外，一切正常。<br>vector<bool>不是一个STL容器，原因是一个对象要成为STL容器，必须满足的一个条件是，支持operator[]。也就是当使用operator[]取得了容器Container<t>中的一个T对象，那么可以通过取它的地址得到一个指向该对象的指针。<br>因此，如果vector<bool>是一个容器，那么下面这段代码必须可以被编译：</bool></t></bool></bool></p>
+<pre><code>vector&lt;bool&gt; v;
+bool *p = &amp;v[0];
+</code></pre><p>但是，它不能通过编译。原因是，vector<bool>是一个假的容器，它并不真的储存bool，相反，为了节省空间，它储存的是bool的紧凑表示。在一个典型的实现中，储存在”vector”中的每个”bool”仅占一个二进制位，一个8位的字节可容纳8个”bool”。在内部，vector<bool>使用了与位域一样的思想，来表示它所存储的那些bool；实际上它只是假装存储了这些bool。<br>位域与bool相似，它只能表示两个可能的值，但是在bool与看似bool的位域之间有一个重要的区别：可以创建一个指向bool的指针，而指向单个位的指针则是不允许的。<br>所以，在上述的实验中，vector<bool>::operator[]需要返回一个指向单个位的引用，而这样的引用却不存在。<br>那么。当需要vector<bool>的时候，应该使用什么呢？<br>标准库提供了两种选择，可以满足绝大多数的需求。第一种是deque<bool>。deque几乎提供了vector所提供的一切，而deque<bool>是一个STL容器，并且确实存储bool。只是需要注意的是，deque中的元素的内存不是连续的，所以不能把deque<bool>中的数据传递给一个期望bool数组的C API。<br>第二种方案时bitset。bitset不是STL容器，但它是标准C++库的一部分。与STL容器不同的是，它的大小（即元素的个数）在编译时就确定了，所以它不支持插入和删除元素。而且，它不支持迭代器。但是，与vector<bool>一样，它使用了一种紧凑表示，只为包含所包含的每个值提高一位空间，它提供了vector<bool>所特有的flip成员函数，以及其他一些特有的、对位的集合有意义的成员函数。在不需要迭代器和动态改变大小的环境下，bitset很适合需要。</bool></bool></bool></bool></bool></bool></bool></bool></bool></p>
+<h3 id="string实现的多样性"><a href="#string实现的多样性" class="headerlink" title="string实现的多样性"></a>string实现的多样性</h3><p>几乎每个string实现都包含如下信息：<br>（1）字符串的大小，即所包含的字符的个数。<br>（2）用于存储该字符串中字符的内存的容量。<br>（3）字符串的值。<br>除此之外，一个string可能还包含：<br>（1）它的分配子的一份拷贝。<br>（2）对值的引用计数。<br>不同的string实现以不同的方式来组织这些信息。下面以4种不同的string实现方式来说明。它们来源于四种STL实现。    </p>
+<h4 id="实现A"><a href="#实现A" class="headerlink" title="实现A"></a>实现A</h4><p>每个string对象包含其分配子的一份拷贝、该字符串的大小、它的容量以及一个指针，该指针指向一块动态分配的内存，其中包含了引用计数和字符串的值。<br><img src="http://i.imgur.com/5ySzRwe.png" alt=""><br>在该实现中，使用默认分配子的string对象是一个指针的4倍。若使用了自定义的分配子，则string对象会更大一些，多出的部分取决于分配子对象的大小。    </p>
+<h4 id="实现B"><a href="#实现B" class="headerlink" title="实现B"></a>实现B</h4><p>在实现B中，string对象与指针大小相同，因为它只包含一个指向结构的指针。B的string所指向的对象中包含了该字符串的大小、容量和引用计数，以及一个指向动态分配的内存的指针，该内存中存放了字符串的值。<br><img src="http://i.imgur.com/NhnOLNi.png" alt="">      </p>
+<h4 id="实现C"><a href="#实现C" class="headerlink" title="实现C"></a>实现C</h4><p>在实现C中，string对象的大小总是与指针的相同，该指针指向一块动态分配的内存，其中包含了与该字符串相关的一切数据：它的大小、容量、引用计数和值。<br><img src="http://i.imgur.com/pdowvMe.png" alt="">    </p>
+<h4 id="实现D"><a href="#实现D" class="headerlink" title="实现D"></a>实现D</h4><p>实现D的string对象是指针大小的7倍（仍然假定使用的是默认的分配子）。这一实现不使用引用计数，但是每个string对象内部包含一块内存，最大可容纳15个字符的字符串。因此，小的字符串可以完整地存放在string对象中，这通常被称为“小字符串优化”特性。而当一个string的容量超过15时，该内存的起始部分被当做一个指向一块动态分配的内存的指针，而该string的值就在这块内存中。<br><img src="http://i.imgur.com/dD1svMe.png" alt=""></p>
+<h4 id="比较"><a href="#比较" class="headerlink" title="比较"></a>比较</h4><p>（1）在以引用计数为基础的设计方案中，string对象之外的一切可以被多个string对象（如果它们有同样的值）。所以，实现A比实现B或C提供了较小的共享能力。尤其是，实现B和C可以共享string的大小和容量，从而减少每个对象存储这些数据的平均开销。<br>（2）创建一个新的字符串值可能需要零次、一次或两次动态分配。      </p>
 
       
     </div>
@@ -316,7 +342,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/openwrt-wifi/" rel="tag">#openwrt/wifi</a>
+            <a href="/tags/C/" rel="tag">#C++</a>
           
         </div>
       
@@ -325,16 +351,16 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/03/11/welcome/" rel="next" title="Welcome to My Blog">
-                <i class="fa fa-chevron-left"></i> Welcome to My Blog
+              <a href="/2016/12/08/String/" rel="next" title="《C++编程思想》之字符串学习笔记">
+                <i class="fa fa-chevron-left"></i> 《C++编程思想》之字符串学习笔记
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2016/03/18/startAP/" rel="prev" title="OpenWrt设置程序开机自启动">
-                OpenWrt设置程序开机自启动 <i class="fa fa-chevron-right"></i>
+              <a href="/2016/12/19/Effective-STL-2/" rel="prev" title="使用STL算法时需注意的问题">
+                使用STL算法时需注意的问题 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -361,8 +387,8 @@
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/03/15/dumbap/"
-           data-title="配置OpenWrt路由器为Dumb AP" data-url="http://blog.dujiong.net/2016/03/15/dumbap/">
+      <div class="ds-thread" data-thread-key="2016/12/11/Effective-STL-1/"
+           data-title="使用vector和string时需注意的问题" data-url="http://blog.dujiong.net/2016/12/11/Effective-STL-1/">
       </div>
     
   </div>
@@ -476,7 +502,7 @@
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Dumb-AP"><span class="nav-number">1.</span> <span class="nav-text">Dumb AP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#配置Dumb-AP"><span class="nav-number">2.</span> <span class="nav-text">配置Dumb AP</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#修改网络配置文件-etc-config-network"><span class="nav-number">2.1.</span> <span class="nav-text">修改网络配置文件(/etc/config/network)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#关掉DHCP"><span class="nav-number">2.2.</span> <span class="nav-text">关掉DHCP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#关掉防火墙"><span class="nav-number">2.3.</span> <span class="nav-text">关掉防火墙</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#附：完整的-etc-config-network文件"><span class="nav-number">3.</span> <span class="nav-text">附：完整的/etc/config/network文件</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#使用reserve避免不必要的重新分配"><span class="nav-number">1.</span> <span class="nav-text">使用reserve避免不必要的重新分配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#把vector和string数据传递给旧的C-API"><span class="nav-number">2.</span> <span class="nav-text">把vector和string数据传递给旧的C API</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#避免使用vector"><span class="nav-number">3.</span> <span class="nav-text">避免使用vector</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#string实现的多样性"><span class="nav-number">4.</span> <span class="nav-text">string实现的多样性</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#实现A"><span class="nav-number">4.1.</span> <span class="nav-text">实现A</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#实现B"><span class="nav-number">4.2.</span> <span class="nav-text">实现B</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#实现C"><span class="nav-number">4.3.</span> <span class="nav-text">实现C</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#实现D"><span class="nav-number">4.4.</span> <span class="nav-text">实现D</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#比较"><span class="nav-number">4.5.</span> <span class="nav-text">比较</span></a></li></ol></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">
