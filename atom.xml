@@ -125,11 +125,176 @@ result.first-&amp;gt;second = 1.50;
   </entry>
   
   <entry>
+    <title>使用STL算法时需注意的问题</title>
+    <link href="http://blog.dujiong.net/2016/12/19/Effective-STL-2/"/>
+    <id>http://blog.dujiong.net/2016/12/19/Effective-STL-2/</id>
+    <published>2016-12-19T12:21:14.000Z</published>
+    <updated>2016-12-29T13:46:36.245Z</updated>
+    
+    <content type="html">&lt;p&gt;接着上一篇，对STL中非常有用而又容易犯错的一些算法做总结和记录。希望在后面的使用中更加注重STL算法。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&quot;确保目标空间足够大&quot;&gt;&lt;a href=&quot;#确保目标空间足够大&quot; class=&quot;headerlink&quot; title=&quot;确保目标空间足够大&quot;&gt;&lt;/a&gt;确保目标空间足够大&lt;/h3&gt;&lt;p&gt;如上篇所述，当有新的对象加入容器时，STL容器会自动扩充存储空间以容纳这些对象。但是，需要注意的是，STL容器并不总是能够正确地管理其存储空间。比如下面这个例子：     &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;int trans(int x){
+    return -x;
+}
+
+vector&amp;lt;int&amp;gt; ivec{1,2};
+vector&amp;lt;int&amp;gt; res;
+
+std::transform(ivec.begin(), ivec.end(), res.begin(), trans);    // error
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这段代码中，transform首先以ivec[0]为参数调用trans，并将结果赋给&lt;em&gt;\res.end()。然后，再以ivec[1]为参数调用trans，并将结果赋给\&lt;/em&gt;(res.end()+1)。这可能会引起灾难性的后果，因为在*res.end()中并没有对象，*(res.end()+1)就更没有对象了。这种transform调用时错误的，因为导致了对无效对象的赋值操作。&lt;br&gt;犯这种错误的程序员总是希望他们所调用的算法的结果会被插入到目标容器中。事实上，必须向STL明确表达意图。所以，上面的例子需要通过调用back_insert生成一个迭代器来指定目标区间的起始位置：      &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;int trans(int x){
+    return -x;    
+}
+
+vector&amp;lt;int&amp;gt; ivec{1,2};
+vector&amp;lt;int&amp;gt; res;
+
+std::transform(ivec.begin(), ivec.end(), back_inserter(res), trans);
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;在内部，back_insert返回的迭代器将使得push_back被调用，所以back_insert可使用于所有提供push_back方法的容器。而如果想让一个算法在容器的头部而不是尾部插入对象可以使用front_inserter。&lt;br&gt;因此，无论何时，如果所使用的算法需要指定一个目标区间，那么必须确保目标区间足够大，或者确保它会随着算法的运行而增大。要么在算法执行过程中增大目标区间，请使用插入型迭代器，比如ostream_iterator，或者由back_inserter、front_inserter返回的迭代器。&lt;/p&gt;
+&lt;h3 id=&quot;与排序有关的选择&quot;&gt;&lt;a href=&quot;#与排序有关的选择&quot; class=&quot;headerlink&quot; title=&quot;与排序有关的选择&quot;&gt;&lt;/a&gt;与排序有关的选择&lt;/h3&gt;&lt;p&gt;提到排序，首先想到的是std::sort。但需要注意的是，std::sort并非在任何场合下都是完美无缺的。有些场景并不需要完全的排序操作。比如使用partial_sort来选择前n个最好的商品送给n个最重要的客户，或者当只需要将最好的20个商品送给最重要的20个客户，而不关心哪个商品送给哪位客户的时候选用nth_element。   &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;vector&amp;lt;int&amp;gt; ivec{2,5,10,23,12,56,34,100};
+
+std::partial_sort(ivec.begin(), ivec.begin()+4, ivec.end(), greater&amp;lt;int&amp;gt;());
+for(auto n : ivec){
+    cout &amp;lt;&amp;lt; n &amp;lt;&amp;lt; endl
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;运行结果：&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/5BIVF20.png&quot; alt=&quot;&quot;&gt;   &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;vector&amp;lt;int&amp;gt; ivec{2,5,10,23,12,56,34,100};
+
+std::nth_element(ivec.begin(), ivec.begin()+3, ivec.end(), greater&amp;lt;int&amp;gt;());
+for(auto n : ivec){
+    cout &amp;lt;&amp;lt; n &amp;lt;&amp;lt; endl
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;运行结果:&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/aZpaEcc.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;可以看出，对nth_element的调用与partial_sort几乎一样。在效果上唯一不同之处在于，partial_sort对前20个元素进行了排序，而nth_element没有对他们进行排序。&lt;br&gt;sort、partial_sort、nth_element和stable_sort都属于非稳定的排序算法，有一个名为stable_sort的算法可以提供稳定排序特性。&lt;br&gt;另外，sort、partial_sort、nth_element和stable_sort算法都要求随机访问迭代器，所以这些算法只能被应用于vector、string、deque和数组。对标准关联容器中的元素进行排序并没有实际意义，因为这样的容器总是使用比较函数来维护内部元素的有序性。list是唯一需要排序却无法使用这些排序算法的容器，为此，list特别提供了sort成员函数（稳定排序）。    &lt;/p&gt;
+&lt;h3 id=&quot;remove算法后调用erase删除元素&quot;&gt;&lt;a href=&quot;#remove算法后调用erase删除元素&quot; class=&quot;headerlink&quot; title=&quot;remove算法后调用erase删除元素&quot;&gt;&lt;/a&gt;remove算法后调用erase删除元素&lt;/h3&gt;&lt;p&gt;我们需要知道，从容器中删除元素唯一的办法是调用容器的成员函数，几乎总是erase的某种形式。因此，remove并不知道它操作的元素所在的容器，所以remove不可能从容器中删除元素。那么remove究竟做了什么？&lt;br&gt;其实，remove移动了区间中的元素，其结果是，“不用背删除”的元素移到了区间的前部（保持原来的相对顺序）。返回的是一个迭代器指向最后一个“不用背删除”的元素之后的元素。这个返回值相当于该区间“新的逻辑结尾”。但是，需要注意的是，通常来说，当调用了remove以后，从区间中被删除的那些元素可能在也可能不在区间中，这是算法操作的附带结果。&lt;br&gt;所以，如果真想删除元素，那就必须在remove之后使用erase。要删除的元素的位置从“新的逻辑结尾”一直到原区间的结尾。比如:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;vector&amp;lt;int&amp;gt; ivec;
+...
+v.erase(remove(v.begin(), v.end(), 99), v.end());    
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;此外，remove并不是唯一一个适用于这种情形的算法，其他还有两个属于“remove类”的算法：remove_if和unique。&lt;/p&gt;
+&lt;h3 id=&quot;使用accumulate或者for-each进行区间统计&quot;&gt;&lt;a href=&quot;#使用accumulate或者for-each进行区间统计&quot; class=&quot;headerlink&quot; title=&quot;使用accumulate或者for_each进行区间统计&quot;&gt;&lt;/a&gt;使用accumulate或者for_each进行区间统计&lt;/h3&gt;&lt;p&gt;有时候，我们需要按照某种自定义的方式对区间进行统计处理。这个时候，必须自己定义统计方法。STL通过算法accumulate来提供。&lt;br&gt;accumulate有两种形式：第一种形式有两个迭代器和一个初始值，它返回该初始值加上由迭代器标识的区间中的值的总和。如下面的例子：      &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;vector&amp;lt;int&amp;gt; ivec{1,2,3};
+
+std::accumulate(ivec.begin(), ivec.end(), 0);
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;而另一种形式是accumulate带一个初始值和一个任意的统计函数。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;vector&amp;lt;int&amp;gt; ivec{2,2,3};
+
+std::accumulate(ivec.begin(), ivec.end(), 2, multiplies&amp;lt;int&amp;gt;());  //24    
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;另一个可用来统计区间的算法时for_each，如图accumulate一样，for_each也带两个参数：一个是区间，另一个是函数（通常是函数对象）—对区间中的每个元素都要调用这个函数，但是，传给for_each的这个函数只接受一个实参（即当前的区间元素）；for_each执行完毕后会返回它的函数。&lt;/p&gt;
+&lt;h3 id=&quot;使用排序的区间作为参数的算法&quot;&gt;&lt;a href=&quot;#使用排序的区间作为参数的算法&quot; class=&quot;headerlink&quot; title=&quot;使用排序的区间作为参数的算法&quot;&gt;&lt;/a&gt;使用排序的区间作为参数的算法&lt;/h3&gt;&lt;p&gt;有些算法既可以与排序的区间一起工作，也可以与未排序的区间一起工作，但是当它们作用在排序的区间上时，算法会更加有效。&lt;br&gt;首先，罗列出要求排序区间的STL算法:&lt;br&gt;binary_search, lower_bound, upper_bound, equal_range, set_union, set_intersection, set_difference, set_symmetric_difference, merge, inplace_merge, includes&lt;br&gt;还有一些算法并不一定要求排序的区间，但通常情况下会与排序区间一起使用。&lt;br&gt;unique, unique_copy&lt;br&gt;这其中，用于查找的算法binary_search, lower_bound, upper_bound, equal_range要求排序的区间，因为它们用二分法查找数据。&lt;br&gt;set_union, set_intersection, set_difference, set_symmetric_difference这四个算法提供了线性时间效率的集合操作。它们要求排序的区间，因为如果不满足，它们就无法在线性时间内完成工作。&lt;br&gt;merge和inplace_merge实际上实现了合并和排序的联合操作：它们读入两个排序的区间，然后合并成一个新的排序区间。如果源区间没有排过序，就不可能在线性时间内完成。&lt;br&gt;同样，includes也要求两个区间是排序的，承诺线性时间的效率。&lt;br&gt;而unique和unique_copy与上述讨论过的算法有所不同，它们即使对于未排序的区间也有很好的行为。以unique为例，unique用于删除区间中所有重复的元素，所以必须保证所有相等的元素都是连续存放的。因此，总是要确保传给unique的区间是排序的。&lt;br&gt;顺便提一下，unique使用了与remove类似的办法来删除区间中的元素，而并非真正意义上的删除。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;接着上一篇，对STL中非常有用而又容易犯错的一些算法做总结和记录。希望在后面的使用中更加注重STL算法。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>使用vector和string时需注意的问题</title>
+    <link href="http://blog.dujiong.net/2016/12/11/Effective-STL-1/"/>
+    <id>http://blog.dujiong.net/2016/12/11/Effective-STL-1/</id>
+    <published>2016-12-11T09:39:38.000Z</published>
+    <updated>2017-01-03T02:05:31.993Z</updated>
+    
+    <content type="html">&lt;p&gt;随着对STL的频繁使用和着迷，越发意识到更深层次理解STL的重要性。使用STL正确得到结果是一回事，而高效地使用STL得到结果又是另一回事。因此，拿起了Scott Meyers大神的《Effective STL》，结合自己平时遇到的问题，作一些总结和记录。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&quot;使用reserve避免不必要的重新分配&quot;&gt;&lt;a href=&quot;#使用reserve避免不必要的重新分配&quot; class=&quot;headerlink&quot; title=&quot;使用reserve避免不必要的重新分配&quot;&gt;&lt;/a&gt;使用reserve避免不必要的重新分配&lt;/h3&gt;&lt;p&gt;我们知道，STL容器最大的进步之一是它们会自动增长以便容纳下所放入的数据，只要没有超出它们的最大限制（可以使用max_size()成员函数查看）就可以。vector和string的增长过程是：&lt;br&gt;（1）分配一块大小为当前容量的某个倍数的新内存，在大多数实现中，vector和string的容量每次以2的倍数增长，即每当容器需要扩张时，它们的容量即加倍。&lt;br&gt;（2）把容器的所有元素从旧的内存复制到新的内存中。&lt;br&gt;（3）析构掉旧内存中的对象。&lt;br&gt;（4）释放旧内存。&lt;br&gt;可以看出，这个过程会非常耗时。因此，可以使用reserve成员函数来讲重新分配的次数减少到最低限度，从而避免了重新分配和迭代器/引用失效带来的开销。&lt;br&gt;因此，当一个元素需要被插入而容器的容量不够时，就会发生重新分配过程。比如：创建一个1到1000之间的vector&lt;int&gt;，如果采用这样的方式：&lt;/int&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;vector&amp;lt;int&amp;gt; ivec;
+for(int i=1;i&amp;lt;=1000;i++)
+    ivec.push_back(i);
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;对于大多数STL实现，该循环在进行过程中将导致2到10次重新分配。而如果改用reserve。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;vector&amp;lt;int&amp;gt; v;
+v.reserve(1000);
+for(int i=1;i&amp;lt;=1000;++i)
+    v.push_back(i);
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;那么，在循环过程中，将不会再发生重新分配。&lt;br&gt;所以，当能确切知道或大致预计容器中最终会有多少元素时，使用reserve。如果不知道，可以先预留足够大的空间，然后，当所有数据都加入以后，再去除多余的容量。   &lt;/p&gt;
+&lt;h3 id=&quot;把vector和string数据传递给旧的C-API&quot;&gt;&lt;a href=&quot;#把vector和string数据传递给旧的C-API&quot; class=&quot;headerlink&quot; title=&quot;把vector和string数据传递给旧的C API&quot;&gt;&lt;/a&gt;把vector和string数据传递给旧的C API&lt;/h3&gt;&lt;p&gt;在使用C/C++时，我们发现很多时候还有旧的C API的身影，它们使用数组和char*指针而不是vector或string对象来进行数据交换。因此，在使用STL时，也必须处理好与旧的C API之间的关系。&lt;br&gt;比如，有一个vector v，而需要得到一个指向v中数据的指针，从而可把v中的数据作为数组来对待，那么只需要使用&amp;amp;v[0]就可以了。而对于string s,对应的形式是s.c_str()。&lt;br&gt;所以，对于给定的C API：        &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;void doSomething(const int* pInts, size_t numInts);
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;可以这样使用：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;if(!v.empty()){
+    doSomething(&amp;amp;v[0], v.size());
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;请注意，不要使用v.begin()来代替&amp;amp;v[0]，因为begin的返回值是一个迭代器，不是指针；当需要一个指向vector中的数据的指针时，永远不应该使用begin()。（可以使用&amp;amp;*v.begin()）&lt;br&gt;但是，上述方法对string却是不可靠的。原因如下：&lt;br&gt;（1）string中的数据不一定存储在连续的内存中；&lt;br&gt;（2）string的内部表示不一定是以空字符结尾的。&lt;br&gt;所以，对于给定的C API：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;void doSomething(const char* pString)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;可以这样使用： &lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;doSomething(s.c_str())    
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;避免使用vector&quot;&gt;&lt;a href=&quot;#避免使用vector&quot; class=&quot;headerlink&quot; title=&quot;避免使用vector&quot;&gt;&lt;/a&gt;避免使用vector&lt;bool&gt;&lt;/bool&gt;&lt;/h3&gt;&lt;p&gt;作为一个STL容器，vector&lt;bool&gt;有两点问题。首先，它不是一个STL容器。其次，它并不存储bool。除此之外，一切正常。&lt;br&gt;vector&lt;bool&gt;不是一个STL容器，原因是一个对象要成为STL容器，必须满足的一个条件是，支持operator[]。也就是当使用operator[]取得了容器Container&lt;t&gt;中的一个T对象，那么可以通过取它的地址得到一个指向该对象的指针。&lt;br&gt;因此，如果vector&lt;bool&gt;是一个容器，那么下面这段代码必须可以被编译：&lt;/bool&gt;&lt;/t&gt;&lt;/bool&gt;&lt;/bool&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;vector&amp;lt;bool&amp;gt; v;
+bool *p = &amp;amp;v[0];
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;但是，它不能通过编译。原因是，vector&lt;bool&gt;是一个假的容器，它并不真的储存bool，相反，为了节省空间，它储存的是bool的紧凑表示。在一个典型的实现中，储存在”vector”中的每个”bool”仅占一个二进制位，一个8位的字节可容纳8个”bool”。在内部，vector&lt;bool&gt;使用了与位域一样的思想，来表示它所存储的那些bool；实际上它只是假装存储了这些bool。&lt;br&gt;位域与bool相似，它只能表示两个可能的值，但是在bool与看似bool的位域之间有一个重要的区别：可以创建一个指向bool的指针，而指向单个位的指针则是不允许的。&lt;br&gt;所以，在上述的实验中，vector&lt;bool&gt;::operator[]需要返回一个指向单个位的引用，而这样的引用却不存在。&lt;br&gt;那么。当需要vector&lt;bool&gt;的时候，应该使用什么呢？&lt;br&gt;标准库提供了两种选择，可以满足绝大多数的需求。第一种是deque&lt;bool&gt;。deque几乎提供了vector所提供的一切，而deque&lt;bool&gt;是一个STL容器，并且确实存储bool。只是需要注意的是，deque中的元素的内存不是连续的，所以不能把deque&lt;bool&gt;中的数据传递给一个期望bool数组的C API。&lt;br&gt;第二种方案时bitset。bitset不是STL容器，但它是标准C++库的一部分。与STL容器不同的是，它的大小（即元素的个数）在编译时就确定了，所以它不支持插入和删除元素。而且，它不支持迭代器。但是，与vector&lt;bool&gt;一样，它使用了一种紧凑表示，只为包含所包含的每个值提高一位空间，它提供了vector&lt;bool&gt;所特有的flip成员函数，以及其他一些特有的、对位的集合有意义的成员函数。在不需要迭代器和动态改变大小的环境下，bitset很适合需要。&lt;/bool&gt;&lt;/bool&gt;&lt;/bool&gt;&lt;/bool&gt;&lt;/bool&gt;&lt;/bool&gt;&lt;/bool&gt;&lt;/bool&gt;&lt;/bool&gt;&lt;/p&gt;
+&lt;h3 id=&quot;string实现的多样性&quot;&gt;&lt;a href=&quot;#string实现的多样性&quot; class=&quot;headerlink&quot; title=&quot;string实现的多样性&quot;&gt;&lt;/a&gt;string实现的多样性&lt;/h3&gt;&lt;p&gt;几乎每个string实现都包含如下信息：&lt;br&gt;（1）字符串的大小，即所包含的字符的个数。&lt;br&gt;（2）用于存储该字符串中字符的内存的容量。&lt;br&gt;（3）字符串的值。&lt;br&gt;除此之外，一个string可能还包含：&lt;br&gt;（1）它的分配子的一份拷贝。&lt;br&gt;（2）对值的引用计数。&lt;br&gt;不同的string实现以不同的方式来组织这些信息。下面以4种不同的string实现方式来说明。它们来源于四种STL实现。    &lt;/p&gt;
+&lt;h4 id=&quot;实现A&quot;&gt;&lt;a href=&quot;#实现A&quot; class=&quot;headerlink&quot; title=&quot;实现A&quot;&gt;&lt;/a&gt;实现A&lt;/h4&gt;&lt;p&gt;每个string对象包含其分配子的一份拷贝、该字符串的大小、它的容量以及一个指针，该指针指向一块动态分配的内存，其中包含了引用计数和字符串的值。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/5ySzRwe.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;在该实现中，使用默认分配子的string对象是一个指针的4倍。若使用了自定义的分配子，则string对象会更大一些，多出的部分取决于分配子对象的大小。    &lt;/p&gt;
+&lt;h4 id=&quot;实现B&quot;&gt;&lt;a href=&quot;#实现B&quot; class=&quot;headerlink&quot; title=&quot;实现B&quot;&gt;&lt;/a&gt;实现B&lt;/h4&gt;&lt;p&gt;在实现B中，string对象与指针大小相同，因为它只包含一个指向结构的指针。B的string所指向的对象中包含了该字符串的大小、容量和引用计数，以及一个指向动态分配的内存的指针，该内存中存放了字符串的值。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/NhnOLNi.png&quot; alt=&quot;&quot;&gt;      &lt;/p&gt;
+&lt;h4 id=&quot;实现C&quot;&gt;&lt;a href=&quot;#实现C&quot; class=&quot;headerlink&quot; title=&quot;实现C&quot;&gt;&lt;/a&gt;实现C&lt;/h4&gt;&lt;p&gt;在实现C中，string对象的大小总是与指针的相同，该指针指向一块动态分配的内存，其中包含了与该字符串相关的一切数据：它的大小、容量、引用计数和值。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/pdowvMe.png&quot; alt=&quot;&quot;&gt;    &lt;/p&gt;
+&lt;h4 id=&quot;实现D&quot;&gt;&lt;a href=&quot;#实现D&quot; class=&quot;headerlink&quot; title=&quot;实现D&quot;&gt;&lt;/a&gt;实现D&lt;/h4&gt;&lt;p&gt;实现D的string对象是指针大小的7倍（仍然假定使用的是默认的分配子）。这一实现不使用引用计数，但是每个string对象内部包含一块内存，最大可容纳15个字符的字符串。因此，小的字符串可以完整地存放在string对象中，这通常被称为“小字符串优化”特性。而当一个string的容量超过15时，该内存的起始部分被当做一个指向一块动态分配的内存的指针，而该string的值就在这块内存中。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/dD1svMe.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h4 id=&quot;比较&quot;&gt;&lt;a href=&quot;#比较&quot; class=&quot;headerlink&quot; title=&quot;比较&quot;&gt;&lt;/a&gt;比较&lt;/h4&gt;&lt;p&gt;（1）在以引用计数为基础的设计方案中，string对象之外的一切可以被多个string对象（如果它们有同样的值）。所以，实现A比实现B或C提供了较小的共享能力。尤其是，实现B和C可以共享string的大小和容量，从而减少每个对象存储这些数据的平均开销。&lt;br&gt;（2）创建一个新的字符串值可能需要零次、一次或两次动态分配。      &lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;随着对STL的频繁使用和着迷，越发意识到更深层次理解STL的重要性。使用STL正确得到结果是一回事，而高效地使用STL得到结果又是另一回事。因此，拿起了Scott Meyers大神的《Effective STL》，结合自己平时遇到的问题，作一些总结和记录。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>《C++编程思想》之字符串学习笔记</title>
+    <link href="http://blog.dujiong.net/2016/12/08/String/"/>
+    <id>http://blog.dujiong.net/2016/12/08/String/</id>
+    <published>2016-12-08T13:10:07.000Z</published>
+    <updated>2016-12-07T08:33:13.404Z</updated>
+    
+    <content type="html">&lt;p&gt;字符串是C++标准库的一个重要组成部分，本文参照《C++编程思想》中字符串的相关内容，对该部分进行简单总结。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&quot;C字符型数组和C-字符串&quot;&gt;&lt;a href=&quot;#C字符型数组和C-字符串&quot; class=&quot;headerlink&quot; title=&quot;C字符型数组和C++字符串&quot;&gt;&lt;/a&gt;C字符型数组和C++字符串&lt;/h3&gt;&lt;p&gt;在C语言中，字符串基本上就是字符串数组，并且总是以二进制零（空结束符）作为最末元素。C++ string与它们在C语言中的前身截然不同。首先，也是最重要的不同点，C++隐藏了它所包含的字符序列的物理表示。程序设计人员不必关心数组的维数或空结束符方面的问题。C++ string对象知道自己在内存中的开始位置、包含的内容、包含的字符长度以及在必需重新调整内部缓冲区的大小之前自己可以增长到的最大字符长度。C++字符串极大地减少了C语言编程中最常见且最具破坏性的错误：（1）超越数组边界；（2）通过未被初始化或被赋以错误值的指针来访问数组元素；（3）在释放了某一数组原先所分配的存储单元后仍保留了“悬挂”指针。&lt;br&gt;C++标准没有定义字符串类内存布局的确切实现。采用这种体系结构是为了获得足够的灵活性，从而允许不同的编译器厂商能够提供不同的实现，并且向用户保证提供可预测的行为。&lt;/p&gt;
+&lt;h3 id=&quot;创建并初始化C-字符串&quot;&gt;&lt;a href=&quot;#创建并初始化C-字符串&quot; class=&quot;headerlink&quot; title=&quot;创建并初始化C++字符串&quot;&gt;&lt;/a&gt;创建并初始化C++字符串&lt;/h3&gt;&lt;p&gt;创建C++ string一般有以下几种方式：&lt;br&gt;（1）&lt;code&gt;string temp;&lt;/code&gt;  创建空string对象，且并不立即用字符数据对其初始化；&lt;br&gt;（2）&lt;code&gt;string temp(&amp;quot;hello world&amp;quot;);&lt;/code&gt;  将一个文字的引用数组作为参数传递给构造函数，以此来对一个string对象进行初始化；&lt;br&gt;（3）&lt;code&gt;string temp = &amp;quot;hello world&amp;quot;;&lt;/code&gt;  用等号来初始化一个string对象;&lt;br&gt;（4）&lt;code&gt;string temp(str);&lt;/code&gt;        用一个string对象看来初始化另一个string对象。&lt;br&gt;另外，还有一些相关的成员函数和特性：&lt;br&gt;（1）用operator+来将不同的初始化数据源结合在一起；&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;string s1(&amp;quot;hello&amp;quot;);
+std::cout &amp;lt;&amp;lt; s1 + &amp;quot; world&amp;quot; &amp;lt;&amp;lt; std::endl;        //hello world
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;（2）用string对象的成员函数substr()来创建一个子串。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;string s1(&amp;quot;hello world, hello&amp;quot;);
+std::cout &amp;lt;&amp;lt; s1.substr(0, 11) &amp;lt;&amp;lt; std::endl;        //hello world   \
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;string类对象的成员函数substr()将开始位置作为其第一个参数，而将待选字符的个数作为其第2个参数。&lt;br&gt;（3）将string看做容器对象，利用string类的迭代器string::begin()和string::end()。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;string s1(&amp;quot;hello world&amp;quot;);
+string s2(s1.begin(), s2.end());
+std::cout &amp;lt;&amp;lt; s2 &amp;lt;&amp;lt; std::endl;        //hello world
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;不可以使用单个的字符、ASCII码或其他整数值来初始化C++字符串。&lt;/p&gt;
+&lt;h3 id=&quot;字符串的操作&quot;&gt;&lt;a href=&quot;#字符串的操作&quot; class=&quot;headerlink&quot; title=&quot;字符串的操作&quot;&gt;&lt;/a&gt;字符串的操作&lt;/h3&gt;&lt;p&gt;标准C语言的char型数组工具中存在着其固有的误区，那就是它们都显示地依赖一种假设：字符数组包括一个空结束符。若由于疏忽或是其他差错，这个空结束符被忽略或重写，这个小小的差错就会使C语言的char数组处理函数几乎不可避免地操作其已分配空间之外的内存，有时会带来灾难性后果。&lt;br&gt;C++提供的string类对象，在使用的便利性和安全性上都有很大的提高。     &lt;/p&gt;
+&lt;h4 id=&quot;追加、插入和连接字符串&quot;&gt;&lt;a href=&quot;#追加、插入和连接字符串&quot; class=&quot;headerlink&quot; title=&quot;追加、插入和连接字符串&quot;&gt;&lt;/a&gt;追加、插入和连接字符串&lt;/h4&gt;&lt;p&gt;C++字符串一个便于使用的特色是：无需程序员干预，可根据需要自行扩充规模。这样程序员不再需要跟踪字符串的存储边界。此外，当字符串增长时，字符串成员函数append()–(追加)和insert()–(插入)很明显地重新分配了存储空间。&lt;br&gt;此外，还有一些成员函数：capacity()返回当前分配的存储空间的规模；reserve(int size)提供一种优化机制，按照程序员的意图，预留一定数量的存储空间，以便将来使用。而如果要生成的新字符串的规模比当前的字符串大或者需要截断原字符串，resize()函数就会在字符串的末尾追加空格或是指定的字符。&lt;/p&gt;
+&lt;h4 id=&quot;替换字符串的字符&quot;&gt;&lt;a href=&quot;#替换字符串的字符&quot; class=&quot;headerlink&quot; title=&quot;替换字符串的字符&quot;&gt;&lt;/a&gt;替换字符串的字符&lt;/h4&gt;&lt;p&gt;insert()使程序员放心地向字符串中插入字符，而不必担心会使存储空间越界，或者会改写插入点之后紧跟的字符。存储空间增大了，原有的字符会该改变其存储位置，以便安置新元素。&lt;br&gt;replace()用于替换（删除）字符串中的字符，如果对replace()的调用使“替换”超出了原有序列的边界，这与追加操作是等价的，这样replace()也会增加存储空间。&lt;br&gt;此外，我们知道，STL中的算法功能很强大，由于string类几乎可以与STL容器等价，因此，string的很多解决方案可以由标准库的算法完成。比如，使用&lt;code&gt;std::replace(s.begin(), s.end(), &amp;#39;X&amp;#39;, &amp;#39;Y&amp;#39;)&lt;/code&gt;将字符串中出现的某个字符（’X’）全部用另一个字符(‘Y’)替换掉。这里的replace()是STL通用算法，不是string的成员函数。&lt;/p&gt;
+&lt;h4 id=&quot;使用非成员重载运算符连接&quot;&gt;&lt;a href=&quot;#使用非成员重载运算符连接&quot; class=&quot;headerlink&quot; title=&quot;使用非成员重载运算符连接&quot;&gt;&lt;/a&gt;使用非成员重载运算符连接&lt;/h4&gt;&lt;p&gt;C++ string类另一个令人欣喜的特性是可以借助operator+和operator+=来轻易地实现字符串的合并与追加操作。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;string str(&amp;quot;hello&amp;quot;);
+str += &amp;quot; world&amp;quot;;
+cout &amp;lt;&amp;lt; str &amp;lt;&amp;lt; endl;        //hello world
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;字符串的查找&quot;&gt;&lt;a href=&quot;#字符串的查找&quot; class=&quot;headerlink&quot; title=&quot;字符串的查找&quot;&gt;&lt;/a&gt;字符串的查找&lt;/h3&gt;&lt;p&gt;string成员函数中的find族是用来在给定字符串中定位某个或某组字符的。包括：&lt;br&gt;（1）find()：在字符串中查找一个指定的单个字符或字符组；&lt;br&gt;（2）find_first_of()：查找第一个与指定字符组任何字符匹配的字符位置；&lt;br&gt;（3）find_first_not_of()：查找第一个与指定字符组任何字符都不匹配的字符位置；&lt;br&gt;（4）find_last_of();&lt;br&gt;（5）find_last_not_of();&lt;br&gt;（6）rfind()：对一个字符串从尾到头查找指定的字符或字符组，返回首次匹配的开始位置。&lt;br&gt;string类中没有改变字符串大小写的函数，可以借助于标准C语言的toupper()和tolower()实现，这两个函数以此只能改变一个字符的大小写。&lt;/p&gt;
+&lt;h3 id=&quot;字符串的删除&quot;&gt;&lt;a href=&quot;#字符串的删除&quot; class=&quot;headerlink&quot; title=&quot;字符串的删除&quot;&gt;&lt;/a&gt;字符串的删除&lt;/h3&gt;&lt;p&gt;使用erase()成员函数删除字符串中的字符，该函数有两个参数：一个参数表示开始删除字符的位置（默认值是0）；另一个表示要删除多少个字符（默认值是string::npos）。如果指定删除的字符个数比字符串中剩余的字符还多，那么剩余的字符将全部删除，所以，调用不含参数的erase()函数将删除字符串中的所有字符。&lt;/p&gt;
+&lt;h3 id=&quot;字符串的比较&quot;&gt;&lt;a href=&quot;#字符串的比较&quot; class=&quot;headerlink&quot; title=&quot;字符串的比较&quot;&gt;&lt;/a&gt;字符串的比较&lt;/h3&gt;&lt;p&gt;字符串的比较，简而言之就是：当两个字符串比较遇到第一对不同的字符时，字符串s1中第一个不同的字符比字符串s2中同样位置的字符在ASCII表中的位置更靠后，那么s1“大于”s2。&lt;br&gt;C++提供了多种字符串比较方法，它们各具特色。其中最简单的就是使用非成员的重载运算符函数：operator==、operator!=、operator&amp;gt;、operator&amp;lt;、operator&amp;gt;=、operator&amp;lt;=。&lt;br&gt;此外，string类还提供compare()成员函数，用以提供更复杂紧密的比较手段。用多种重载版本来对比较的字串做控制。&lt;br&gt;C语言中获取字符串中的某个字符都是采用数组索引法（[]）,C++ string提供一种s[n]表示法的替代方法：at()成员函数。如果不出异常，这两种索引机制在C++中产生的结果是一样的。而有异常的情况时，比如程序员引用了一个超过边界的数组元素，at()将会友好地抛出一个异常，而普通的[]下标语法将让程序员自行决策。at()成员函数抛出的是一个out_of_range类对象，它(最终)派生于std::exception。程序可在一个异常处理器中捕获该对象，并采取适当的补救措施，比如重新计算越界下标或扩充数组。而string::operator&lt;a href=&quot;&quot;&gt;&lt;/a&gt;不会有那样的保护性，它的危险性等同于C语言中国对char型数组的处理。    &lt;/p&gt;
+&lt;h3 id=&quot;C语言函数处理时的转换&quot;&gt;&lt;a href=&quot;#C语言函数处理时的转换&quot; class=&quot;headerlink&quot; title=&quot;C语言函数处理时的转换&quot;&gt;&lt;/a&gt;C语言函数处理时的转换&lt;/h3&gt;&lt;p&gt;C++ string提供了c_str()函数返回一个const char*，它指向一个C语言风格的具有“空结束符”的字符串，此字符串与string对象的内容等价。当想将一个字符串传送给一个标准C语言函数时，比如atoi()、printf()，const char*可派上用场。不过，用c_str()的返回值作为非const参数应用于任一函数都是错误的。    &lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;字符串是C++标准库的一个重要组成部分，本文参照《C++编程思想》中字符串的相关内容，对该部分进行简单总结。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
+    
+  </entry>
+  
+  <entry>
     <title>Redis之数据库的实现</title>
-    <link href="http://blog.dujiong.net/2016/12/23/Redis-db/"/>
-    <id>http://blog.dujiong.net/2016/12/23/Redis-db/</id>
-    <published>2016-12-23T11:46:03.000Z</published>
-    <updated>2017-01-19T08:48:15.961Z</updated>
+    <link href="http://blog.dujiong.net/2016/12/03/Redis-db/"/>
+    <id>http://blog.dujiong.net/2016/12/03/Redis-db/</id>
+    <published>2016-12-03T11:46:03.000Z</published>
+    <updated>2017-01-19T08:51:50.312Z</updated>
     
     <content type="html">&lt;p&gt;本文对Redis服务器的数据库实现进行说明，包括服务器保存数据库的方法，数据库保存键值对的方法，以及针对数据库的添加、删除、查看等操作的实现方法，最后，会对服务器保存键的过期时间的方法和服务器自动删除过期键的方法进行分析。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h3 id=&quot;服务器中的数据库结构&quot;&gt;&lt;a href=&quot;#服务器中的数据库结构&quot; class=&quot;headerlink&quot; title=&quot;服务器中的数据库结构&quot;&gt;&lt;/a&gt;服务器中的数据库结构&lt;/h3&gt;&lt;p&gt;Redis服务器将所有数据库都保存在服务器状态redis.h/redisServer结构的db数组中，db数组的每个项都是一个redis.h/redisDb结构，每个redisDb结构代表一个数据库。     &lt;/p&gt;
@@ -297,171 +462,6 @@ void expireGenericCommand(redisClient *c, long long basetime, int unit) {
     
     
       <category term="Redis" scheme="http://blog.dujiong.net/tags/Redis/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>使用STL算法时需注意的问题</title>
-    <link href="http://blog.dujiong.net/2016/12/19/Effective-STL-2/"/>
-    <id>http://blog.dujiong.net/2016/12/19/Effective-STL-2/</id>
-    <published>2016-12-19T12:21:14.000Z</published>
-    <updated>2016-12-29T13:46:36.245Z</updated>
-    
-    <content type="html">&lt;p&gt;接着上一篇，对STL中非常有用而又容易犯错的一些算法做总结和记录。希望在后面的使用中更加注重STL算法。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;h3 id=&quot;确保目标空间足够大&quot;&gt;&lt;a href=&quot;#确保目标空间足够大&quot; class=&quot;headerlink&quot; title=&quot;确保目标空间足够大&quot;&gt;&lt;/a&gt;确保目标空间足够大&lt;/h3&gt;&lt;p&gt;如上篇所述，当有新的对象加入容器时，STL容器会自动扩充存储空间以容纳这些对象。但是，需要注意的是，STL容器并不总是能够正确地管理其存储空间。比如下面这个例子：     &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;int trans(int x){
-    return -x;
-}
-
-vector&amp;lt;int&amp;gt; ivec{1,2};
-vector&amp;lt;int&amp;gt; res;
-
-std::transform(ivec.begin(), ivec.end(), res.begin(), trans);    // error
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这段代码中，transform首先以ivec[0]为参数调用trans，并将结果赋给&lt;em&gt;\res.end()。然后，再以ivec[1]为参数调用trans，并将结果赋给\&lt;/em&gt;(res.end()+1)。这可能会引起灾难性的后果，因为在*res.end()中并没有对象，*(res.end()+1)就更没有对象了。这种transform调用时错误的，因为导致了对无效对象的赋值操作。&lt;br&gt;犯这种错误的程序员总是希望他们所调用的算法的结果会被插入到目标容器中。事实上，必须向STL明确表达意图。所以，上面的例子需要通过调用back_insert生成一个迭代器来指定目标区间的起始位置：      &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;int trans(int x){
-    return -x;    
-}
-
-vector&amp;lt;int&amp;gt; ivec{1,2};
-vector&amp;lt;int&amp;gt; res;
-
-std::transform(ivec.begin(), ivec.end(), back_inserter(res), trans);
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;在内部，back_insert返回的迭代器将使得push_back被调用，所以back_insert可使用于所有提供push_back方法的容器。而如果想让一个算法在容器的头部而不是尾部插入对象可以使用front_inserter。&lt;br&gt;因此，无论何时，如果所使用的算法需要指定一个目标区间，那么必须确保目标区间足够大，或者确保它会随着算法的运行而增大。要么在算法执行过程中增大目标区间，请使用插入型迭代器，比如ostream_iterator，或者由back_inserter、front_inserter返回的迭代器。&lt;/p&gt;
-&lt;h3 id=&quot;与排序有关的选择&quot;&gt;&lt;a href=&quot;#与排序有关的选择&quot; class=&quot;headerlink&quot; title=&quot;与排序有关的选择&quot;&gt;&lt;/a&gt;与排序有关的选择&lt;/h3&gt;&lt;p&gt;提到排序，首先想到的是std::sort。但需要注意的是，std::sort并非在任何场合下都是完美无缺的。有些场景并不需要完全的排序操作。比如使用partial_sort来选择前n个最好的商品送给n个最重要的客户，或者当只需要将最好的20个商品送给最重要的20个客户，而不关心哪个商品送给哪位客户的时候选用nth_element。   &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;vector&amp;lt;int&amp;gt; ivec{2,5,10,23,12,56,34,100};
-
-std::partial_sort(ivec.begin(), ivec.begin()+4, ivec.end(), greater&amp;lt;int&amp;gt;());
-for(auto n : ivec){
-    cout &amp;lt;&amp;lt; n &amp;lt;&amp;lt; endl
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;运行结果：&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/5BIVF20.png&quot; alt=&quot;&quot;&gt;   &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;vector&amp;lt;int&amp;gt; ivec{2,5,10,23,12,56,34,100};
-
-std::nth_element(ivec.begin(), ivec.begin()+3, ivec.end(), greater&amp;lt;int&amp;gt;());
-for(auto n : ivec){
-    cout &amp;lt;&amp;lt; n &amp;lt;&amp;lt; endl
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;运行结果:&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/aZpaEcc.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;可以看出，对nth_element的调用与partial_sort几乎一样。在效果上唯一不同之处在于，partial_sort对前20个元素进行了排序，而nth_element没有对他们进行排序。&lt;br&gt;sort、partial_sort、nth_element和stable_sort都属于非稳定的排序算法，有一个名为stable_sort的算法可以提供稳定排序特性。&lt;br&gt;另外，sort、partial_sort、nth_element和stable_sort算法都要求随机访问迭代器，所以这些算法只能被应用于vector、string、deque和数组。对标准关联容器中的元素进行排序并没有实际意义，因为这样的容器总是使用比较函数来维护内部元素的有序性。list是唯一需要排序却无法使用这些排序算法的容器，为此，list特别提供了sort成员函数（稳定排序）。    &lt;/p&gt;
-&lt;h3 id=&quot;remove算法后调用erase删除元素&quot;&gt;&lt;a href=&quot;#remove算法后调用erase删除元素&quot; class=&quot;headerlink&quot; title=&quot;remove算法后调用erase删除元素&quot;&gt;&lt;/a&gt;remove算法后调用erase删除元素&lt;/h3&gt;&lt;p&gt;我们需要知道，从容器中删除元素唯一的办法是调用容器的成员函数，几乎总是erase的某种形式。因此，remove并不知道它操作的元素所在的容器，所以remove不可能从容器中删除元素。那么remove究竟做了什么？&lt;br&gt;其实，remove移动了区间中的元素，其结果是，“不用背删除”的元素移到了区间的前部（保持原来的相对顺序）。返回的是一个迭代器指向最后一个“不用背删除”的元素之后的元素。这个返回值相当于该区间“新的逻辑结尾”。但是，需要注意的是，通常来说，当调用了remove以后，从区间中被删除的那些元素可能在也可能不在区间中，这是算法操作的附带结果。&lt;br&gt;所以，如果真想删除元素，那就必须在remove之后使用erase。要删除的元素的位置从“新的逻辑结尾”一直到原区间的结尾。比如:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;vector&amp;lt;int&amp;gt; ivec;
-...
-v.erase(remove(v.begin(), v.end(), 99), v.end());    
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;此外，remove并不是唯一一个适用于这种情形的算法，其他还有两个属于“remove类”的算法：remove_if和unique。&lt;/p&gt;
-&lt;h3 id=&quot;使用accumulate或者for-each进行区间统计&quot;&gt;&lt;a href=&quot;#使用accumulate或者for-each进行区间统计&quot; class=&quot;headerlink&quot; title=&quot;使用accumulate或者for_each进行区间统计&quot;&gt;&lt;/a&gt;使用accumulate或者for_each进行区间统计&lt;/h3&gt;&lt;p&gt;有时候，我们需要按照某种自定义的方式对区间进行统计处理。这个时候，必须自己定义统计方法。STL通过算法accumulate来提供。&lt;br&gt;accumulate有两种形式：第一种形式有两个迭代器和一个初始值，它返回该初始值加上由迭代器标识的区间中的值的总和。如下面的例子：      &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;vector&amp;lt;int&amp;gt; ivec{1,2,3};
-
-std::accumulate(ivec.begin(), ivec.end(), 0);
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;而另一种形式是accumulate带一个初始值和一个任意的统计函数。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;vector&amp;lt;int&amp;gt; ivec{2,2,3};
-
-std::accumulate(ivec.begin(), ivec.end(), 2, multiplies&amp;lt;int&amp;gt;());  //24    
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;另一个可用来统计区间的算法时for_each，如图accumulate一样，for_each也带两个参数：一个是区间，另一个是函数（通常是函数对象）—对区间中的每个元素都要调用这个函数，但是，传给for_each的这个函数只接受一个实参（即当前的区间元素）；for_each执行完毕后会返回它的函数。&lt;/p&gt;
-&lt;h3 id=&quot;使用排序的区间作为参数的算法&quot;&gt;&lt;a href=&quot;#使用排序的区间作为参数的算法&quot; class=&quot;headerlink&quot; title=&quot;使用排序的区间作为参数的算法&quot;&gt;&lt;/a&gt;使用排序的区间作为参数的算法&lt;/h3&gt;&lt;p&gt;有些算法既可以与排序的区间一起工作，也可以与未排序的区间一起工作，但是当它们作用在排序的区间上时，算法会更加有效。&lt;br&gt;首先，罗列出要求排序区间的STL算法:&lt;br&gt;binary_search, lower_bound, upper_bound, equal_range, set_union, set_intersection, set_difference, set_symmetric_difference, merge, inplace_merge, includes&lt;br&gt;还有一些算法并不一定要求排序的区间，但通常情况下会与排序区间一起使用。&lt;br&gt;unique, unique_copy&lt;br&gt;这其中，用于查找的算法binary_search, lower_bound, upper_bound, equal_range要求排序的区间，因为它们用二分法查找数据。&lt;br&gt;set_union, set_intersection, set_difference, set_symmetric_difference这四个算法提供了线性时间效率的集合操作。它们要求排序的区间，因为如果不满足，它们就无法在线性时间内完成工作。&lt;br&gt;merge和inplace_merge实际上实现了合并和排序的联合操作：它们读入两个排序的区间，然后合并成一个新的排序区间。如果源区间没有排过序，就不可能在线性时间内完成。&lt;br&gt;同样，includes也要求两个区间是排序的，承诺线性时间的效率。&lt;br&gt;而unique和unique_copy与上述讨论过的算法有所不同，它们即使对于未排序的区间也有很好的行为。以unique为例，unique用于删除区间中所有重复的元素，所以必须保证所有相等的元素都是连续存放的。因此，总是要确保传给unique的区间是排序的。&lt;br&gt;顺便提一下，unique使用了与remove类似的办法来删除区间中的元素，而并非真正意义上的删除。&lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;接着上一篇，对STL中非常有用而又容易犯错的一些算法做总结和记录。希望在后面的使用中更加注重STL算法。&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>使用vector和string时需注意的问题</title>
-    <link href="http://blog.dujiong.net/2016/12/11/Effective-STL-1/"/>
-    <id>http://blog.dujiong.net/2016/12/11/Effective-STL-1/</id>
-    <published>2016-12-11T09:39:38.000Z</published>
-    <updated>2017-01-03T02:05:31.993Z</updated>
-    
-    <content type="html">&lt;p&gt;随着对STL的频繁使用和着迷，越发意识到更深层次理解STL的重要性。使用STL正确得到结果是一回事，而高效地使用STL得到结果又是另一回事。因此，拿起了Scott Meyers大神的《Effective STL》，结合自己平时遇到的问题，作一些总结和记录。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;h3 id=&quot;使用reserve避免不必要的重新分配&quot;&gt;&lt;a href=&quot;#使用reserve避免不必要的重新分配&quot; class=&quot;headerlink&quot; title=&quot;使用reserve避免不必要的重新分配&quot;&gt;&lt;/a&gt;使用reserve避免不必要的重新分配&lt;/h3&gt;&lt;p&gt;我们知道，STL容器最大的进步之一是它们会自动增长以便容纳下所放入的数据，只要没有超出它们的最大限制（可以使用max_size()成员函数查看）就可以。vector和string的增长过程是：&lt;br&gt;（1）分配一块大小为当前容量的某个倍数的新内存，在大多数实现中，vector和string的容量每次以2的倍数增长，即每当容器需要扩张时，它们的容量即加倍。&lt;br&gt;（2）把容器的所有元素从旧的内存复制到新的内存中。&lt;br&gt;（3）析构掉旧内存中的对象。&lt;br&gt;（4）释放旧内存。&lt;br&gt;可以看出，这个过程会非常耗时。因此，可以使用reserve成员函数来讲重新分配的次数减少到最低限度，从而避免了重新分配和迭代器/引用失效带来的开销。&lt;br&gt;因此，当一个元素需要被插入而容器的容量不够时，就会发生重新分配过程。比如：创建一个1到1000之间的vector&lt;int&gt;，如果采用这样的方式：&lt;/int&gt;&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;vector&amp;lt;int&amp;gt; ivec;
-for(int i=1;i&amp;lt;=1000;i++)
-    ivec.push_back(i);
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;对于大多数STL实现，该循环在进行过程中将导致2到10次重新分配。而如果改用reserve。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;vector&amp;lt;int&amp;gt; v;
-v.reserve(1000);
-for(int i=1;i&amp;lt;=1000;++i)
-    v.push_back(i);
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;那么，在循环过程中，将不会再发生重新分配。&lt;br&gt;所以，当能确切知道或大致预计容器中最终会有多少元素时，使用reserve。如果不知道，可以先预留足够大的空间，然后，当所有数据都加入以后，再去除多余的容量。   &lt;/p&gt;
-&lt;h3 id=&quot;把vector和string数据传递给旧的C-API&quot;&gt;&lt;a href=&quot;#把vector和string数据传递给旧的C-API&quot; class=&quot;headerlink&quot; title=&quot;把vector和string数据传递给旧的C API&quot;&gt;&lt;/a&gt;把vector和string数据传递给旧的C API&lt;/h3&gt;&lt;p&gt;在使用C/C++时，我们发现很多时候还有旧的C API的身影，它们使用数组和char*指针而不是vector或string对象来进行数据交换。因此，在使用STL时，也必须处理好与旧的C API之间的关系。&lt;br&gt;比如，有一个vector v，而需要得到一个指向v中数据的指针，从而可把v中的数据作为数组来对待，那么只需要使用&amp;amp;v[0]就可以了。而对于string s,对应的形式是s.c_str()。&lt;br&gt;所以，对于给定的C API：        &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;void doSomething(const int* pInts, size_t numInts);
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;可以这样使用：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;if(!v.empty()){
-    doSomething(&amp;amp;v[0], v.size());
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;请注意，不要使用v.begin()来代替&amp;amp;v[0]，因为begin的返回值是一个迭代器，不是指针；当需要一个指向vector中的数据的指针时，永远不应该使用begin()。（可以使用&amp;amp;*v.begin()）&lt;br&gt;但是，上述方法对string却是不可靠的。原因如下：&lt;br&gt;（1）string中的数据不一定存储在连续的内存中；&lt;br&gt;（2）string的内部表示不一定是以空字符结尾的。&lt;br&gt;所以，对于给定的C API：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;void doSomething(const char* pString)
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;可以这样使用： &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;doSomething(s.c_str())    
-&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;避免使用vector&quot;&gt;&lt;a href=&quot;#避免使用vector&quot; class=&quot;headerlink&quot; title=&quot;避免使用vector&quot;&gt;&lt;/a&gt;避免使用vector&lt;bool&gt;&lt;/bool&gt;&lt;/h3&gt;&lt;p&gt;作为一个STL容器，vector&lt;bool&gt;有两点问题。首先，它不是一个STL容器。其次，它并不存储bool。除此之外，一切正常。&lt;br&gt;vector&lt;bool&gt;不是一个STL容器，原因是一个对象要成为STL容器，必须满足的一个条件是，支持operator[]。也就是当使用operator[]取得了容器Container&lt;t&gt;中的一个T对象，那么可以通过取它的地址得到一个指向该对象的指针。&lt;br&gt;因此，如果vector&lt;bool&gt;是一个容器，那么下面这段代码必须可以被编译：&lt;/bool&gt;&lt;/t&gt;&lt;/bool&gt;&lt;/bool&gt;&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;vector&amp;lt;bool&amp;gt; v;
-bool *p = &amp;amp;v[0];
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;但是，它不能通过编译。原因是，vector&lt;bool&gt;是一个假的容器，它并不真的储存bool，相反，为了节省空间，它储存的是bool的紧凑表示。在一个典型的实现中，储存在”vector”中的每个”bool”仅占一个二进制位，一个8位的字节可容纳8个”bool”。在内部，vector&lt;bool&gt;使用了与位域一样的思想，来表示它所存储的那些bool；实际上它只是假装存储了这些bool。&lt;br&gt;位域与bool相似，它只能表示两个可能的值，但是在bool与看似bool的位域之间有一个重要的区别：可以创建一个指向bool的指针，而指向单个位的指针则是不允许的。&lt;br&gt;所以，在上述的实验中，vector&lt;bool&gt;::operator[]需要返回一个指向单个位的引用，而这样的引用却不存在。&lt;br&gt;那么。当需要vector&lt;bool&gt;的时候，应该使用什么呢？&lt;br&gt;标准库提供了两种选择，可以满足绝大多数的需求。第一种是deque&lt;bool&gt;。deque几乎提供了vector所提供的一切，而deque&lt;bool&gt;是一个STL容器，并且确实存储bool。只是需要注意的是，deque中的元素的内存不是连续的，所以不能把deque&lt;bool&gt;中的数据传递给一个期望bool数组的C API。&lt;br&gt;第二种方案时bitset。bitset不是STL容器，但它是标准C++库的一部分。与STL容器不同的是，它的大小（即元素的个数）在编译时就确定了，所以它不支持插入和删除元素。而且，它不支持迭代器。但是，与vector&lt;bool&gt;一样，它使用了一种紧凑表示，只为包含所包含的每个值提高一位空间，它提供了vector&lt;bool&gt;所特有的flip成员函数，以及其他一些特有的、对位的集合有意义的成员函数。在不需要迭代器和动态改变大小的环境下，bitset很适合需要。&lt;/bool&gt;&lt;/bool&gt;&lt;/bool&gt;&lt;/bool&gt;&lt;/bool&gt;&lt;/bool&gt;&lt;/bool&gt;&lt;/bool&gt;&lt;/bool&gt;&lt;/p&gt;
-&lt;h3 id=&quot;string实现的多样性&quot;&gt;&lt;a href=&quot;#string实现的多样性&quot; class=&quot;headerlink&quot; title=&quot;string实现的多样性&quot;&gt;&lt;/a&gt;string实现的多样性&lt;/h3&gt;&lt;p&gt;几乎每个string实现都包含如下信息：&lt;br&gt;（1）字符串的大小，即所包含的字符的个数。&lt;br&gt;（2）用于存储该字符串中字符的内存的容量。&lt;br&gt;（3）字符串的值。&lt;br&gt;除此之外，一个string可能还包含：&lt;br&gt;（1）它的分配子的一份拷贝。&lt;br&gt;（2）对值的引用计数。&lt;br&gt;不同的string实现以不同的方式来组织这些信息。下面以4种不同的string实现方式来说明。它们来源于四种STL实现。    &lt;/p&gt;
-&lt;h4 id=&quot;实现A&quot;&gt;&lt;a href=&quot;#实现A&quot; class=&quot;headerlink&quot; title=&quot;实现A&quot;&gt;&lt;/a&gt;实现A&lt;/h4&gt;&lt;p&gt;每个string对象包含其分配子的一份拷贝、该字符串的大小、它的容量以及一个指针，该指针指向一块动态分配的内存，其中包含了引用计数和字符串的值。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/5ySzRwe.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;在该实现中，使用默认分配子的string对象是一个指针的4倍。若使用了自定义的分配子，则string对象会更大一些，多出的部分取决于分配子对象的大小。    &lt;/p&gt;
-&lt;h4 id=&quot;实现B&quot;&gt;&lt;a href=&quot;#实现B&quot; class=&quot;headerlink&quot; title=&quot;实现B&quot;&gt;&lt;/a&gt;实现B&lt;/h4&gt;&lt;p&gt;在实现B中，string对象与指针大小相同，因为它只包含一个指向结构的指针。B的string所指向的对象中包含了该字符串的大小、容量和引用计数，以及一个指向动态分配的内存的指针，该内存中存放了字符串的值。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/NhnOLNi.png&quot; alt=&quot;&quot;&gt;      &lt;/p&gt;
-&lt;h4 id=&quot;实现C&quot;&gt;&lt;a href=&quot;#实现C&quot; class=&quot;headerlink&quot; title=&quot;实现C&quot;&gt;&lt;/a&gt;实现C&lt;/h4&gt;&lt;p&gt;在实现C中，string对象的大小总是与指针的相同，该指针指向一块动态分配的内存，其中包含了与该字符串相关的一切数据：它的大小、容量、引用计数和值。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/pdowvMe.png&quot; alt=&quot;&quot;&gt;    &lt;/p&gt;
-&lt;h4 id=&quot;实现D&quot;&gt;&lt;a href=&quot;#实现D&quot; class=&quot;headerlink&quot; title=&quot;实现D&quot;&gt;&lt;/a&gt;实现D&lt;/h4&gt;&lt;p&gt;实现D的string对象是指针大小的7倍（仍然假定使用的是默认的分配子）。这一实现不使用引用计数，但是每个string对象内部包含一块内存，最大可容纳15个字符的字符串。因此，小的字符串可以完整地存放在string对象中，这通常被称为“小字符串优化”特性。而当一个string的容量超过15时，该内存的起始部分被当做一个指向一块动态分配的内存的指针，而该string的值就在这块内存中。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/dD1svMe.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
-&lt;h4 id=&quot;比较&quot;&gt;&lt;a href=&quot;#比较&quot; class=&quot;headerlink&quot; title=&quot;比较&quot;&gt;&lt;/a&gt;比较&lt;/h4&gt;&lt;p&gt;（1）在以引用计数为基础的设计方案中，string对象之外的一切可以被多个string对象（如果它们有同样的值）。所以，实现A比实现B或C提供了较小的共享能力。尤其是，实现B和C可以共享string的大小和容量，从而减少每个对象存储这些数据的平均开销。&lt;br&gt;（2）创建一个新的字符串值可能需要零次、一次或两次动态分配。      &lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;随着对STL的频繁使用和着迷，越发意识到更深层次理解STL的重要性。使用STL正确得到结果是一回事，而高效地使用STL得到结果又是另一回事。因此，拿起了Scott Meyers大神的《Effective STL》，结合自己平时遇到的问题，作一些总结和记录。&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>《C++编程思想》之字符串学习笔记</title>
-    <link href="http://blog.dujiong.net/2016/12/08/String/"/>
-    <id>http://blog.dujiong.net/2016/12/08/String/</id>
-    <published>2016-12-08T13:10:07.000Z</published>
-    <updated>2016-12-07T08:33:13.404Z</updated>
-    
-    <content type="html">&lt;p&gt;字符串是C++标准库的一个重要组成部分，本文参照《C++编程思想》中字符串的相关内容，对该部分进行简单总结。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;h3 id=&quot;C字符型数组和C-字符串&quot;&gt;&lt;a href=&quot;#C字符型数组和C-字符串&quot; class=&quot;headerlink&quot; title=&quot;C字符型数组和C++字符串&quot;&gt;&lt;/a&gt;C字符型数组和C++字符串&lt;/h3&gt;&lt;p&gt;在C语言中，字符串基本上就是字符串数组，并且总是以二进制零（空结束符）作为最末元素。C++ string与它们在C语言中的前身截然不同。首先，也是最重要的不同点，C++隐藏了它所包含的字符序列的物理表示。程序设计人员不必关心数组的维数或空结束符方面的问题。C++ string对象知道自己在内存中的开始位置、包含的内容、包含的字符长度以及在必需重新调整内部缓冲区的大小之前自己可以增长到的最大字符长度。C++字符串极大地减少了C语言编程中最常见且最具破坏性的错误：（1）超越数组边界；（2）通过未被初始化或被赋以错误值的指针来访问数组元素；（3）在释放了某一数组原先所分配的存储单元后仍保留了“悬挂”指针。&lt;br&gt;C++标准没有定义字符串类内存布局的确切实现。采用这种体系结构是为了获得足够的灵活性，从而允许不同的编译器厂商能够提供不同的实现，并且向用户保证提供可预测的行为。&lt;/p&gt;
-&lt;h3 id=&quot;创建并初始化C-字符串&quot;&gt;&lt;a href=&quot;#创建并初始化C-字符串&quot; class=&quot;headerlink&quot; title=&quot;创建并初始化C++字符串&quot;&gt;&lt;/a&gt;创建并初始化C++字符串&lt;/h3&gt;&lt;p&gt;创建C++ string一般有以下几种方式：&lt;br&gt;（1）&lt;code&gt;string temp;&lt;/code&gt;  创建空string对象，且并不立即用字符数据对其初始化；&lt;br&gt;（2）&lt;code&gt;string temp(&amp;quot;hello world&amp;quot;);&lt;/code&gt;  将一个文字的引用数组作为参数传递给构造函数，以此来对一个string对象进行初始化；&lt;br&gt;（3）&lt;code&gt;string temp = &amp;quot;hello world&amp;quot;;&lt;/code&gt;  用等号来初始化一个string对象;&lt;br&gt;（4）&lt;code&gt;string temp(str);&lt;/code&gt;        用一个string对象看来初始化另一个string对象。&lt;br&gt;另外，还有一些相关的成员函数和特性：&lt;br&gt;（1）用operator+来将不同的初始化数据源结合在一起；&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;string s1(&amp;quot;hello&amp;quot;);
-std::cout &amp;lt;&amp;lt; s1 + &amp;quot; world&amp;quot; &amp;lt;&amp;lt; std::endl;        //hello world
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;（2）用string对象的成员函数substr()来创建一个子串。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;string s1(&amp;quot;hello world, hello&amp;quot;);
-std::cout &amp;lt;&amp;lt; s1.substr(0, 11) &amp;lt;&amp;lt; std::endl;        //hello world   \
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;string类对象的成员函数substr()将开始位置作为其第一个参数，而将待选字符的个数作为其第2个参数。&lt;br&gt;（3）将string看做容器对象，利用string类的迭代器string::begin()和string::end()。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;string s1(&amp;quot;hello world&amp;quot;);
-string s2(s1.begin(), s2.end());
-std::cout &amp;lt;&amp;lt; s2 &amp;lt;&amp;lt; std::endl;        //hello world
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;不可以使用单个的字符、ASCII码或其他整数值来初始化C++字符串。&lt;/p&gt;
-&lt;h3 id=&quot;字符串的操作&quot;&gt;&lt;a href=&quot;#字符串的操作&quot; class=&quot;headerlink&quot; title=&quot;字符串的操作&quot;&gt;&lt;/a&gt;字符串的操作&lt;/h3&gt;&lt;p&gt;标准C语言的char型数组工具中存在着其固有的误区，那就是它们都显示地依赖一种假设：字符数组包括一个空结束符。若由于疏忽或是其他差错，这个空结束符被忽略或重写，这个小小的差错就会使C语言的char数组处理函数几乎不可避免地操作其已分配空间之外的内存，有时会带来灾难性后果。&lt;br&gt;C++提供的string类对象，在使用的便利性和安全性上都有很大的提高。     &lt;/p&gt;
-&lt;h4 id=&quot;追加、插入和连接字符串&quot;&gt;&lt;a href=&quot;#追加、插入和连接字符串&quot; class=&quot;headerlink&quot; title=&quot;追加、插入和连接字符串&quot;&gt;&lt;/a&gt;追加、插入和连接字符串&lt;/h4&gt;&lt;p&gt;C++字符串一个便于使用的特色是：无需程序员干预，可根据需要自行扩充规模。这样程序员不再需要跟踪字符串的存储边界。此外，当字符串增长时，字符串成员函数append()–(追加)和insert()–(插入)很明显地重新分配了存储空间。&lt;br&gt;此外，还有一些成员函数：capacity()返回当前分配的存储空间的规模；reserve(int size)提供一种优化机制，按照程序员的意图，预留一定数量的存储空间，以便将来使用。而如果要生成的新字符串的规模比当前的字符串大或者需要截断原字符串，resize()函数就会在字符串的末尾追加空格或是指定的字符。&lt;/p&gt;
-&lt;h4 id=&quot;替换字符串的字符&quot;&gt;&lt;a href=&quot;#替换字符串的字符&quot; class=&quot;headerlink&quot; title=&quot;替换字符串的字符&quot;&gt;&lt;/a&gt;替换字符串的字符&lt;/h4&gt;&lt;p&gt;insert()使程序员放心地向字符串中插入字符，而不必担心会使存储空间越界，或者会改写插入点之后紧跟的字符。存储空间增大了，原有的字符会该改变其存储位置，以便安置新元素。&lt;br&gt;replace()用于替换（删除）字符串中的字符，如果对replace()的调用使“替换”超出了原有序列的边界，这与追加操作是等价的，这样replace()也会增加存储空间。&lt;br&gt;此外，我们知道，STL中的算法功能很强大，由于string类几乎可以与STL容器等价，因此，string的很多解决方案可以由标准库的算法完成。比如，使用&lt;code&gt;std::replace(s.begin(), s.end(), &amp;#39;X&amp;#39;, &amp;#39;Y&amp;#39;)&lt;/code&gt;将字符串中出现的某个字符（’X’）全部用另一个字符(‘Y’)替换掉。这里的replace()是STL通用算法，不是string的成员函数。&lt;/p&gt;
-&lt;h4 id=&quot;使用非成员重载运算符连接&quot;&gt;&lt;a href=&quot;#使用非成员重载运算符连接&quot; class=&quot;headerlink&quot; title=&quot;使用非成员重载运算符连接&quot;&gt;&lt;/a&gt;使用非成员重载运算符连接&lt;/h4&gt;&lt;p&gt;C++ string类另一个令人欣喜的特性是可以借助operator+和operator+=来轻易地实现字符串的合并与追加操作。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;string str(&amp;quot;hello&amp;quot;);
-str += &amp;quot; world&amp;quot;;
-cout &amp;lt;&amp;lt; str &amp;lt;&amp;lt; endl;        //hello world
-&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;字符串的查找&quot;&gt;&lt;a href=&quot;#字符串的查找&quot; class=&quot;headerlink&quot; title=&quot;字符串的查找&quot;&gt;&lt;/a&gt;字符串的查找&lt;/h3&gt;&lt;p&gt;string成员函数中的find族是用来在给定字符串中定位某个或某组字符的。包括：&lt;br&gt;（1）find()：在字符串中查找一个指定的单个字符或字符组；&lt;br&gt;（2）find_first_of()：查找第一个与指定字符组任何字符匹配的字符位置；&lt;br&gt;（3）find_first_not_of()：查找第一个与指定字符组任何字符都不匹配的字符位置；&lt;br&gt;（4）find_last_of();&lt;br&gt;（5）find_last_not_of();&lt;br&gt;（6）rfind()：对一个字符串从尾到头查找指定的字符或字符组，返回首次匹配的开始位置。&lt;br&gt;string类中没有改变字符串大小写的函数，可以借助于标准C语言的toupper()和tolower()实现，这两个函数以此只能改变一个字符的大小写。&lt;/p&gt;
-&lt;h3 id=&quot;字符串的删除&quot;&gt;&lt;a href=&quot;#字符串的删除&quot; class=&quot;headerlink&quot; title=&quot;字符串的删除&quot;&gt;&lt;/a&gt;字符串的删除&lt;/h3&gt;&lt;p&gt;使用erase()成员函数删除字符串中的字符，该函数有两个参数：一个参数表示开始删除字符的位置（默认值是0）；另一个表示要删除多少个字符（默认值是string::npos）。如果指定删除的字符个数比字符串中剩余的字符还多，那么剩余的字符将全部删除，所以，调用不含参数的erase()函数将删除字符串中的所有字符。&lt;/p&gt;
-&lt;h3 id=&quot;字符串的比较&quot;&gt;&lt;a href=&quot;#字符串的比较&quot; class=&quot;headerlink&quot; title=&quot;字符串的比较&quot;&gt;&lt;/a&gt;字符串的比较&lt;/h3&gt;&lt;p&gt;字符串的比较，简而言之就是：当两个字符串比较遇到第一对不同的字符时，字符串s1中第一个不同的字符比字符串s2中同样位置的字符在ASCII表中的位置更靠后，那么s1“大于”s2。&lt;br&gt;C++提供了多种字符串比较方法，它们各具特色。其中最简单的就是使用非成员的重载运算符函数：operator==、operator!=、operator&amp;gt;、operator&amp;lt;、operator&amp;gt;=、operator&amp;lt;=。&lt;br&gt;此外，string类还提供compare()成员函数，用以提供更复杂紧密的比较手段。用多种重载版本来对比较的字串做控制。&lt;br&gt;C语言中获取字符串中的某个字符都是采用数组索引法（[]）,C++ string提供一种s[n]表示法的替代方法：at()成员函数。如果不出异常，这两种索引机制在C++中产生的结果是一样的。而有异常的情况时，比如程序员引用了一个超过边界的数组元素，at()将会友好地抛出一个异常，而普通的[]下标语法将让程序员自行决策。at()成员函数抛出的是一个out_of_range类对象，它(最终)派生于std::exception。程序可在一个异常处理器中捕获该对象，并采取适当的补救措施，比如重新计算越界下标或扩充数组。而string::operator&lt;a href=&quot;&quot;&gt;&lt;/a&gt;不会有那样的保护性，它的危险性等同于C语言中国对char型数组的处理。    &lt;/p&gt;
-&lt;h3 id=&quot;C语言函数处理时的转换&quot;&gt;&lt;a href=&quot;#C语言函数处理时的转换&quot; class=&quot;headerlink&quot; title=&quot;C语言函数处理时的转换&quot;&gt;&lt;/a&gt;C语言函数处理时的转换&lt;/h3&gt;&lt;p&gt;C++ string提供了c_str()函数返回一个const char*，它指向一个C语言风格的具有“空结束符”的字符串，此字符串与string对象的内容等价。当想将一个字符串传送给一个标准C语言函数时，比如atoi()、printf()，const char*可派上用场。不过，用c_str()的返回值作为非const参数应用于任一函数都是错误的。    &lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;字符串是C++标准库的一个重要组成部分，本文参照《C++编程思想》中字符串的相关内容，对该部分进行简单总结。&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
     
   </entry>
   
