@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://blog.dujiong.net/2016/12/23/Redis-db/</loc>
+    
+    <lastmod>2017-01-19T08:48:15.961Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://blog.dujiong.net/2016/11/17/Redis-replicate/</loc>
     
     <lastmod>2017-01-19T08:45:01.363Z</lastmod>
@@ -89,13 +96,6 @@
     <loc>http://blog.dujiong.net/2016/11/20/shortest-path/</loc>
     
     <lastmod>2016-11-25T01:45:32.826Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://blog.dujiong.net/2016/11/17/Redis-db/</loc>
-    
-    <lastmod>2016-11-24T07:49:39.294Z</lastmod>
     
   </url>
   

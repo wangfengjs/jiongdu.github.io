@@ -4,6 +4,23 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/12/23/Redis-db/</loc>
+    <lastmod>2017-01-19T08:48:15.961Z</lastmod>
+    <data>
+        <display>
+        <title>Redis之数据库的实现</title>
+        <pubTime>2016-12-23T11:46:03.000Z</pubTime>
+        
+        <tag>Redis</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/11/17/Redis-replicate/</loc>
     <lastmod>2017-01-19T08:45:01.363Z</lastmod>
     <data>
@@ -218,23 +235,6 @@
         <pubTime>2016-11-20T12:03:09.000Z</pubTime>
         
         <tag>数据结构与算法</tag>
-         
-         
-           
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
-    <loc>http://blog.dujiong.net/2016/11/17/Redis-db/</loc>
-    <lastmod>2016-11-24T07:49:39.294Z</lastmod>
-    <data>
-        <display>
-        <title>Redis之数据库的实现</title>
-        <pubTime>2016-11-17T11:46:03.000Z</pubTime>
-        
-        <tag>Redis</tag>
          
          
            
