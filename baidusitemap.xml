@@ -4,12 +4,29 @@
 
     
   <url>
-    <loc>http://blog.dujiong.net/2016/12/23/Effective-STL-3/</loc>
-    <lastmod>2017-01-03T06:05:53.135Z</lastmod>
+    <loc>http://blog.dujiong.net/2016/11/17/Redis-replicate/</loc>
+    <lastmod>2017-01-19T08:45:01.363Z</lastmod>
+    <data>
+        <display>
+        <title>Redis之复制</title>
+        <pubTime>2016-11-17T07:04:22.000Z</pubTime>
+        
+        <tag>Redis</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://blog.dujiong.net/2016/12/30/Effective-STL-3/</loc>
+    <lastmod>2017-01-19T07:13:29.279Z</lastmod>
     <data>
         <display>
         <title>更好地使用STL关联容器</title>
-        <pubTime>2016-12-23T02:13:50.000Z</pubTime>
+        <pubTime>2016-12-30T02:13:50.000Z</pubTime>
         
         <tag>C++</tag>
          

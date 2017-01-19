@@ -2,9 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://blog.dujiong.net/2016/12/23/Effective-STL-3/</loc>
+    <loc>http://blog.dujiong.net/2016/11/17/Redis-replicate/</loc>
     
-    <lastmod>2017-01-03T06:05:53.135Z</lastmod>
+    <lastmod>2017-01-19T08:45:01.363Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://blog.dujiong.net/2016/12/30/Effective-STL-3/</loc>
+    
+    <lastmod>2017-01-19T07:13:29.279Z</lastmod>
     
   </url>
   
