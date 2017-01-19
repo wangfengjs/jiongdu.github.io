@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://blog.dujiong.net/2016/12/23/Coroutine/</loc>
+    
+    <lastmod>2017-01-19T08:53:27.830Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://blog.dujiong.net/2016/12/03/Redis-db/</loc>
     
     <lastmod>2017-01-19T08:51:50.312Z</lastmod>
@@ -54,13 +61,6 @@
     <loc>http://blog.dujiong.net/2016/10/23/permutation/</loc>
     
     <lastmod>2016-12-02T02:55:05.318Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://blog.dujiong.net/2016/12/03/Coroutine/</loc>
-    
-    <lastmod>2016-11-30T13:21:20.180Z</lastmod>
     
   </url>
   
