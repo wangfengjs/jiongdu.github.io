@@ -68,7 +68,14 @@
 <meta property="og:image" content="http://i.imgur.com/O4QfdDF.jpg">
 <meta property="og:image" content="http://i.imgur.com/6QuQXPQ.png">
 <meta property="og:image" content="http://i.imgur.com/nWUeGum.png">
-<meta property="og:updated_time" content="2017-03-27T11:24:47.988Z">
+<meta property="og:image" content="http://i.imgur.com/6jhul4S.png">
+<meta property="og:image" content="http://i.imgur.com/WTTZPh8.png">
+<meta property="og:image" content="http://i.imgur.com/jJcOqwB.png">
+<meta property="og:image" content="http://i.imgur.com/X3GWKHJ.png">
+<meta property="og:image" content="http://i.imgur.com/a0P55nA.png">
+<meta property="og:image" content="http://i.imgur.com/Hr2xMz6.png">
+<meta property="og:image" content="http://i.imgur.com/xLG6ctH.png">
+<meta property="og:updated_time" content="2017-03-27T13:19:07.602Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="搭建Redis集群">
 <meta name="twitter:description" content="Redis集群是Redis提供的分布式数据库方案，集群通过分片来进行数据共享，并提供复制和故障转移功能。">
@@ -335,8 +342,12 @@ redis-server redis.conf
 <pre><code>cp redis-3.2.8/src/redis-trib.rb /usr/local/bin/redis-trib
 </code></pre><p>就可以使用redis-trib创建集群了。</p>
 <pre><code>redis-trib create --replicas 1 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003 127.0.0.1:7004 127.0.0.1:7005
-</code></pre><p>其中，命令create表示创建一个新的集群，选项–replicas 1表示未集群中的每个主节点创建一个从节点。即，上述命令运行后，redis-trib将创建一个包含三个主节点和三个从节点的集群。    </p>
-<h3 id="一些简单的测试"><a href="#一些简单的测试" class="headerlink" title="一些简单的测试"></a>一些简单的测试</h3><h4 id="集群查询"><a href="#集群查询" class="headerlink" title="集群查询"></a>集群查询</h4><h4 id="删除节点"><a href="#删除节点" class="headerlink" title="删除节点"></a>删除节点</h4><h4 id="故障转移"><a href="#故障转移" class="headerlink" title="故障转移"></a>故障转移</h4>
+</code></pre><p>其中，命令create表示创建一个新的集群，选项–replicas 1表示未集群中的每个主节点创建一个从节点。即，上述命令运行后，redis-trib将创建一个包含三个主节点和三个从节点的集群。<br><img src="http://i.imgur.com/6jhul4S.png" alt=""><br>键入“yes”后一个三主三从的集群架构就创建完毕。<br><img src="http://i.imgur.com/WTTZPh8.png" alt=""></p>
+<h3 id="一些简单的测试"><a href="#一些简单的测试" class="headerlink" title="一些简单的测试"></a>一些简单的测试</h3><p>创建完毕后，可以随时通过redis-cli -p 7000(node number) cluster nodes来查看集群中各节点的信息。包括唯一的节点ID，主从关系，每个主节点分配的slots范围。<br><img src="http://i.imgur.com/jJcOqwB.png" alt=""></p>
+<h4 id="集群查询"><a href="#集群查询" class="headerlink" title="集群查询"></a>集群查询</h4><p>做一个简单的测试，    在7000节点上存储K-V数据，然后分别在其从节点和其他主节点上获取该数据。<br><img src="http://i.imgur.com/X3GWKHJ.png" alt=""><br><img src="http://i.imgur.com/a0P55nA.png" alt=""><br>要找的数据没有在当前节点上时，cluster发送MOVED指令指示到对应的节点上穿，可以通过-c参数指定查询时接收到MOVED指令自动跳转。</p>
+<h4 id="删除节点"><a href="#删除节点" class="headerlink" title="删除节点"></a>删除节点</h4><p>Slave节点的作用是提供冗余和高可用，大部分情况下用于分担读的压力。移除Slave节点无须多余的动作，直接删除即可。<br><img src="http://i.imgur.com/Hr2xMz6.png" alt=""><br>而如果是Master节点，则需要将其负责的slots范围迁移到其他节点上。保证数据不丢失。<br>所以，先使用redis-trib reshard …来将待删除的节点上的数据迁移到其他节点，然后删除该节点。<br><img src="http://i.imgur.com/xLG6ctH.png" alt=""></p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>Redis Cluster是3.0版本之后提供的新功能，采用了P2P的去中心化架构，而没有采用像Codis之类的Proxy解决方案中的中心协调节点设计。本文只是简单搭建了一个Redis集群环境，后续还将在此基础上，进一步深入研究高可用、可扩展的Redis集群方案。</p>
+
       
     </div>
 
@@ -506,7 +517,7 @@ redis-server redis.conf
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis集群概述"><span class="nav-number">1.</span> <span class="nav-text">Redis集群概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis集群架构图"><span class="nav-number">2.</span> <span class="nav-text">Redis集群架构图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis集群实践"><span class="nav-number">3.</span> <span class="nav-text">Redis集群实践</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#一些简单的测试"><span class="nav-number">4.</span> <span class="nav-text">一些简单的测试</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#集群查询"><span class="nav-number">4.1.</span> <span class="nav-text">集群查询</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#删除节点"><span class="nav-number">4.2.</span> <span class="nav-text">删除节点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#故障转移"><span class="nav-number">4.3.</span> <span class="nav-text">故障转移</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis集群概述"><span class="nav-number">1.</span> <span class="nav-text">Redis集群概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis集群架构图"><span class="nav-number">2.</span> <span class="nav-text">Redis集群架构图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis集群实践"><span class="nav-number">3.</span> <span class="nav-text">Redis集群实践</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#一些简单的测试"><span class="nav-number">4.</span> <span class="nav-text">一些简单的测试</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#集群查询"><span class="nav-number">4.1.</span> <span class="nav-text">集群查询</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#删除节点"><span class="nav-number">4.2.</span> <span class="nav-text">删除节点</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">

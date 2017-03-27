@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2017-03-27T11:24:47.988Z</updated>
+  <updated>2017-03-27T13:19:07.602Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://blog.dujiong.net/2017/01/05/Redis-Cluster/"/>
     <id>http://blog.dujiong.net/2017/01/05/Redis-Cluster/</id>
     <published>2017-01-05T07:08:05.000Z</published>
-    <updated>2017-03-27T11:24:47.988Z</updated>
+    <updated>2017-03-27T13:19:07.602Z</updated>
     
     <content type="html">&lt;p&gt;Redis集群是Redis提供的分布式数据库方案，集群通过分片来进行数据共享，并提供复制和故障转移功能。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h3 id=&quot;Redis集群概述&quot;&gt;&lt;a href=&quot;#Redis集群概述&quot; class=&quot;headerlink&quot; title=&quot;Redis集群概述&quot;&gt;&lt;/a&gt;Redis集群概述&lt;/h3&gt;&lt;p&gt;Redis集群使用数据分片而非一致性哈希来实现，一个Redis集群包含16384个哈希槽（slot），数据库中的每个键都属于这16384个哈希槽中的其中一个，集群中的每个节点可以处理0个或最多16384个槽，当数据库中的16384个槽都有节点在处理时，集群处于上线状态；而如果数据库中有任何一个槽没有得到处理，那么集群处于下线状态。&lt;br&gt;集群中的每个节点负责处理一部分哈希槽，比如，现在有三个独立的节点127.0.0.1:7000,127.0.0.1:7001,127.0.0.1:7002，其中各节点处理的哈希槽关系：节点7000负责处理0到5000号哈希槽，节点7001负责处理5001到10000号哈希槽，节点7002负责处理10001到16384号哈希槽。&lt;br&gt;从而，当向集群中添加或删除节点时，集群只需在对应节点的哈希槽做移动即可。不会造成节点阻塞、集群下线。&lt;br&gt;当然，为了使得集群在一部分节点下线的情况下仍然可以正常运作，Redis集群对节点提供了主从复制功能，集群中的每个节点都有1到N个复制节点，形成主-从模型。&lt;/p&gt;
@@ -61,8 +61,12 @@ redis-server redis.conf
 &lt;pre&gt;&lt;code&gt;cp redis-3.2.8/src/redis-trib.rb /usr/local/bin/redis-trib
 &lt;/code&gt;&lt;/pre&gt;&lt;p&gt;就可以使用redis-trib创建集群了。&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;redis-trib create --replicas 1 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003 127.0.0.1:7004 127.0.0.1:7005
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;其中，命令create表示创建一个新的集群，选项–replicas 1表示未集群中的每个主节点创建一个从节点。即，上述命令运行后，redis-trib将创建一个包含三个主节点和三个从节点的集群。    &lt;/p&gt;
-&lt;h3 id=&quot;一些简单的测试&quot;&gt;&lt;a href=&quot;#一些简单的测试&quot; class=&quot;headerlink&quot; title=&quot;一些简单的测试&quot;&gt;&lt;/a&gt;一些简单的测试&lt;/h3&gt;&lt;h4 id=&quot;集群查询&quot;&gt;&lt;a href=&quot;#集群查询&quot; class=&quot;headerlink&quot; title=&quot;集群查询&quot;&gt;&lt;/a&gt;集群查询&lt;/h4&gt;&lt;h4 id=&quot;删除节点&quot;&gt;&lt;a href=&quot;#删除节点&quot; class=&quot;headerlink&quot; title=&quot;删除节点&quot;&gt;&lt;/a&gt;删除节点&lt;/h4&gt;&lt;h4 id=&quot;故障转移&quot;&gt;&lt;a href=&quot;#故障转移&quot; class=&quot;headerlink&quot; title=&quot;故障转移&quot;&gt;&lt;/a&gt;故障转移&lt;/h4&gt;</content>
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;其中，命令create表示创建一个新的集群，选项–replicas 1表示未集群中的每个主节点创建一个从节点。即，上述命令运行后，redis-trib将创建一个包含三个主节点和三个从节点的集群。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/6jhul4S.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;键入“yes”后一个三主三从的集群架构就创建完毕。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/WTTZPh8.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h3 id=&quot;一些简单的测试&quot;&gt;&lt;a href=&quot;#一些简单的测试&quot; class=&quot;headerlink&quot; title=&quot;一些简单的测试&quot;&gt;&lt;/a&gt;一些简单的测试&lt;/h3&gt;&lt;p&gt;创建完毕后，可以随时通过redis-cli -p 7000(node number) cluster nodes来查看集群中各节点的信息。包括唯一的节点ID，主从关系，每个主节点分配的slots范围。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/jJcOqwB.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h4 id=&quot;集群查询&quot;&gt;&lt;a href=&quot;#集群查询&quot; class=&quot;headerlink&quot; title=&quot;集群查询&quot;&gt;&lt;/a&gt;集群查询&lt;/h4&gt;&lt;p&gt;做一个简单的测试，    在7000节点上存储K-V数据，然后分别在其从节点和其他主节点上获取该数据。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/X3GWKHJ.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/a0P55nA.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;要找的数据没有在当前节点上时，cluster发送MOVED指令指示到对应的节点上穿，可以通过-c参数指定查询时接收到MOVED指令自动跳转。&lt;/p&gt;
+&lt;h4 id=&quot;删除节点&quot;&gt;&lt;a href=&quot;#删除节点&quot; class=&quot;headerlink&quot; title=&quot;删除节点&quot;&gt;&lt;/a&gt;删除节点&lt;/h4&gt;&lt;p&gt;Slave节点的作用是提供冗余和高可用，大部分情况下用于分担读的压力。移除Slave节点无须多余的动作，直接删除即可。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/Hr2xMz6.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;而如果是Master节点，则需要将其负责的slots范围迁移到其他节点上。保证数据不丢失。&lt;br&gt;所以，先使用redis-trib reshard …来将待删除的节点上的数据迁移到其他节点，然后删除该节点。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/xLG6ctH.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h3 id=&quot;总结&quot;&gt;&lt;a href=&quot;#总结&quot; class=&quot;headerlink&quot; title=&quot;总结&quot;&gt;&lt;/a&gt;总结&lt;/h3&gt;&lt;p&gt;Redis Cluster是3.0版本之后提供的新功能，采用了P2P的去中心化架构，而没有采用像Codis之类的Proxy解决方案中的中心协调节点设计。本文只是简单搭建了一个Redis集群环境，后续还将在此基础上，进一步深入研究高可用、可扩展的Redis集群方案。&lt;/p&gt;
+</content>
     
     <summary type="html">
     
