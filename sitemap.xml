@@ -2,16 +2,23 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://blog.dujiong.net/2016/12/23/Coroutine/</loc>
+    <loc>http://blog.dujiong.net/2016/12/03/Redis-RDB-AOF/</loc>
     
-    <lastmod>2017-01-19T08:53:27.830Z</lastmod>
+    <lastmod>2017-03-27T07:02:28.516Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://blog.dujiong.net/2016/12/03/Redis-db/</loc>
+    <loc>http://blog.dujiong.net/2016/11/25/Redis-db/</loc>
     
-    <lastmod>2017-01-19T08:51:50.312Z</lastmod>
+    <lastmod>2017-03-27T07:02:10.685Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://blog.dujiong.net/2016/12/23/Coroutine/</loc>
+    
+    <lastmod>2017-01-19T08:53:27.830Z</lastmod>
     
   </url>
   
@@ -47,13 +54,6 @@
     <loc>http://blog.dujiong.net/2016/12/08/String/</loc>
     
     <lastmod>2016-12-07T08:33:13.404Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://blog.dujiong.net/2016/11/30/Redis-RDB-AOF/</loc>
-    
-    <lastmod>2016-12-05T09:10:53.872Z</lastmod>
     
   </url>
   
