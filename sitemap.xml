@@ -2,6 +2,20 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://blog.dujiong.net/2016/11/27/Redis-RDB/</loc>
+    
+    <lastmod>2017-03-27T07:06:50.360Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://blog.dujiong.net/2016/11/30/Redis-AOF/</loc>
+    
+    <lastmod>2017-03-27T07:06:48.645Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://blog.dujiong.net/2016/12/03/Redis-RDB-AOF/</loc>
     
     <lastmod>2017-03-27T07:02:28.516Z</lastmod>
@@ -75,20 +89,6 @@
     <loc>http://blog.dujiong.net/2016/09/18/spinlock-vs-mutex/</loc>
     
     <lastmod>2016-11-30T10:38:14.506Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://blog.dujiong.net/2016/11/27/Redis-AOF/</loc>
-    
-    <lastmod>2016-11-28T11:47:43.686Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://blog.dujiong.net/2016/11/25/Redis-RDB/</loc>
-    
-    <lastmod>2016-11-25T08:21:30.775Z</lastmod>
     
   </url>
   

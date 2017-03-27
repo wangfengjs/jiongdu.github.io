@@ -248,8 +248,8 @@
             
               
                 
-                <a class="post-title-link" href="/2016/11/25/Redis-RDB/" itemprop="url">
-                  Redis之RDB持久化
+                <a class="post-title-link" href="/2016/11/25/Redis-db/" itemprop="url">
+                  Redis之数据库的实现
                 </a>
               
             
@@ -262,7 +262,7 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-11-25T14:22:16+08:00" content="2016-11-25">
+            <time itemprop="dateCreated" datetime="2016-11-25T19:46:03+08:00" content="2016-11-25">
               2016-11-25
             </time>
           </span>
@@ -273,8 +273,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/11/25/Redis-RDB/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/11/25/Redis-RDB/" itemprop="commentsCount"></span>
+                <a href="/2016/11/25/Redis-db/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/11/25/Redis-db/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -297,9 +297,9 @@
 
       
         
-          <p>Redis是内存数据库，它将自己的数据库状态储存在内存里面，所以，如果不想办法将储存在内存中的数据库状态保存到磁盘里面，那么一旦服务器进程退出，服务器中的数据库状态也会消失不见。<br>
+          <p>本文对Redis服务器的数据库实现进行说明，包括服务器保存数据库的方法，数据库保存键值对的方法，以及针对数据库的添加、删除、查看等操作的实现方法，最后，会对服务器保存键的过期时间的方法和服务器自动删除过期键的方法进行分析。<br>
           <div class="post-more-link text-center">
-            <a class="btn" href="/2016/11/25/Redis-RDB/#more" rel="contents">
+            <a class="btn" href="/2016/11/25/Redis-db/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
