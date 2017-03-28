@@ -4,6 +4,40 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2016/11/25/Redis-replicate/</loc>
+    <lastmod>2017-03-28T07:14:36.056Z</lastmod>
+    <data>
+        <display>
+        <title>Redis之复制</title>
+        <pubTime>2016-11-25T07:04:22.000Z</pubTime>
+        
+        <tag>Redis</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://blog.dujiong.net/2016/11/17/Redis-db/</loc>
+    <lastmod>2017-03-28T07:14:34.678Z</lastmod>
+    <data>
+        <display>
+        <title>Redis之数据库的实现</title>
+        <pubTime>2016-11-17T11:46:03.000Z</pubTime>
+        
+        <tag>Redis</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2017/01/05/Redis-Cluster/</loc>
     <lastmod>2017-03-27T13:19:07.602Z</lastmod>
     <data>
@@ -72,23 +106,6 @@
 
     
   <url>
-    <loc>http://blog.dujiong.net/2016/11/25/Redis-db/</loc>
-    <lastmod>2017-03-27T07:02:10.685Z</lastmod>
-    <data>
-        <display>
-        <title>Redis之数据库的实现</title>
-        <pubTime>2016-11-25T11:46:03.000Z</pubTime>
-        
-        <tag>Redis</tag>
-         
-         
-           
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
     <loc>http://blog.dujiong.net/2016/12/23/Coroutine/</loc>
     <lastmod>2017-01-19T08:53:27.830Z</lastmod>
     <data>
@@ -97,23 +114,6 @@
         <pubTime>2016-12-23T10:41:42.000Z</pubTime>
         
         <tag>进程/线程/并发</tag>
-         
-         
-           
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
-    <loc>http://blog.dujiong.net/2016/11/17/Redis-replicate/</loc>
-    <lastmod>2017-01-19T08:45:01.363Z</lastmod>
-    <data>
-        <display>
-        <title>Redis之复制</title>
-        <pubTime>2016-11-17T07:04:22.000Z</pubTime>
-        
-        <tag>Redis</tag>
          
          
            

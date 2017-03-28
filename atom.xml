@@ -799,11 +799,163 @@ struct saveparams {
   </entry>
   
   <entry>
+    <title>Redis之复制</title>
+    <link href="http://blog.dujiong.net/2016/11/25/Redis-replicate/"/>
+    <id>http://blog.dujiong.net/2016/11/25/Redis-replicate/</id>
+    <published>2016-11-25T07:04:22.000Z</published>
+    <updated>2017-03-28T07:14:36.056Z</updated>
+    
+    <content type="html">&lt;p&gt;本文来学习下Redis中的复制特性。我们知道，在使用多Redis服务器的时候，保持主从服务器间的数据同步（一致性）是一个很重要的问题。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt; &lt;/p&gt;
+&lt;h3 id=&quot;Redis-2-8以前的复制&quot;&gt;&lt;a href=&quot;#Redis-2-8以前的复制&quot; class=&quot;headerlink&quot; title=&quot;Redis 2.8以前的复制&quot;&gt;&lt;/a&gt;Redis 2.8以前的复制&lt;/h3&gt;&lt;p&gt;Redid的复制功能分为同步和命令传播两个操作：&lt;br&gt;（1）同步用于将从服务器的数据库状态更新至主服务器当前所处的数据库状态；&lt;br&gt;（2）命令传播操作则用于在数据库状态被修改，导致主从服务器的数据库状态不一致时，让主从服务器的数据库状态重新回到一致状态。   &lt;/p&gt;
+&lt;h4 id=&quot;同步&quot;&gt;&lt;a href=&quot;#同步&quot; class=&quot;headerlink&quot; title=&quot;同步&quot;&gt;&lt;/a&gt;同步&lt;/h4&gt;&lt;p&gt;从服务器对主服务器的同步操作需要通过向主服务器发送SYNC命令来完成，其执行步骤是：&lt;br&gt;（1）从服务器向主服务器发送SYNC命令。&lt;br&gt;（2）收到SYNC命令的主服务器执行BGSAVE命令，在后台生成一个RDB文件，并使用一个缓冲区记录从现在开始执行的所有写命令。&lt;br&gt;（3）当主服务器的BGSAVE命令执行完毕时，主服务器会将BGSAVE命令生成的RDB文件发送给从服务器，从服务器接收并载入该RDB文件，将自己的数据库状态更新至主服务器执行BGSAVE命令时的数据库状态。&lt;br&gt;（4）主服务器将记录在缓冲区中的所有写命令发送给从服务器，从服务器执行这些写命令，将自己的数据库状态更新至主服务器数据库当前所处的状态。      &lt;/p&gt;
+&lt;h4 id=&quot;命令传播&quot;&gt;&lt;a href=&quot;#命令传播&quot; class=&quot;headerlink&quot; title=&quot;命令传播&quot;&gt;&lt;/a&gt;命令传播&lt;/h4&gt;&lt;p&gt;同步操作执行完毕后，主从服务器两者的数据库达到一致状态，但这种一致并非一成不变的，每当主服务器执行客户端发送的写命令时，主服务器的数据库就有可能会被修改，并导致主服务器状态不再一致。&lt;br&gt;因此，为了让主从服务器再次回到一致状态，主服务器需要对服务器执行命令传播操作：主服务器会将自己执行的写命令，也即是造成主从服务器不一致的那条写命令，发送给从服务器执行，当从服务器执行了相同的写命令之后，主从服务器将再次回到一致状态。     &lt;/p&gt;
+&lt;h4 id=&quot;Redis-2-8以前的复制存在的问题&quot;&gt;&lt;a href=&quot;#Redis-2-8以前的复制存在的问题&quot; class=&quot;headerlink&quot; title=&quot;Redis 2.8以前的复制存在的问题&quot;&gt;&lt;/a&gt;Redis 2.8以前的复制存在的问题&lt;/h4&gt;&lt;p&gt;Redis 2.8之前的版本对于断线后重新复制支持不好，虽然能够完成任务，但是效率却非常低。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/BixE10t.png&quot; alt=&quot;&quot;&gt;&lt;img src=&quot;http://i.imgur.com/PYwhGV3.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;从上面的例子可以看出，虽然再次向主服务器发送SYNC命令可以让主从服务器重新回到一致状态，但是，主服务器生成的RDB文件中却包含了键k1至键k10089的RDB文件，而其中k1至k10086的数据对于服务器来说都是不必要的。     &lt;/p&gt;
+&lt;h3 id=&quot;新版Redis复制功能的实现&quot;&gt;&lt;a href=&quot;#新版Redis复制功能的实现&quot; class=&quot;headerlink&quot; title=&quot;新版Redis复制功能的实现&quot;&gt;&lt;/a&gt;新版Redis复制功能的实现&lt;/h3&gt;&lt;p&gt;Redis从2.8版本开始，使用PSYNC命令代替SYNC命令来执行复制时的同步操作。而PSYNC命令具有完整重同步和部分重同步。不难想到，完全重同步用于处理初次复制的情况；而部分重同步用于处理断线后重复制的情况。&lt;/p&gt;
+&lt;h4 id=&quot;部分重同步的实现&quot;&gt;&lt;a href=&quot;#部分重同步的实现&quot; class=&quot;headerlink&quot; title=&quot;部分重同步的实现&quot;&gt;&lt;/a&gt;部分重同步的实现&lt;/h4&gt;&lt;p&gt;部分重同步功能由三个部分构成：（1）主服务器和从服务器的复制偏移量；（2）主服务器的复制积压缓冲区；（3）服务器的运行ID。       &lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;执行复制的主从服务器双方会分别维护一个复制偏移量：&lt;br&gt;（1）主服务器每次向从服务器传播N个字节的数据时，就将自己的复制偏移量的值加上N；&lt;br&gt;（2）从服务器每次收到主服务器传来的N个字节的数据时，将自己的复制偏移量的值加上N。&lt;br&gt;从而，通过对比主从服务器的复制偏移量，程序可以很容易地知道主从服务器是否处于抑制状态。   &lt;/li&gt;
+&lt;li&gt;复制积压缓冲区是主从服务器在进行同步时的一个重要结构。它是由主服务器维护的一个固定长度的FIFO队列，默认大小为1MB。&lt;br&gt;当主服务器进行命令传播时，它不仅会将写命令发送给所有从服务器，还会将写命令入队到复制积压缓冲区中。因此，主服务器的复制积压缓冲区里面会保存一部分最近传播的写命令，并且会为每个字节记录相应的复制偏移量。&lt;br&gt;所以，当从服务器重新连上主服务器时，从服务器会通过PSYNC命令将自己的复制偏移量offset发送给主服务器，主服务器会根据这个复制偏移量来决定对从服务器执行何种同步操作。&lt;/li&gt;
+&lt;li&gt;除了上述两部分之外，实现部分重同步操作还需要用到服务器运行ID，每个Redis服务器都拥有自己的运行ID。从而当从服务器对主服务器进行初次复制时，主服务器会将自己的运行ID传送给从服务器，从服务器则会将这个运行ID保存起来。当从服务器断线并重新连上一个主服务器时，从服务器将向当前连接的主服务器发送之前保存的运行ID，主服务器进行对比来判断是执行部分重同步还是完整重同步。    &lt;h3 id=&quot;心跳监测&quot;&gt;&lt;a href=&quot;#心跳监测&quot; class=&quot;headerlink&quot; title=&quot;心跳监测&quot;&gt;&lt;/a&gt;心跳监测&lt;/h3&gt;在命令传播阶段，从服务器默认以每秒一次的频率，向主服务器发送命令： &lt;code&gt;REPLCONF ACK &amp;lt;replication_offset&amp;gt;&lt;/code&gt;，其中replication_offset是从服务器当前的复制偏移量。&lt;br&gt;发送该命令对于主从服务器有三个作用：&lt;br&gt;（1）检测主从服务器的网络连接状态。&lt;br&gt;（2）辅助实现mini-slaves选项。&lt;br&gt;（3）检测命令丢失。    &lt;h4 id=&quot;检测主从服务器的网络连接状态&quot;&gt;&lt;a href=&quot;#检测主从服务器的网络连接状态&quot; class=&quot;headerlink&quot; title=&quot;检测主从服务器的网络连接状态&quot;&gt;&lt;/a&gt;检测主从服务器的网络连接状态&lt;/h4&gt;主从服务器通过发送和接收REPLCONF ACK命令来检查两者之间的网络连接是否正常：如果主服务器超过一秒钟没有收到从服务器发来的REPLCONF ACK命令，那么主服务器就知道主从服务器之间的连接出现问题了。    &lt;h4 id=&quot;辅助实现mini-slaves配置选项&quot;&gt;&lt;a href=&quot;#辅助实现mini-slaves配置选项&quot; class=&quot;headerlink&quot; title=&quot;辅助实现mini-slaves配置选项&quot;&gt;&lt;/a&gt;辅助实现mini-slaves配置选项&lt;/h4&gt;Redis的mini-slaves-to-write和mini-slaves-max-lag两个选项可以防止主服务器在不安全的情况下执行写命令。比如，主服务器有如下配置：&lt;br&gt;&lt;code&gt;min-slaves-to-write 3&lt;/code&gt;&lt;br&gt;&lt;code&gt;min-slaves-max-lag 10&lt;/code&gt;&lt;br&gt;那么在从服务器的数量少于3个，或者三个从服务器的延迟值都大于或等于10秒时，主服务器将拒绝执行写命令。    &lt;h4 id=&quot;检测命令丢失&quot;&gt;&lt;a href=&quot;#检测命令丢失&quot; class=&quot;headerlink&quot; title=&quot;检测命令丢失&quot;&gt;&lt;/a&gt;检测命令丢失&lt;/h4&gt;如果因为网络故障，主服务器传播给从服务器的写命令在半路丢失，那么当从服务器向主服务器发送REPLCONF ACK命令时，主服务器将发觉从服务器当前的复制偏移量少于自己的复制偏移量，然后主服务器就会根据从服务器提交的复制偏移量，在复制积压缓冲区里找到从服务器缺少的数据，并将这些数据重新发送给从服务器。  &lt;/li&gt;
+&lt;/ol&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;本文来学习下Redis中的复制特性。我们知道，在使用多Redis服务器的时候，保持主从服务器间的数据同步（一致性）是一个很重要的问题。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="Redis" scheme="http://blog.dujiong.net/tags/Redis/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>最短路问题</title>
+    <link href="http://blog.dujiong.net/2016/11/20/shortest-path/"/>
+    <id>http://blog.dujiong.net/2016/11/20/shortest-path/</id>
+    <published>2016-11-20T12:03:09.000Z</published>
+    <updated>2016-11-25T01:45:32.826Z</updated>
+    
+    <content type="html">&lt;p&gt;最短路问题是图论中最基础的问题。最短路是给定两个顶点，在以这两个点为起点和终点的路径中，边的权值和最小的路径。如果把权值当做距离，考虑最短距离就很容易理解了。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&quot;单源最短路问题&quot;&gt;&lt;a href=&quot;#单源最短路问题&quot; class=&quot;headerlink&quot; title=&quot;单源最短路问题&quot;&gt;&lt;/a&gt;单源最短路问题&lt;/h3&gt;&lt;p&gt;单源最短路问题是固定一个起点，求它到其他所有点的最短路的问题。如果终点也固定，这样的问题叫做两点之间的最短路问题。        &lt;/p&gt;
+&lt;h4 id=&quot;Bellman-Ford算法&quot;&gt;&lt;a href=&quot;#Bellman-Ford算法&quot; class=&quot;headerlink&quot; title=&quot;Bellman-Ford算法&quot;&gt;&lt;/a&gt;Bellman-Ford算法&lt;/h4&gt;&lt;p&gt;记从起点s出发到顶点i的最短距离为d[i]。则下列等式成立：&lt;br&gt; &lt;img src=&quot;http://i.imgur.com/sZLfLxF.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;如果给定的图是一个有向无环图，可以按拓扑排序给顶点编号，并利用这条递推关系式计算出d。但是，如果图中有圈，就无法依赖这样的顺序进行排序。这种情况下，记当前到顶点i的最短路长度为d[i]，并设初值d[s]=0，d[i]=INF，再不断使用这条关系式更新d的值，就可以算出新的d。只要图中不存在负圈，这样的更新操作是有限的。结束之后的d就是所求的最短距离。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;struct edge {
+    int from, to;
+    int cost;
+}
+
+edge es[MAX_E];        //边
+
+int d[MAX_V];        //最短距离
+int V, E;            //顶点数和边数
+
+void shortest_path(int s) {
+    for(int i=0;i&amp;lt;V;i++){
+        d[i]=INF;    //初始化为INF
+    }
+    d[s]=0;
+    while(true){
+        bool update =false;
+        for(int i=0;i&amp;lt;E;i++){
+            edge e = es[i];        //边
+            if(d[e.from]!=INF &amp;amp;&amp;amp; d[e.to]&amp;gt;d[e.from]+e.cost){
+                d[e.to] = d[e.from]+cost;    
+                update = true;
+            }
+        }
+        if(!update) break;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;该算法叫做Bellman-Ford算法。如果在图中不存在从s可达的负圈，那么最短路不会经过同一顶点两次（即最多通过|V-1|条边），while循环最多执行|V|-1次。因此，复杂度是O(|V|x|E|)。反之，如果存在从s到达的负圈，那么在第|V|次循环中也会更新d的值，因此可以利用这个性质来检查负圈。&lt;/p&gt;
+&lt;h4 id=&quot;Dijkstra算法&quot;&gt;&lt;a href=&quot;#Dijkstra算法&quot; class=&quot;headerlink&quot; title=&quot;Dijkstra算法&quot;&gt;&lt;/a&gt;Dijkstra算法&lt;/h4&gt;&lt;p&gt;考虑一下Bellman-Ford算法没有负边的情况。如果d[i]还不是最短距离的话，那么即使进行d[j]=d[i]+(从i到j的边的权值)的更新，d[j]也不会变成最短距离。而且，即使d[i]没有变化，每一次循环也要检查一遍从i出发的所有边，这是很浪费时间的。因此可以对算法做如下修改：&lt;br&gt;（1）找到最短距离已经确定的顶点，从它出发更新相邻的最短距离；&lt;br&gt;（2）此后不需要再关心（1）中“最短距离已经确定的顶点”。&lt;br&gt;得到上述提到的“最短距离已经确定的顶点“是问题的关键。在最开始时，只有起点的最短距离是确定的。而在尚未使用过的顶点中，距离d[i]最小的顶点就是最短距离已经确定的顶点。因为不存在负边，所以d[i]不会在后面的更新中变小。该算法称为Dijkstra算法。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;int cost[MAX_V][MAX_V];        //cost[u][v]表示边e=(u,v)的权值
+int d[MAX_V];                //顶点s出发的最短距离
+bool used[MAX_V];            //已经使用过的图
+int V;
+
+void dijkstra(int s){
+    fill(d, d+V, INF);        //初始距离设为无穷大
+    d[s]=0;
+
+    while(true){
+        int v=-1;
+        for(int u=0;u&amp;lt;V;u++){
+            if(!used[u] &amp;amp;&amp;amp; (v==-1 || d[u]&amp;lt;d[v])) v=u;    //从尚未使过的顶点中选择一个距离最小的顶点
+        }
+        if(v==-1) break;
+        used[v]=true;
+        for(int u=0;u&amp;lt;V;u++){
+            d[u] = min(d[u], d[v]+cost[v][u]);
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;使用邻接矩阵实现的Dijkstra算法的复杂度是O(|V|^2)。使用邻接表的话，更新最短距离只需要访问每条边一次即可，因此这部分的复杂度是O(|E|)。但是每次要枚举所有的顶点来查找下一个使用的顶点，因此最终复杂度还是O(|V|^2)。在|E|比较小时，大部分时间花在了查找下一个使用的顶点上，因此需要使用合适的数据结构对其进行优化。&lt;br&gt;使用堆就可以了，把每个顶点当前的最短距离用堆维护，在更新最短距离时，把对应的元素往根的方向移动以满足堆的性质。而每次从堆中取出的最小值就是下一次要使用的顶点。这样堆中元素共有O(|V|)个，更新和取出数值的操作有O(|E|)次，因此整个算法的复杂度是O(|E|log|V|)。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;struct edge {
+    int to, cost;    
+}
+
+typedef pair&amp;lt;int, int&amp;gt; P;        //first是最短距离，second是顶点的编号
+
+int V;
+vector&amp;lt;edge&amp;gt; G[MAX_V];
+
+int d[MAX_V];
+
+void dijkstra(int s) {
+    priority_queue&amp;lt;P, vector&amp;lt;P&amp;gt;, greater&amp;lt;P&amp;gt; &amp;gt; que;
+    fill(d, d+V, INF);
+    d[s]=0;
+    que.push(P(0, s));
+
+    while(!que.empty()){
+        P p=que.top();
+        que.pop();
+        int v=p.second;        //顶点
+        if(d[v]&amp;lt;p.first) continue;
+        for(int i=0;i&amp;lt;G[v].size();i++){        //找距离最短的邻点
+            edge e=G[v][i];
+            if(d[e.to]&amp;gt;d[v]+e.cost){            //更新
+                d[e.to]=d[v]+e.cost;
+                que.push(P(d[e.to], e.to));        //把最近的节点和距离放入堆中
+            }
+        }    
+
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;任意两点间的最短路问题&quot;&gt;&lt;a href=&quot;#任意两点间的最短路问题&quot; class=&quot;headerlink&quot; title=&quot;任意两点间的最短路问题&quot;&gt;&lt;/a&gt;任意两点间的最短路问题&lt;/h3&gt;&lt;p&gt;求解所有两点间的最短路问题叫做任意两点间的最短路问题，可以尝试使用动态规划。只使用顶点0~k和i,j的情况下，记i到j的最短路长度为d[k+1][i][j]。k=-1时，认为只使用i和j，所以d[0][i][j]=cost[i][j]。接下来把只使用顶点0~k的问题归约到只使用0~k-1的问题上。&lt;br&gt;只使用0~k时，我们分i到j的最短路正好经过顶点k一次和完全不经过顶点k两种情况来讨论。不经过顶点k的情况，d[k][i][j]=d[k-1][i][j]。通过顶点k的情况下，d[k][i][j]=d[k-1][i][k]+d[k-1][k][j]。合起来，就得到了d[k][i][j]=min(d[k-1][i][j], d[k-1][i][k]+d[k-1][k][j])。这个DP也可以使用同一个数组，不断进行d[i][j]=d[i][k]+d[k][j]的更新来实现。&lt;br&gt;该算法叫做Floyd-Warshall算法，可以在O(|V|^3)时间里求得所有两点间的最短路长度。该算法可以处理边是负数的情况。而判断图中是否有负圈，只需检查是否存在d[i][i]是负数的顶点i即可。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;int d[MAX_V][MAX_V];    //边不存在为INF，d[i][i]=0
+int V;
+
+void warshall_floyd() {
+    for(int k=0;k&amp;lt;V;k++){
+        for(int i=0;i&amp;lt;V;i++){
+            for(int j=0;j&amp;lt;V;j++){
+                dp[i][j]=min(d[i][j], d[i][k]+d[k][j]);
+            }
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这样通过三重循环非常简单地就可以求出所有两点间的最短路长度。实现起来简单，复杂度也在可以承受的范围之内。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;最短路问题是图论中最基础的问题。最短路是给定两个顶点，在以这两个点为起点和终点的路径中，边的权值和最小的路径。如果把权值当做距离，考虑最短距离就很容易理解了。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="数据结构与算法" scheme="http://blog.dujiong.net/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/"/>
+    
+  </entry>
+  
+  <entry>
     <title>Redis之数据库的实现</title>
-    <link href="http://blog.dujiong.net/2016/11/25/Redis-db/"/>
-    <id>http://blog.dujiong.net/2016/11/25/Redis-db/</id>
-    <published>2016-11-25T11:46:03.000Z</published>
-    <updated>2017-03-27T07:02:10.685Z</updated>
+    <link href="http://blog.dujiong.net/2016/11/17/Redis-db/"/>
+    <id>http://blog.dujiong.net/2016/11/17/Redis-db/</id>
+    <published>2016-11-17T11:46:03.000Z</published>
+    <updated>2017-03-28T07:14:34.678Z</updated>
     
     <content type="html">&lt;p&gt;本文对Redis服务器的数据库实现进行说明，包括服务器保存数据库的方法，数据库保存键值对的方法，以及针对数据库的添加、删除、查看等操作的实现方法，最后，会对服务器保存键的过期时间的方法和服务器自动删除过期键的方法进行分析。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h3 id=&quot;服务器中的数据库结构&quot;&gt;&lt;a href=&quot;#服务器中的数据库结构&quot; class=&quot;headerlink&quot; title=&quot;服务器中的数据库结构&quot;&gt;&lt;/a&gt;服务器中的数据库结构&lt;/h3&gt;&lt;p&gt;Redis服务器将所有数据库都保存在服务器状态redis.h/redisServer结构的db数组中，db数组的每个项都是一个redis.h/redisDb结构，每个redisDb结构代表一个数据库。     &lt;/p&gt;
@@ -966,158 +1118,6 @@ void expireGenericCommand(redisClient *c, long long basetime, int unit) {
     <summary type="html">
     
       &lt;p&gt;本文对Redis服务器的数据库实现进行说明，包括服务器保存数据库的方法，数据库保存键值对的方法，以及针对数据库的添加、删除、查看等操作的实现方法，最后，会对服务器保存键的过期时间的方法和服务器自动删除过期键的方法进行分析。&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="Redis" scheme="http://blog.dujiong.net/tags/Redis/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>最短路问题</title>
-    <link href="http://blog.dujiong.net/2016/11/20/shortest-path/"/>
-    <id>http://blog.dujiong.net/2016/11/20/shortest-path/</id>
-    <published>2016-11-20T12:03:09.000Z</published>
-    <updated>2016-11-25T01:45:32.826Z</updated>
-    
-    <content type="html">&lt;p&gt;最短路问题是图论中最基础的问题。最短路是给定两个顶点，在以这两个点为起点和终点的路径中，边的权值和最小的路径。如果把权值当做距离，考虑最短距离就很容易理解了。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;h3 id=&quot;单源最短路问题&quot;&gt;&lt;a href=&quot;#单源最短路问题&quot; class=&quot;headerlink&quot; title=&quot;单源最短路问题&quot;&gt;&lt;/a&gt;单源最短路问题&lt;/h3&gt;&lt;p&gt;单源最短路问题是固定一个起点，求它到其他所有点的最短路的问题。如果终点也固定，这样的问题叫做两点之间的最短路问题。        &lt;/p&gt;
-&lt;h4 id=&quot;Bellman-Ford算法&quot;&gt;&lt;a href=&quot;#Bellman-Ford算法&quot; class=&quot;headerlink&quot; title=&quot;Bellman-Ford算法&quot;&gt;&lt;/a&gt;Bellman-Ford算法&lt;/h4&gt;&lt;p&gt;记从起点s出发到顶点i的最短距离为d[i]。则下列等式成立：&lt;br&gt; &lt;img src=&quot;http://i.imgur.com/sZLfLxF.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;如果给定的图是一个有向无环图，可以按拓扑排序给顶点编号，并利用这条递推关系式计算出d。但是，如果图中有圈，就无法依赖这样的顺序进行排序。这种情况下，记当前到顶点i的最短路长度为d[i]，并设初值d[s]=0，d[i]=INF，再不断使用这条关系式更新d的值，就可以算出新的d。只要图中不存在负圈，这样的更新操作是有限的。结束之后的d就是所求的最短距离。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;struct edge {
-    int from, to;
-    int cost;
-}
-
-edge es[MAX_E];        //边
-
-int d[MAX_V];        //最短距离
-int V, E;            //顶点数和边数
-
-void shortest_path(int s) {
-    for(int i=0;i&amp;lt;V;i++){
-        d[i]=INF;    //初始化为INF
-    }
-    d[s]=0;
-    while(true){
-        bool update =false;
-        for(int i=0;i&amp;lt;E;i++){
-            edge e = es[i];        //边
-            if(d[e.from]!=INF &amp;amp;&amp;amp; d[e.to]&amp;gt;d[e.from]+e.cost){
-                d[e.to] = d[e.from]+cost;    
-                update = true;
-            }
-        }
-        if(!update) break;
-    }
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;该算法叫做Bellman-Ford算法。如果在图中不存在从s可达的负圈，那么最短路不会经过同一顶点两次（即最多通过|V-1|条边），while循环最多执行|V|-1次。因此，复杂度是O(|V|x|E|)。反之，如果存在从s到达的负圈，那么在第|V|次循环中也会更新d的值，因此可以利用这个性质来检查负圈。&lt;/p&gt;
-&lt;h4 id=&quot;Dijkstra算法&quot;&gt;&lt;a href=&quot;#Dijkstra算法&quot; class=&quot;headerlink&quot; title=&quot;Dijkstra算法&quot;&gt;&lt;/a&gt;Dijkstra算法&lt;/h4&gt;&lt;p&gt;考虑一下Bellman-Ford算法没有负边的情况。如果d[i]还不是最短距离的话，那么即使进行d[j]=d[i]+(从i到j的边的权值)的更新，d[j]也不会变成最短距离。而且，即使d[i]没有变化，每一次循环也要检查一遍从i出发的所有边，这是很浪费时间的。因此可以对算法做如下修改：&lt;br&gt;（1）找到最短距离已经确定的顶点，从它出发更新相邻的最短距离；&lt;br&gt;（2）此后不需要再关心（1）中“最短距离已经确定的顶点”。&lt;br&gt;得到上述提到的“最短距离已经确定的顶点“是问题的关键。在最开始时，只有起点的最短距离是确定的。而在尚未使用过的顶点中，距离d[i]最小的顶点就是最短距离已经确定的顶点。因为不存在负边，所以d[i]不会在后面的更新中变小。该算法称为Dijkstra算法。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;int cost[MAX_V][MAX_V];        //cost[u][v]表示边e=(u,v)的权值
-int d[MAX_V];                //顶点s出发的最短距离
-bool used[MAX_V];            //已经使用过的图
-int V;
-
-void dijkstra(int s){
-    fill(d, d+V, INF);        //初始距离设为无穷大
-    d[s]=0;
-
-    while(true){
-        int v=-1;
-        for(int u=0;u&amp;lt;V;u++){
-            if(!used[u] &amp;amp;&amp;amp; (v==-1 || d[u]&amp;lt;d[v])) v=u;    //从尚未使过的顶点中选择一个距离最小的顶点
-        }
-        if(v==-1) break;
-        used[v]=true;
-        for(int u=0;u&amp;lt;V;u++){
-            d[u] = min(d[u], d[v]+cost[v][u]);
-        }
-    }
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;使用邻接矩阵实现的Dijkstra算法的复杂度是O(|V|^2)。使用邻接表的话，更新最短距离只需要访问每条边一次即可，因此这部分的复杂度是O(|E|)。但是每次要枚举所有的顶点来查找下一个使用的顶点，因此最终复杂度还是O(|V|^2)。在|E|比较小时，大部分时间花在了查找下一个使用的顶点上，因此需要使用合适的数据结构对其进行优化。&lt;br&gt;使用堆就可以了，把每个顶点当前的最短距离用堆维护，在更新最短距离时，把对应的元素往根的方向移动以满足堆的性质。而每次从堆中取出的最小值就是下一次要使用的顶点。这样堆中元素共有O(|V|)个，更新和取出数值的操作有O(|E|)次，因此整个算法的复杂度是O(|E|log|V|)。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;struct edge {
-    int to, cost;    
-}
-
-typedef pair&amp;lt;int, int&amp;gt; P;        //first是最短距离，second是顶点的编号
-
-int V;
-vector&amp;lt;edge&amp;gt; G[MAX_V];
-
-int d[MAX_V];
-
-void dijkstra(int s) {
-    priority_queue&amp;lt;P, vector&amp;lt;P&amp;gt;, greater&amp;lt;P&amp;gt; &amp;gt; que;
-    fill(d, d+V, INF);
-    d[s]=0;
-    que.push(P(0, s));
-
-    while(!que.empty()){
-        P p=que.top();
-        que.pop();
-        int v=p.second;        //顶点
-        if(d[v]&amp;lt;p.first) continue;
-        for(int i=0;i&amp;lt;G[v].size();i++){        //找距离最短的邻点
-            edge e=G[v][i];
-            if(d[e.to]&amp;gt;d[v]+e.cost){            //更新
-                d[e.to]=d[v]+e.cost;
-                que.push(P(d[e.to], e.to));        //把最近的节点和距离放入堆中
-            }
-        }    
-
-    }
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;任意两点间的最短路问题&quot;&gt;&lt;a href=&quot;#任意两点间的最短路问题&quot; class=&quot;headerlink&quot; title=&quot;任意两点间的最短路问题&quot;&gt;&lt;/a&gt;任意两点间的最短路问题&lt;/h3&gt;&lt;p&gt;求解所有两点间的最短路问题叫做任意两点间的最短路问题，可以尝试使用动态规划。只使用顶点0~k和i,j的情况下，记i到j的最短路长度为d[k+1][i][j]。k=-1时，认为只使用i和j，所以d[0][i][j]=cost[i][j]。接下来把只使用顶点0~k的问题归约到只使用0~k-1的问题上。&lt;br&gt;只使用0~k时，我们分i到j的最短路正好经过顶点k一次和完全不经过顶点k两种情况来讨论。不经过顶点k的情况，d[k][i][j]=d[k-1][i][j]。通过顶点k的情况下，d[k][i][j]=d[k-1][i][k]+d[k-1][k][j]。合起来，就得到了d[k][i][j]=min(d[k-1][i][j], d[k-1][i][k]+d[k-1][k][j])。这个DP也可以使用同一个数组，不断进行d[i][j]=d[i][k]+d[k][j]的更新来实现。&lt;br&gt;该算法叫做Floyd-Warshall算法，可以在O(|V|^3)时间里求得所有两点间的最短路长度。该算法可以处理边是负数的情况。而判断图中是否有负圈，只需检查是否存在d[i][i]是负数的顶点i即可。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;int d[MAX_V][MAX_V];    //边不存在为INF，d[i][i]=0
-int V;
-
-void warshall_floyd() {
-    for(int k=0;k&amp;lt;V;k++){
-        for(int i=0;i&amp;lt;V;i++){
-            for(int j=0;j&amp;lt;V;j++){
-                dp[i][j]=min(d[i][j], d[i][k]+d[k][j]);
-            }
-        }
-    }
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这样通过三重循环非常简单地就可以求出所有两点间的最短路长度。实现起来简单，复杂度也在可以承受的范围之内。&lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;最短路问题是图论中最基础的问题。最短路是给定两个顶点，在以这两个点为起点和终点的路径中，边的权值和最小的路径。如果把权值当做距离，考虑最短距离就很容易理解了。&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="数据结构与算法" scheme="http://blog.dujiong.net/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Redis之复制</title>
-    <link href="http://blog.dujiong.net/2016/11/17/Redis-replicate/"/>
-    <id>http://blog.dujiong.net/2016/11/17/Redis-replicate/</id>
-    <published>2016-11-17T07:04:22.000Z</published>
-    <updated>2017-01-19T08:45:01.363Z</updated>
-    
-    <content type="html">&lt;p&gt;本文来学习下Redis中的复制特性。我们知道，在使用多Redis服务器的时候，保持主从服务器间的数据同步（一致性）是一个很重要的问题。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt; &lt;/p&gt;
-&lt;h3 id=&quot;Redis-2-8以前的复制&quot;&gt;&lt;a href=&quot;#Redis-2-8以前的复制&quot; class=&quot;headerlink&quot; title=&quot;Redis 2.8以前的复制&quot;&gt;&lt;/a&gt;Redis 2.8以前的复制&lt;/h3&gt;&lt;p&gt;Redid的复制功能分为同步和命令传播两个操作：&lt;br&gt;（1）同步用于将从服务器的数据库状态更新至主服务器当前所处的数据库状态；&lt;br&gt;（2）命令传播操作则用于在数据库状态被修改，导致主从服务器的数据库状态不一致时，让主从服务器的数据库状态重新回到一致状态。   &lt;/p&gt;
-&lt;h4 id=&quot;同步&quot;&gt;&lt;a href=&quot;#同步&quot; class=&quot;headerlink&quot; title=&quot;同步&quot;&gt;&lt;/a&gt;同步&lt;/h4&gt;&lt;p&gt;从服务器对主服务器的同步操作需要通过向主服务器发送SYNC命令来完成，其执行步骤是：&lt;br&gt;（1）从服务器向主服务器发送SYNC命令。&lt;br&gt;（2）收到SYNC命令的主服务器执行BGSAVE命令，在后台生成一个RDB文件，并使用一个缓冲区记录从现在开始执行的所有写命令。&lt;br&gt;（3）当主服务器的BGSAVE命令执行完毕时，主服务器会将BGSAVE命令生成的RDB文件发送给从服务器，从服务器接收并载入该RDB文件，将自己的数据库状态更新至主服务器执行BGSAVE命令时的数据库状态。&lt;br&gt;（4）主服务器将记录在缓冲区中的所有写命令发送给从服务器，从服务器执行这些写命令，将自己的数据库状态更新至主服务器数据库当前所处的状态。      &lt;/p&gt;
-&lt;h4 id=&quot;命令传播&quot;&gt;&lt;a href=&quot;#命令传播&quot; class=&quot;headerlink&quot; title=&quot;命令传播&quot;&gt;&lt;/a&gt;命令传播&lt;/h4&gt;&lt;p&gt;同步操作执行完毕后，主从服务器两者的数据库达到一致状态，但这种一致并非一成不变的，每当主服务器执行客户端发送的写命令时，主服务器的数据库就有可能会被修改，并导致主服务器状态不再一致。&lt;br&gt;因此，为了让主从服务器再次回到一致状态，主服务器需要对服务器执行命令传播操作：主服务器会将自己执行的写命令，也即是造成主从服务器不一致的那条写命令，发送给从服务器执行，当从服务器执行了相同的写命令之后，主从服务器将再次回到一致状态。     &lt;/p&gt;
-&lt;h4 id=&quot;Redis-2-8以前的复制存在的问题&quot;&gt;&lt;a href=&quot;#Redis-2-8以前的复制存在的问题&quot; class=&quot;headerlink&quot; title=&quot;Redis 2.8以前的复制存在的问题&quot;&gt;&lt;/a&gt;Redis 2.8以前的复制存在的问题&lt;/h4&gt;&lt;p&gt;Redis 2.8之前的版本对于断线后重新复制支持不好，虽然能够完成任务，但是效率却非常低。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/BixE10t.png&quot; alt=&quot;&quot;&gt;&lt;img src=&quot;http://i.imgur.com/PYwhGV3.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;从上面的例子可以看出，虽然再次向主服务器发送SYNC命令可以让主从服务器重新回到一致状态，但是，主服务器生成的RDB文件中却包含了键k1至键k10089的RDB文件，而其中k1至k10086的数据对于服务器来说都是不必要的。     &lt;/p&gt;
-&lt;h3 id=&quot;新版Redis复制功能的实现&quot;&gt;&lt;a href=&quot;#新版Redis复制功能的实现&quot; class=&quot;headerlink&quot; title=&quot;新版Redis复制功能的实现&quot;&gt;&lt;/a&gt;新版Redis复制功能的实现&lt;/h3&gt;&lt;p&gt;Redis从2.8版本开始，使用PSYNC命令代替SYNC命令来执行复制时的同步操作。而PSYNC命令具有完整重同步和部分重同步。不难想到，完全重同步用于处理初次复制的情况；而部分重同步用于处理断线后重复制的情况。&lt;/p&gt;
-&lt;h4 id=&quot;部分重同步的实现&quot;&gt;&lt;a href=&quot;#部分重同步的实现&quot; class=&quot;headerlink&quot; title=&quot;部分重同步的实现&quot;&gt;&lt;/a&gt;部分重同步的实现&lt;/h4&gt;&lt;p&gt;部分重同步功能由三个部分构成：（1）主服务器和从服务器的复制偏移量；（2）主服务器的复制积压缓冲区；（3）服务器的运行ID。       &lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;执行复制的主从服务器双方会分别维护一个复制偏移量：&lt;br&gt;（1）主服务器每次向从服务器传播N个字节的数据时，就将自己的复制偏移量的值加上N；&lt;br&gt;（2）从服务器每次收到主服务器传来的N个字节的数据时，将自己的复制偏移量的值加上N。&lt;br&gt;从而，通过对比主从服务器的复制偏移量，程序可以很容易地知道主从服务器是否处于抑制状态。   &lt;/li&gt;
-&lt;li&gt;复制积压缓冲区是主从服务器在进行同步时的一个重要结构。它是由主服务器维护的一个固定长度的FIFO队列，默认大小为1MB。&lt;br&gt;当主服务器进行命令传播时，它不仅会将写命令发送给所有从服务器，还会将写命令入队到复制积压缓冲区中。因此，主服务器的复制积压缓冲区里面会保存一部分最近传播的写命令，并且会为每个字节记录相应的复制偏移量。&lt;br&gt;所以，当从服务器重新连上主服务器时，从服务器会通过PSYNC命令将自己的复制偏移量offset发送给主服务器，主服务器会根据这个复制偏移量来决定对从服务器执行何种同步操作。&lt;/li&gt;
-&lt;li&gt;除了上述两部分之外，实现部分重同步操作还需要用到服务器运行ID，每个Redis服务器都拥有自己的运行ID。从而当从服务器对主服务器进行初次复制时，主服务器会将自己的运行ID传送给从服务器，从服务器则会将这个运行ID保存起来。当从服务器断线并重新连上一个主服务器时，从服务器将向当前连接的主服务器发送之前保存的运行ID，主服务器进行对比来判断是执行部分重同步还是完整重同步。    &lt;h3 id=&quot;心跳监测&quot;&gt;&lt;a href=&quot;#心跳监测&quot; class=&quot;headerlink&quot; title=&quot;心跳监测&quot;&gt;&lt;/a&gt;心跳监测&lt;/h3&gt;在命令传播阶段，从服务器默认以每秒一次的频率，向主服务器发送命令： &lt;code&gt;REPLCONF ACK &amp;lt;replication_offset&amp;gt;&lt;/code&gt;，其中replication_offset是从服务器当前的复制偏移量。&lt;br&gt;发送该命令对于主从服务器有三个作用：&lt;br&gt;（1）检测主从服务器的网络连接状态。&lt;br&gt;（2）辅助实现mini-slaves选项。&lt;br&gt;（3）检测命令丢失。    &lt;h4 id=&quot;检测主从服务器的网络连接状态&quot;&gt;&lt;a href=&quot;#检测主从服务器的网络连接状态&quot; class=&quot;headerlink&quot; title=&quot;检测主从服务器的网络连接状态&quot;&gt;&lt;/a&gt;检测主从服务器的网络连接状态&lt;/h4&gt;主从服务器通过发送和接收REPLCONF ACK命令来检查两者之间的网络连接是否正常：如果主服务器超过一秒钟没有收到从服务器发来的REPLCONF ACK命令，那么主服务器就知道主从服务器之间的连接出现问题了。    &lt;h4 id=&quot;辅助实现mini-slaves配置选项&quot;&gt;&lt;a href=&quot;#辅助实现mini-slaves配置选项&quot; class=&quot;headerlink&quot; title=&quot;辅助实现mini-slaves配置选项&quot;&gt;&lt;/a&gt;辅助实现mini-slaves配置选项&lt;/h4&gt;Redis的mini-slaves-to-write和mini-slaves-max-lag两个选项可以防止主服务器在不安全的情况下执行写命令。比如，主服务器有如下配置：&lt;br&gt;&lt;code&gt;min-slaves-to-write 3&lt;/code&gt;&lt;br&gt;&lt;code&gt;min-slaves-max-lag 10&lt;/code&gt;&lt;br&gt;那么在从服务器的数量少于3个，或者三个从服务器的延迟值都大于或等于10秒时，主服务器将拒绝执行写命令。    &lt;h4 id=&quot;检测命令丢失&quot;&gt;&lt;a href=&quot;#检测命令丢失&quot; class=&quot;headerlink&quot; title=&quot;检测命令丢失&quot;&gt;&lt;/a&gt;检测命令丢失&lt;/h4&gt;如果因为网络故障，主服务器传播给从服务器的写命令在半路丢失，那么当从服务器向主服务器发送REPLCONF ACK命令时，主服务器将发觉从服务器当前的复制偏移量少于自己的复制偏移量，然后主服务器就会根据从服务器提交的复制偏移量，在复制积压缓冲区里找到从服务器缺少的数据，并将这些数据重新发送给从服务器。  &lt;/li&gt;
-&lt;/ol&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;本文来学习下Redis中的复制特性。我们知道，在使用多Redis服务器的时候，保持主从服务器间的数据同步（一致性）是一个很重要的问题。&lt;br&gt;
     
     </summary>
     

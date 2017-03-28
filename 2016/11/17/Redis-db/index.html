@@ -65,7 +65,7 @@
 <meta property="og:url" content="http://blog.dujiong.net/2016/11/17/Redis-db/index.html">
 <meta property="og:site_name" content="一期一会">
 <meta property="og:description" content="本文对Redis服务器的数据库实现进行说明，包括服务器保存数据库的方法，数据库保存键值对的方法，以及针对数据库的添加、删除、查看等操作的实现方法，最后，会对服务器保存键的过期时间的方法和服务器自动删除过期键的方法进行分析。">
-<meta property="og:updated_time" content="2016-11-24T07:49:39.294Z">
+<meta property="og:updated_time" content="2017-03-28T07:14:34.678Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Redis之数据库的实现">
 <meta name="twitter:description" content="本文对Redis服务器的数据库实现进行说明，包括服务器保存数据库的方法，数据库保存键值对的方法，以及针对数据库的添加、删除、查看等操作的实现方法，最后，会对服务器保存键的过期时间的方法和服务器自动删除过期键的方法进行分析。">
@@ -471,8 +471,8 @@ void expireGenericCommand(redisClient *c, long long basetime, int unit) {
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/11/17/Redis-replicate/" rel="next" title="Redis之复制">
-                <i class="fa fa-chevron-left"></i> Redis之复制
+              <a href="/2016/11/13/Redis-pubsub/" rel="next" title="Redis之发布与订阅">
+                <i class="fa fa-chevron-left"></i> Redis之发布与订阅
               </a>
             
           </div>
@@ -553,7 +553,7 @@ void expireGenericCommand(redisClient *c, long long basetime, int unit) {
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">49</span>
+              <span class="site-state-item-count">50</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
