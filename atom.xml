@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2017-03-29T07:29:02.859Z</updated>
+  <updated>2017-03-29T13:53:02.476Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -17,10 +17,10 @@
   
   <entry>
     <title>搭建Redis集群</title>
-    <link href="http://blog.dujiong.net/2017/01/11/Redis-Cluster/"/>
-    <id>http://blog.dujiong.net/2017/01/11/Redis-Cluster/</id>
-    <published>2017-01-11T07:08:05.000Z</published>
-    <updated>2017-03-29T07:29:02.859Z</updated>
+    <link href="http://blog.dujiong.net/2017/01/15/Redis-Cluster/"/>
+    <id>http://blog.dujiong.net/2017/01/15/Redis-Cluster/</id>
+    <published>2017-01-15T07:08:05.000Z</published>
+    <updated>2017-03-29T13:53:02.476Z</updated>
     
     <content type="html">&lt;p&gt;Redis集群是Redis提供的分布式数据库方案，集群通过分片来进行数据共享，并提供复制和故障转移功能。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h3 id=&quot;Redis集群概述&quot;&gt;&lt;a href=&quot;#Redis集群概述&quot; class=&quot;headerlink&quot; title=&quot;Redis集群概述&quot;&gt;&lt;/a&gt;Redis集群概述&lt;/h3&gt;&lt;p&gt;Redis集群使用数据分片而非一致性哈希来实现，一个Redis集群包含16384个哈希槽（slot），数据库中的每个键都属于这16384个哈希槽中的其中一个，集群中的每个节点可以处理0个或最多16384个槽，当数据库中的16384个槽都有节点在处理时，集群处于上线状态；而如果数据库中有任何一个槽没有得到处理，那么集群处于下线状态。&lt;br&gt;集群中的每个节点负责处理一部分哈希槽，比如，现在有三个独立的节点127.0.0.1:7000,127.0.0.1:7001,127.0.0.1:7002，其中各节点处理的哈希槽关系：节点7000负责处理0到5000号哈希槽，节点7001负责处理5001到10000号哈希槽，节点7002负责处理10001到16384号哈希槽。&lt;br&gt;从而，当向集群中添加或删除节点时，集群只需在对应节点的哈希槽做移动即可。不会造成节点阻塞、集群下线。&lt;br&gt;当然，为了使得集群在一部分节点下线的情况下仍然可以正常运作，Redis集群对节点提供了主从复制功能，集群中的每个节点都有1到N个复制节点，形成主-从模型。&lt;/p&gt;
@@ -81,10 +81,10 @@ redis-server redis.conf
   
   <entry>
     <title>Redis Sentinel原理及实践</title>
-    <link href="http://blog.dujiong.net/2017/01/05/Redis-sentinel/"/>
-    <id>http://blog.dujiong.net/2017/01/05/Redis-sentinel/</id>
-    <published>2017-01-05T07:21:58.000Z</published>
-    <updated>2017-03-29T10:20:41.345Z</updated>
+    <link href="http://blog.dujiong.net/2017/01/11/Redis-sentinel/"/>
+    <id>http://blog.dujiong.net/2017/01/11/Redis-sentinel/</id>
+    <published>2017-01-11T07:21:58.000Z</published>
+    <updated>2017-03-29T13:53:03.368Z</updated>
     
     <content type="html">&lt;p&gt;Sentinel（哨兵）是Redis的高可用性解决方案：由一个或多个Sentinel实例组成的Sentinel系统可以监视任意多个主服务器，以及这些主服务器属下的多个从服务器，并在被监视的主服务器进入下线状态时，自动将下线主服务器属下的某个从服务器升级为新的主服务器。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h3 id=&quot;Redis-Sentinel系统结构&quot;&gt;&lt;a href=&quot;#Redis-Sentinel系统结构&quot; class=&quot;headerlink&quot; title=&quot;Redis Sentinel系统结构&quot;&gt;&lt;/a&gt;Redis Sentinel系统结构&lt;/h3&gt;&lt;p&gt;下图展示了一个Sentinel系统监视服务器的例子。当前系统包括主服务器server1，从服务器server2、server3、server4和Sentinel监听系统。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/Q5Keiy2.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;假设某时刻server1进入下线状态，那么从服务器对主服务器的复制操作将中止，并且Sentinel系统会察觉到server1已下线，并在server1的下线时长超过用户设定的上限时，Sentinel系统会执行故障转移操作：&lt;br&gt;（1）首先，Sentinel会挑选一个从服务器，将其升级为新的主服务器，这里涉及到选举算法；&lt;br&gt;（2）然后Sentienl向server1所有的从服务器发送新的复制指令，让它们成为新的主服务器的从服务器；&lt;br&gt;（3）Sentinel还会继续监视已下线的server1，并在它重新上线时，将它设置为新的服务器的从服务器。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/l2q4BV4.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
@@ -127,6 +127,37 @@ sentinel known-sentinel Master 127.0.0.1 26373 e7625d74a5a4b142c495baa8ca522517b
     <summary type="html">
     
       &lt;p&gt;Sentinel（哨兵）是Redis的高可用性解决方案：由一个或多个Sentinel实例组成的Sentinel系统可以监视任意多个主服务器，以及这些主服务器属下的多个从服务器，并在被监视的主服务器进入下线状态时，自动将下线主服务器属下的某个从服务器升级为新的主服务器。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="Redis" scheme="http://blog.dujiong.net/tags/Redis/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Redis事务</title>
+    <link href="http://blog.dujiong.net/2017/01/05/Redis-transaction/"/>
+    <id>http://blog.dujiong.net/2017/01/05/Redis-transaction/</id>
+    <published>2017-01-05T12:25:52.000Z</published>
+    <updated>2017-03-29T13:53:01.348Z</updated>
+    
+    <content type="html">&lt;p&gt;在关系数据库的事务中，用户首先向数据库服务器发送BEGIN，然后执行各个相互一致的写操作和读操作，最后，用户可以选择发送COMMIT来确认之前所做的修改，或者发送ROLLBACK来放弃那些修改。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&quot;Redis事务处理流程&quot;&gt;&lt;a href=&quot;#Redis事务处理流程&quot; class=&quot;headerlink&quot; title=&quot;Redis事务处理流程&quot;&gt;&lt;/a&gt;Redis事务处理流程&lt;/h3&gt;&lt;p&gt;Redis通过MULTI、EXEC、WATCH等命令来实现事务功能。事务提供了一种将多个命令请求打包，然后一次性、按顺序地执行多个命令的机制，并且在事务执行期间，服务器不会中断事务而该去执行其他客户端的命令请求，它会将事务中的所有命令都执行完毕，然后才去处理其他客户端的命令请求。&lt;br&gt;一个事务从开始到结束会经历如下三个阶段：&lt;br&gt;（1）事务开始&lt;br&gt;MULTI命令标志着事务的开始，其将执行该命令的客户端从非事务状态切换至事务状态。&lt;br&gt;（2）命令入队&lt;br&gt;当一个客户端处于非事务状态时，这个客户端发送的命令会立即被服务器执行，而当其切换到事务状态时，服务器会根据客户端发来的不同命令来执行不同的操作：如果是MULTI、EXEC、DISCARD、WATCH四个命令中的一个，那么服务器立即执行；如果不是，那么服务器不立即执行命令，而是将其放入一个服务队列里面，然后向客户端返回QUEUED回复。&lt;br&gt;这些命令保存在每个客户端所持有的一个事务队列中，该队列以FIFO的方式保存入队的命令。&lt;br&gt;（3）执行事务&lt;br&gt;当处于事务状态的客户端向服务器发送EXEC命令时，EXEC命令将立即被服务器执行。服务器会遍历这个客户端的事务队列，执行队列中保持的所有命令，最后将执行结果全部返回给客户端。&lt;br&gt;但是，MULTI和EXEC只能保证它们中间的那些入队的命令不会被其他客户端掺杂在一起，却没有锁的逻辑，即不能解决干扰。比如，现有一个key为1的数字，客户端1需要在事务中连续做两次自增操作，但在EXEC之前，客户端2对key进行了修改&lt;code&gt;set key 100&lt;/code&gt;。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/6PQWySj.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;可以看出，在事务执行的过程中，读到了脏数据，为了保障不被干扰，需要对数据加锁。        &lt;/p&gt;
+&lt;h3 id=&quot;乐观锁WATCH&quot;&gt;&lt;a href=&quot;#乐观锁WATCH&quot; class=&quot;headerlink&quot; title=&quot;乐观锁WATCH&quot;&gt;&lt;/a&gt;乐观锁WATCH&lt;/h3&gt;&lt;p&gt;在访问以写入为目的数据的时候，关系数据库会对被访问的数据加锁，直到事务被提交或者被回滚为止。如果有其他客户端试图对被加锁的数据行进行写入，那么该客户端将被阻塞，直到第一个事务执行完毕为止。这种做法称为悲观锁。&lt;br&gt;而Redis为了减少客户端的等待时间，并不会在执行WATCH命令时对数据加锁。相反地，Redis只会在数据已经被其他客户端抢先修改了的情况下，通知执行了WATCH的客户端，这种做法称为乐观锁。当被监视的键至少有一个已经被修改过了，服务器将拒绝执行事务，并向客户端返回代表事务执行失败的空回复。&lt;br&gt;对于上面的例子，使用WATCH监视key。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/PMcavUU.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;当客户端执行EXEC时，服务器发现WATCH监视的键“name”已经被修改，因此服务器拒绝执行客户端A的事务，并向客户端A返回空回复。&lt;br&gt;但是，需要注意的是，WATCH命令的作用只是当被监控的键值被修改后阻止之后一个事务的执行，而不能保证其他客户端不修改这一键值，所以，通常情况下在EXEC执行失败后会重新执行整个函数。   &lt;/p&gt;
+&lt;h4 id=&quot;利用WATCH实现原子自增&quot;&gt;&lt;a href=&quot;#利用WATCH实现原子自增&quot; class=&quot;headerlink&quot; title=&quot;利用WATCH实现原子自增&quot;&gt;&lt;/a&gt;利用WATCH实现原子自增&lt;/h4&gt;&lt;p&gt;使用伪代码表示为：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;WATCH key
+val = GET key
+val = val + 1
+MULTI
+SET key $val
+EXEC
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;事务的ACID性质&quot;&gt;&lt;a href=&quot;#事务的ACID性质&quot; class=&quot;headerlink&quot; title=&quot;事务的ACID性质&quot;&gt;&lt;/a&gt;事务的ACID性质&lt;/h3&gt;&lt;p&gt;（1）原子性&lt;br&gt;对于Redis的事务功能来说，事务队列中的命令要么就全部都执行，要么就一个都不执行，因此，从这一点来看，Redis的事务是具有原子性的。&lt;br&gt;下图是事务因为命令入队出错而被服务器拒绝执行，事务中的所有命令都不会被执行。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/TnIfK7G.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;但是，Redis事务不支持关系数据库的事务回滚机制，即事务队列中的某个命令在执行期间（非语法错误，执行错误）出现了错误，事务的后续命令也会继续执行下去，并且之前执行的命令没有影响。因此，在这方面是不符合原子性的。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/igmOQqS.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;（2）一致性&lt;br&gt;事务的一致性是指，如果数据库在执行事务之前是一致的，那么在事务执行之后，无论事务是否执行成功，数据库也应该是一致的。&lt;br&gt;如前所述，当出现入队错误或是执行错误的情况，Redis分别通过拒绝执行和进行错误处理的方式来保证事务的一致性。&lt;br&gt;当Redis服务器在执行事务的过程中停机，那么根据服务器使用的持久化方式，分以下几种情况讨论：&lt;br&gt;a. 如果当前Redis采用的是内存模式，那么重启后Redis数据库是空的，满足一致性条件；&lt;br&gt;b. 如果当前Redis采用RDB模式存储，在执行事务时，Redis不会中断事务去执行保存RDB的工作，只有在事务执行之后，保存RDB的工作才有可能开始。所以当RDB模式下的Redis服务器进程在事务中途被杀死时，事务内执行的命令，不管成功了多少，都不会被保存到RDB文件里。恢复数据库需要使用现有的RDB文件，而这个RDB文件的数据保存的是最近一次的数据库快照，所以它的数据可能不是最新的，但只要RDB文件本身没有因为其他问题而出错，那么还原后的数据库就是一致的；&lt;br&gt;c. 如果当前Redis采用的AOF模式存储，那么可能事务的内容还未写入到AOF文件，那么此时肯定是满足一致性的，如果事务的内容有部分写入到AOF文件中，那么需要用工具把AOF中事务执行部分成功的指令移除，这时，移除之后的AOF文件也是满足一致性的。&lt;br&gt;（3）隔离性&lt;br&gt;事务的隔离性是指，即使数据库有多个事务并发地执行，各个事务之间也不会互相影响，并发状态下执行的事务和串行执行的事务产生的结果完全相同。&lt;br&gt;因为Redis采用单线程的方式来执行事务，并且服务器保证，在执行事务期间不会对事务进行中断，因此，Redis的事务总是以串行的方式运行的，且事务总是具有隔离性。&lt;br&gt;（4）持久性&lt;br&gt;事务的持久性是指，当一个事务执行完毕时，执行这个事务所得的结果已经被保存到永久性存储介质里面了，即使服务器在事务执行完毕之后停机，执行事务所得的结果也不会丢失。&lt;br&gt;Redis事务只有当服务器运行在AOF持久化模式下，并且appendfsync选项为always时，才是具有持久性的。因为程序总会在执行命令之后调用同步函数，将命令数据真正地保存到硬盘里。&lt;br&gt;当然，不论Redis以什么模式运行，在一个事务的最后加上SAVE命令总可以保证持久性，但这种做法效率太低。&lt;br&gt;所以，Redis只满足ACID中的一致性和隔离性。 &lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在关系数据库的事务中，用户首先向数据库服务器发送BEGIN，然后执行各个相互一致的写操作和读操作，最后，用户可以选择发送COMMIT来确认之前所做的修改，或者发送ROLLBACK来放弃那些修改。&lt;br&gt;
     
     </summary>
     
@@ -2087,68 +2118,6 @@ iterator erase(iterator position){
     
     
       <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>字符串的排列与组合</title>
-    <link href="http://blog.dujiong.net/2016/10/23/permutation/"/>
-    <id>http://blog.dujiong.net/2016/10/23/permutation/</id>
-    <published>2016-10-23T11:09:33.000Z</published>
-    <updated>2016-12-02T02:55:05.318Z</updated>
-    
-    <content type="html">&lt;p&gt;很久没有深入研究数据结构和算法了…&lt;br&gt;这次换个套路，先不说那些干瘪瘪的理论，首先来看一道编程题。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt; &lt;/p&gt;
-&lt;h3 id=&quot;题目描述&quot;&gt;&lt;a href=&quot;#题目描述&quot; class=&quot;headerlink&quot; title=&quot;题目描述&quot;&gt;&lt;/a&gt;题目描述&lt;/h3&gt;&lt;p&gt;编写一个方法，确定某字符串的所有排列组合。&lt;br&gt;给定一个string A[]和一个int n，代表字符串和其长度，请返回所有该字符串字符的排列，保证字符串长度小于等于11且字符串中字符均为大写英文字符，排列中的字符串按字典序从大到小排序。&lt;br&gt;样例： “ABC”&lt;br&gt;返回：[“CBA”,”CAB”,”BCA”,”BAC”,”ACB”,”ABC”]&lt;/p&gt;
-&lt;h3 id=&quot;思考&quot;&gt;&lt;a href=&quot;#思考&quot; class=&quot;headerlink&quot; title=&quot;思考&quot;&gt;&lt;/a&gt;思考&lt;/h3&gt;&lt;p&gt;…&lt;/p&gt;
-&lt;h3 id=&quot;分析&quot;&gt;&lt;a href=&quot;#分析&quot; class=&quot;headerlink&quot; title=&quot;分析&quot;&gt;&lt;/a&gt;分析&lt;/h3&gt;&lt;h4 id=&quot;next-permutation&quot;&gt;&lt;a href=&quot;#next-permutation&quot; class=&quot;headerlink&quot; title=&quot;next_permutation&quot;&gt;&lt;/a&gt;next_permutation&lt;/h4&gt;&lt;p&gt;很容易看出来这是一道排列的问题。由于自己最近对STL甚是着迷，却又没有掌握透彻，故先写出了下面的错误代码。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;vector&amp;lt;string&amp;gt; getPermutation(string A){
-    std::sort(A.begin(), A.end());
-    vector&amp;lt;string&amp;gt; ret;
-    do{
-        ret.push_back(A);
-    }while(next_permutation(A.begin(), A.end()));
-    std::sort(ret.begin(), ret.end(), greater&amp;lt;string&amp;gt;());
-    return ret;
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;当我满怀欣喜地提交代码运行时，却被告知通过率只有13.3%，给出的错误分析表明，当字符串中含有两个及以上的相同字符时，所得结果错误，即原题的意思是字符串中的每一个字符都是独立的，即使它们相同。所以，得出的结果应该有n!个字符串。而算法next_permutation不能处理这样的情况。比如输入”AAB”，使用next_permutation得到的结果如下图所示。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/40N1AVT.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
-&lt;h4 id=&quot;递归&quot;&gt;&lt;a href=&quot;#递归&quot; class=&quot;headerlink&quot; title=&quot;递归&quot;&gt;&lt;/a&gt;递归&lt;/h4&gt;&lt;p&gt;递归方法的思想很容易理解，即从串中依次选出每一个元素，作为排列的第一个元素，然后对剩余的元素递归的进行全排列。&lt;br&gt;以对字符串”abc”进行全排列为例：&lt;br&gt;（1）固定a，求后面bc的排列：abc、acb，求好后，b放在第一位置，得到bac；&lt;br&gt;（2）固定b，求后面ac的排列：bac、bca，求好后，c放在第一位置，得到cba；&lt;br&gt;（3）固定c，求后面ba的排列，cba、cab。&lt;br&gt;其过程如下图所示：&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/iqS7F6D.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;分析了算法思想后，就很容易写出代码了。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;void getPermutation(vector&amp;lt;string&amp;gt;&amp;amp; ret, string A, int start){
-    int end = A.size()-1;
-    if(start == end){
-        ret.push_back(A);
-        return;
-    }else{
-        for(int j=start; j&amp;lt;=end; ++j){
-            std::swap(A[start], A[j]);        //轮流固定在第一个位置
-            getPermutation(ret, A, start+1);
-            std::swap(A[start], A[j]);
-        }
-    }
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;运行上面的例子，结果如下图所示。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/aVKXDCF.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;所以，其实STL算法next_permutation是去掉了重复的全排列。&lt;/p&gt;
-&lt;h3 id=&quot;组合&quot;&gt;&lt;a href=&quot;#组合&quot; class=&quot;headerlink&quot; title=&quot;组合&quot;&gt;&lt;/a&gt;组合&lt;/h3&gt;&lt;p&gt;如果不是求字符的所有排列，而是求其所有组合呢？比如字符a、b、c，它们的组合有a,b,c,ab,ac,bc,abc。    &lt;/p&gt;
-&lt;h4 id=&quot;基于位图的算法&quot;&gt;&lt;a href=&quot;#基于位图的算法&quot; class=&quot;headerlink&quot; title=&quot;基于位图的算法&quot;&gt;&lt;/a&gt;基于位图的算法&lt;/h4&gt;&lt;p&gt;简单的数学知识：假设原有n个字符，则最终组合结果是2^n-1个。采用位操作：假设有元素a、b、c三个，规定二进制1表示取该元素，0表示不取。故取a的二进制表示为001，ab为011，依次类推，000没有意义。&lt;br&gt;所以，这些结果与位图的对应关系：&lt;br&gt;001, 010, 011, 100, 101, 110, 111&lt;br&gt;a, b, ab, c, ac, bc, abc&lt;br&gt;因此，可以循环1~2^n-1，然后输出对应代表的组合即可。    &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;void Combination(string A){
-    int n=1&amp;lt;&amp;lt;A.size();
-    for(int i=1;i&amp;lt;n;++i){
-        for(int j=0;j&amp;lt;A.size();++j){
-            if((1&amp;gt;&amp;gt;j)&amp;amp;i)        //对应位上为1，则输出对应的字符
-                cout &amp;lt;&amp;lt; A[j];
-        }                        //每一个组合
-        cout &amp;lt;&amp;lt; endl;
-    }
-}  
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;代码运行结果如下图所示：&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/hJmuKDD.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;很久没有深入研究数据结构和算法了…&lt;br&gt;这次换个套路，先不说那些干瘪瘪的理论，首先来看一道编程题。&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="数据结构与算法" scheme="http://blog.dujiong.net/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/"/>
     
   </entry>
   

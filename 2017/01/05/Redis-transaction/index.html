@@ -41,7 +41,7 @@
 <link href="/css/main.css?v=0.5.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="network/linux," />
+  <meta name="keywords" content="Redis," />
 
 
 
@@ -59,29 +59,21 @@
 
 
 
-<meta name="description" content="最近，在参与一个数据中心-云存储的项目，用到了DCB（Data Center Bridging，数据中心桥接）协议。现将学到的相关知识总结出来，以供同行交流，同时加深自己的理解。">
+<meta name="description" content="在关系数据库的事务中，用户首先向数据库服务器发送BEGIN，然后执行各个相互一致的写操作和读操作，最后，用户可以选择发送COMMIT来确认之前所做的修改，或者发送ROLLBACK来放弃那些修改。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Data Center Bridging">
-<meta property="og:url" content="http://blog.dujiong.net/2016/10/18/DataCenterBridging/index.html">
+<meta property="og:title" content="Redis事务">
+<meta property="og:url" content="http://blog.dujiong.net/2017/01/05/Redis-transaction/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="最近，在参与一个数据中心-云存储的项目，用到了DCB（Data Center Bridging，数据中心桥接）协议。现将学到的相关知识总结出来，以供同行交流，同时加深自己的理解。">
-<meta property="og:image" content="http://i.imgur.com/1HVTK7q.png">
-<meta property="og:image" content="http://i.imgur.com/PKAQ8Df.png">
-<meta property="og:image" content="http://i.imgur.com/yddhfp4.png">
-<meta property="og:image" content="http://i.imgur.com/2KZIJgX.png">
-<meta property="og:image" content="http://i.imgur.com/24sjzR3.png">
-<meta property="og:image" content="http://i.imgur.com/TCA7P5g.png">
-<meta property="og:image" content="http://i.imgur.com/yUXsCiR.png">
-<meta property="og:image" content="http://i.imgur.com/j8iw750.png">
-<meta property="og:image" content="http://i.imgur.com/3sEu8Cp.png">
-<meta property="og:image" content="http://i.imgur.com/LFQRQa7.png">
-<meta property="og:image" content="http://i.imgur.com/90Qe1wt.png">
-<meta property="og:image" content="http://i.imgur.com/2SXhQy4.png">
-<meta property="og:updated_time" content="2016-10-18T07:14:35.762Z">
+<meta property="og:description" content="在关系数据库的事务中，用户首先向数据库服务器发送BEGIN，然后执行各个相互一致的写操作和读操作，最后，用户可以选择发送COMMIT来确认之前所做的修改，或者发送ROLLBACK来放弃那些修改。">
+<meta property="og:image" content="http://i.imgur.com/6PQWySj.png">
+<meta property="og:image" content="http://i.imgur.com/PMcavUU.png">
+<meta property="og:image" content="http://i.imgur.com/TnIfK7G.png">
+<meta property="og:image" content="http://i.imgur.com/igmOQqS.png">
+<meta property="og:updated_time" content="2017-03-29T13:53:01.348Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Data Center Bridging">
-<meta name="twitter:description" content="最近，在参与一个数据中心-云存储的项目，用到了DCB（Data Center Bridging，数据中心桥接）协议。现将学到的相关知识总结出来，以供同行交流，同时加深自己的理解。">
-<meta name="twitter:image" content="http://i.imgur.com/1HVTK7q.png">
+<meta name="twitter:title" content="Redis事务">
+<meta name="twitter:description" content="在关系数据库的事务中，用户首先向数据库服务器发送BEGIN，然后执行各个相互一致的写操作和读操作，最后，用户可以选择发送COMMIT来确认之前所做的修改，或者发送ROLLBACK来放弃那些修改。">
+<meta name="twitter:image" content="http://i.imgur.com/6PQWySj.png">
 
 
 
@@ -99,7 +91,7 @@
   };
 </script>
 
-  <title> Data Center Bridging | 一期一会 </title>
+  <title> Redis事务 | 一期一会 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -259,7 +251,7 @@
             
             
               
-                Data Center Bridging
+                Redis事务
               
             
           </h1>
@@ -271,8 +263,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-10-18T12:34:17+08:00" content="2016-10-18">
-              2016-10-18
+            <time itemprop="dateCreated" datetime="2017-01-05T20:25:52+08:00" content="2017-01-05">
+              2017-01-05
             </time>
           </span>
 
@@ -282,8 +274,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/10/18/DataCenterBridging/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/10/18/DataCenterBridging/" itemprop="commentsCount"></span>
+                <a href="/2017/01/05/Redis-transaction/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/01/05/Redis-transaction/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -305,15 +297,17 @@
       
 
       
-        <p>最近，在参与一个数据中心-云存储的项目，用到了DCB（Data Center Bridging，数据中心桥接）协议。现将学到的相关知识总结出来，以供同行交流，同时加深自己的理解。<br><a id="more"></a></p>
-<h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><p>在企业中，传统数据中心通常会使用不同的技术来实现不同数据流量的传输，例如LAN（Local Area Network，以太网）技术用来实现IP流量的传输，SAN（Storage Area Network，存储网络）技术用来实现光纤通道存储流量的传输，除此之外，还会用InifiniBand技术来为高性能集群计算提供支持。此时，虽然通过不同的技术解决了数据中心业务需求，但是以上技术的结合使用也导致了企业将面临如下问题，并且随着数据中心规模的逐步增大，问题的严重性也日益增加；首先存在服务器兼容问题，不同的服务器需要多个专用适配器，同时也需要不同的布线系统；其次是设备统一管理问题，由于多套网络无法统一管理，因此需要不同的维护人员，这将导致设备的部署、配置、管理都会很困难。最后是设备成本问题，以上技术的结合使用导致机房需要支持更多的设备，随之而来的则是服务器的电费预算将上升，并且对于服务器的制冷要求也会增加。<br>以上只是硬件问题，不同的技术在满足QoS（Quality of Service，服务质量）的需求上也存在较大差异。例如，LAN流量允许丢包，只需要设备提供尽力而为的服务，丢包和乱序问题则由两端的主机来处理，不需要网络节点做过多的干预；SAN流量对丢包敏感，且要求报文在传输过程中是有序的；IPC（Inter-Process Communication，进程间通信）则对低延时要求很高。<br>多网融合是解决上述问题的方向，即将采用多种技术的网络整合成统一技术的网络。而随着以太网IP技术的高速发展，使用以太网来统一承载上述各种流量在数据中心得到了广泛应用；此外，为了进一步满足各种流量（尤其是SAN流量）的QoS需求，在传统以太网的基础上产生了DCB协议。<br>DCB协议是一组由IEEE 802.1工作组定义的以太网增强协议，广泛应用于现有的数据中心网络中。DCB协议充分利用了传统以太网的优势，通过增添多种关键扩展功能来为数据中心网络提供无损数据传输、低延时和物理链路带宽共享的功能。DCB协议的主要特性有：PFC（Priority-based Flow Control，基于优先级的流量控制）、ETS（Enhanced Transmission Selection，增强流量选择）、DCBX（Data Center Bridging Capabilities Exchange Protocol，数据中心桥接交换协议）和ECN（Explicit Congestion Notification，显示拥塞通告）。 </p>
-<h3 id="PFC"><a href="#PFC" class="headerlink" title="PFC"></a>PFC</h3><p>PFC是一种对IEEE802.3定义的流控机制的增强技术，主要用于消除链路阻塞而导致的丢包。PFC属于DCB的一部分，适用于DCB网络中点到点的全双工链路。在传统的以太网流控机制中，当下游设备发现接收能力小于上游设备的发送能力时，会主动发一个Pause帧给上游设备，要求暂停流量的发送，上游设备等待一定时间后再继续发送数据。此时虽然能够解决流控问题，但是该机制是将链路上所有的流量都暂停，即流量暂停是针对整个接口，这与数据中心的链路共享机制发生了冲突。因为链路共享机制有两个要求：（1）一种类型的突发流量不能影响其他类型流量的转发；（2）一种类型的流量大量积压在队列中不能抢占其他类型的流量的缓存资源。所以，为了解决现有以太网流控机制和链路共享之间的冲突，产生了PFC机制。<br>PFC是一种基于优先级的流量控制机制。PFC可以在一条以太网物理链路上创建8个独立的虚拟通道，并为每条虚拟通道指定一个优先等级，允许单独暂停和重启其中任意一条虚拟通道，同时不影响其他通道的流量。其工作机制如下图所示。<br><img src="http://i.imgur.com/1HVTK7q.png" alt=""><br>Device A发送接口分成了8个优先级队列，Device B接收接口分成了8个接收缓存，两者一一对应。当Device B的端口上某个接收缓存即将产生拥塞时，向Device A发送一个反压信号“STOP”，Device A收到该信号后停止发送对应优先级队列的报文。“反压信号”实际上就是PFC帧，其具体报文格式如下图所示。<br><img src="http://i.imgur.com/PKAQ8Df.png" alt=""><br>报文中各字段的定义如下表所示。<br><img src="http://i.imgur.com/yddhfp4.png" alt=""><br>由此可见，PFC机制下流量暂停只针对某一个或几个优先级队列，不针对整个端口进行中断。这样将会使得每个队列都能单独进行暂停或重启，而不影响其他队列上的流量，从而实现了多种流量对链路的共享。而对于非PFC控制的优先级队列，系统则不进行反压处理，在发生拥塞时直接丢弃报文。</p>
-<h3 id="ETS"><a href="#ETS" class="headerlink" title="ETS"></a>ETS</h3><p>ETS是DCB的另一个重要组成部分，它主要是通过灵活的层次化调度来实现对QoS的高需求。ETS提供两级调度，分别为基于PG（Priority Group，优先级组）的调度和基于优先级的调度；ETS的调度流程如下图所示，即：首先，接口对PG进行第一级调度，然后针对PG内的不同优先级队列进行第二级调度。通过采用ETS技术，可以为网络中不同类型的流量提供不同的服务和带宽。<br><img src="http://i.imgur.com/2KZIJgX.png" alt=""><br>在ETS中定义了3个优先级组PG0、PG1和PG15，分别代表LAN流量、SAN流量和IPC流量。ETS协议根据不同流量的QoS需求规定了不同的调度方式。IEEE 802.1Qaz中定义了三种ETS调度算法：WRR（Weighted Round Robin，基于权重的轮询）算法、SP（Strict Priority，严格优先级）算法和CBS（Credit-Based Shaper，令牌整形调度）算法；ETS协议对三个优先级组PG0、PG1、PG15常见的调度方式是SP算法和WRR算法，其中PG15采用的是SP算法，主要是由于PG15承载的是IPC流量，对延时要求很高；PG0和PG1则采用了WRR算法，其主要承载的是LAN流量和SAN流量。同时，用户可以根据自身的实际需求对优先级组PG0、PG1、PG15等划分不同的带宽。<br>下面简要介绍SP算法和WRR算法。</p>
-<h4 id="SP算法"><a href="#SP算法" class="headerlink" title="SP算法"></a>SP算法</h4><p>如图所示，SP算法要求严格按照优先级来发送队列中的报文，优先发送高优先级队列中的报文，当高优先级队列为空时，再发送低优先级队列中的报文，在图1-4中的8个队列中，队列7优先级最高，队列0优先级最低，所以先发送队列7中的报文，最后发送队列0的报文。根据以上原理，SP算法常用于通过将关键业务报文放入高优先级队列，从而保证这些业务的正常运行的场景。<br><img src="http://i.imgur.com/24sjzR3.png" alt=""></p>
-<h4 id="WRR算法"><a href="#WRR算法" class="headerlink" title="WRR算法"></a>WRR算法</h4><p>WRR算法是一种常用的轮询调度算法，该算法先给每个队列分配一定的权重，然后在队列之间进行轮流调度。每个队列的权重决定了调度到该队列时可以发送的数据量。通过轮询，WRR算法保证每个队列都能得到调度，避免出现低优先级队列饿死的情况。WRR算法的工作过程如下图所示。<br><img src="http://i.imgur.com/TCA7P5g.png" alt=""></p>
-<h3 id="DCBX"><a href="#DCBX" class="headerlink" title="DCBX"></a>DCBX</h3><p>在数据中心网络融合场景下，为实现上述以太网增强协议，链路两端的PFC和ETS的参数配置需要保持一致，因此对于PFC和ETS的参数需要进行配置。但是如果这些配置单纯依靠管理员手动设置，不仅工作量庞大而且极易出错。因此提出了DCBX协议，DCBX协议是一种链路发现协议，主要是为链路两端的设备发现并交换DCB配置信息提供了通信方式。<br>DCBX协议作为信息的载体，运行在点对点的链路上，用于通告本机的PFC、ETS等参数的配置信息，同时，它也期望接收对端发送的配置的信息用以引导本机配置。DCBX将需要交互的DCB配置信息封装到LLDP（Link Layer Discovery Protocol，链路层发现协议）中的TLV中，借由LLDP来进行链路两端设备的DCB配置交换。下面以DCB的PFC参数为例，简要说明LLDP承载DCBX的实现过程。<br><img src="http://i.imgur.com/yUXsCiR.png" alt=""><br>如上图所示，端口Port A和Port B已经开启了LLDP功能和DCBX功能。主要信息交互流程如下：首先，Port A的LLDP模块根据自己的报文发送周期定期地向Port B发送携带DCBX TLV的LLDP报文；然后，Port B收到LLDP报文后解析出DCBX TLV，将Port A的PFC参数通知给DCBX模块；最后，DCBX模块将Port A参数和本地的PFC参数进行比较，协商一致后生成配置文件，保证两端配置一致。DCBX的TLV结构定义如下图所示。<br><img src="http://i.imgur.com/j8iw750.png" alt=""><br>其中，Type字段固定为127，OUI字段固定为0x0080c2，Subtype字段为DCBX TLV承载的消息类型，包括ETS Configuration TLV、ETS Recommendation TLV和PFC Configuration TLV，其具体内容如下表所示。<br><img src="http://i.imgur.com/3sEu8Cp.png" alt=""> </p>
-<h3 id="ECN"><a href="#ECN" class="headerlink" title="ECN"></a>ECN</h3><p>传统的TCP/IP网络中，网络拥塞控制算法都是用包丢失作为指示信息，通知端系统网络中发生了拥塞，进而通过降低发送方的发送速率来减轻拥塞程度。<br>而ECN则采用了一种完全不同的方法，其核心思想是通过路由器标记IP头部的特定比特位来反映网络拥塞状况。当标记报文到达目的地址后，接收方使用下一个ACK通知发送方有拥塞发生，最后，发送方做出响应，缩小拥塞窗口，降低发送速率。<br><img src="http://i.imgur.com/LFQRQa7.png" alt=""><br>根据上图IP首部信息可知，ECN拥塞控制主要用到了IP首部TOS域中的最后两位，称作为ECN域，其字段定义如下表所示。当一个支持ECN的主机发送数据包时首先将ECN域设置为01或10，如果在该数据包的传输路径上的路由器支持ECN并且监测到拥塞信息，它将会把ECN域设置为11，表示网络出现拥塞。而如果ECN域已经被标记为11，下游路由器不会修改其值。<br><img src="http://i.imgur.com/90Qe1wt.png" alt=""><br>此外，ECN仍然需要传输层协议的支持。TCP使用6位保留位的后两位来支持ECN。其字段定义如下图所示。其中，ECE（ECN-Echo）标志位有两个作用：（1）在TCP三次握手中表明TCP端是否支持ECN；（2）在传输数据时表明接收到的TCP段的IP首部的ECN被设置为11，即出现了拥塞。CWR标志位为发送端缩小拥塞窗口标志，用来通知接收端它已经收到设置了ECE标志的ACK，并减小了发送窗口。当接收端收到CWR标志的包时，停止在接下来的ACK中设置ECE标志。<br><img src="http://i.imgur.com/2SXhQy4.png" alt="">    </p>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>DCB协议是一组由IEEE 802.1工作组定义的以太网增强协议，广泛应用于现有的数据中心网络中。DCB协议充分利用了传统以太网的优势，通过增添多种关键扩展功能来为数据中心网络提供无损数据传输、低延时和物理链路带宽共享的功能。</p>
+        <p>在关系数据库的事务中，用户首先向数据库服务器发送BEGIN，然后执行各个相互一致的写操作和读操作，最后，用户可以选择发送COMMIT来确认之前所做的修改，或者发送ROLLBACK来放弃那些修改。<br><a id="more"></a></p>
+<h3 id="Redis事务处理流程"><a href="#Redis事务处理流程" class="headerlink" title="Redis事务处理流程"></a>Redis事务处理流程</h3><p>Redis通过MULTI、EXEC、WATCH等命令来实现事务功能。事务提供了一种将多个命令请求打包，然后一次性、按顺序地执行多个命令的机制，并且在事务执行期间，服务器不会中断事务而该去执行其他客户端的命令请求，它会将事务中的所有命令都执行完毕，然后才去处理其他客户端的命令请求。<br>一个事务从开始到结束会经历如下三个阶段：<br>（1）事务开始<br>MULTI命令标志着事务的开始，其将执行该命令的客户端从非事务状态切换至事务状态。<br>（2）命令入队<br>当一个客户端处于非事务状态时，这个客户端发送的命令会立即被服务器执行，而当其切换到事务状态时，服务器会根据客户端发来的不同命令来执行不同的操作：如果是MULTI、EXEC、DISCARD、WATCH四个命令中的一个，那么服务器立即执行；如果不是，那么服务器不立即执行命令，而是将其放入一个服务队列里面，然后向客户端返回QUEUED回复。<br>这些命令保存在每个客户端所持有的一个事务队列中，该队列以FIFO的方式保存入队的命令。<br>（3）执行事务<br>当处于事务状态的客户端向服务器发送EXEC命令时，EXEC命令将立即被服务器执行。服务器会遍历这个客户端的事务队列，执行队列中保持的所有命令，最后将执行结果全部返回给客户端。<br>但是，MULTI和EXEC只能保证它们中间的那些入队的命令不会被其他客户端掺杂在一起，却没有锁的逻辑，即不能解决干扰。比如，现有一个key为1的数字，客户端1需要在事务中连续做两次自增操作，但在EXEC之前，客户端2对key进行了修改<code>set key 100</code>。<br><img src="http://i.imgur.com/6PQWySj.png" alt=""><br>可以看出，在事务执行的过程中，读到了脏数据，为了保障不被干扰，需要对数据加锁。        </p>
+<h3 id="乐观锁WATCH"><a href="#乐观锁WATCH" class="headerlink" title="乐观锁WATCH"></a>乐观锁WATCH</h3><p>在访问以写入为目的数据的时候，关系数据库会对被访问的数据加锁，直到事务被提交或者被回滚为止。如果有其他客户端试图对被加锁的数据行进行写入，那么该客户端将被阻塞，直到第一个事务执行完毕为止。这种做法称为悲观锁。<br>而Redis为了减少客户端的等待时间，并不会在执行WATCH命令时对数据加锁。相反地，Redis只会在数据已经被其他客户端抢先修改了的情况下，通知执行了WATCH的客户端，这种做法称为乐观锁。当被监视的键至少有一个已经被修改过了，服务器将拒绝执行事务，并向客户端返回代表事务执行失败的空回复。<br>对于上面的例子，使用WATCH监视key。<br><img src="http://i.imgur.com/PMcavUU.png" alt=""><br>当客户端执行EXEC时，服务器发现WATCH监视的键“name”已经被修改，因此服务器拒绝执行客户端A的事务，并向客户端A返回空回复。<br>但是，需要注意的是，WATCH命令的作用只是当被监控的键值被修改后阻止之后一个事务的执行，而不能保证其他客户端不修改这一键值，所以，通常情况下在EXEC执行失败后会重新执行整个函数。   </p>
+<h4 id="利用WATCH实现原子自增"><a href="#利用WATCH实现原子自增" class="headerlink" title="利用WATCH实现原子自增"></a>利用WATCH实现原子自增</h4><p>使用伪代码表示为：</p>
+<pre><code>WATCH key
+val = GET key
+val = val + 1
+MULTI
+SET key $val
+EXEC
+</code></pre><h3 id="事务的ACID性质"><a href="#事务的ACID性质" class="headerlink" title="事务的ACID性质"></a>事务的ACID性质</h3><p>（1）原子性<br>对于Redis的事务功能来说，事务队列中的命令要么就全部都执行，要么就一个都不执行，因此，从这一点来看，Redis的事务是具有原子性的。<br>下图是事务因为命令入队出错而被服务器拒绝执行，事务中的所有命令都不会被执行。<br><img src="http://i.imgur.com/TnIfK7G.png" alt=""><br>但是，Redis事务不支持关系数据库的事务回滚机制，即事务队列中的某个命令在执行期间（非语法错误，执行错误）出现了错误，事务的后续命令也会继续执行下去，并且之前执行的命令没有影响。因此，在这方面是不符合原子性的。<br><img src="http://i.imgur.com/igmOQqS.png" alt=""><br>（2）一致性<br>事务的一致性是指，如果数据库在执行事务之前是一致的，那么在事务执行之后，无论事务是否执行成功，数据库也应该是一致的。<br>如前所述，当出现入队错误或是执行错误的情况，Redis分别通过拒绝执行和进行错误处理的方式来保证事务的一致性。<br>当Redis服务器在执行事务的过程中停机，那么根据服务器使用的持久化方式，分以下几种情况讨论：<br>a. 如果当前Redis采用的是内存模式，那么重启后Redis数据库是空的，满足一致性条件；<br>b. 如果当前Redis采用RDB模式存储，在执行事务时，Redis不会中断事务去执行保存RDB的工作，只有在事务执行之后，保存RDB的工作才有可能开始。所以当RDB模式下的Redis服务器进程在事务中途被杀死时，事务内执行的命令，不管成功了多少，都不会被保存到RDB文件里。恢复数据库需要使用现有的RDB文件，而这个RDB文件的数据保存的是最近一次的数据库快照，所以它的数据可能不是最新的，但只要RDB文件本身没有因为其他问题而出错，那么还原后的数据库就是一致的；<br>c. 如果当前Redis采用的AOF模式存储，那么可能事务的内容还未写入到AOF文件，那么此时肯定是满足一致性的，如果事务的内容有部分写入到AOF文件中，那么需要用工具把AOF中事务执行部分成功的指令移除，这时，移除之后的AOF文件也是满足一致性的。<br>（3）隔离性<br>事务的隔离性是指，即使数据库有多个事务并发地执行，各个事务之间也不会互相影响，并发状态下执行的事务和串行执行的事务产生的结果完全相同。<br>因为Redis采用单线程的方式来执行事务，并且服务器保证，在执行事务期间不会对事务进行中断，因此，Redis的事务总是以串行的方式运行的，且事务总是具有隔离性。<br>（4）持久性<br>事务的持久性是指，当一个事务执行完毕时，执行这个事务所得的结果已经被保存到永久性存储介质里面了，即使服务器在事务执行完毕之后停机，执行事务所得的结果也不会丢失。<br>Redis事务只有当服务器运行在AOF持久化模式下，并且appendfsync选项为always时，才是具有持久性的。因为程序总会在执行命令之后调用同步函数，将命令数据真正地保存到硬盘里。<br>当然，不论Redis以什么模式运行，在一个事务的最后加上SAVE命令总可以保证持久性，但这种做法效率太低。<br>所以，Redis只满足ACID中的一致性和隔离性。 </p>
 
       
     </div>
@@ -328,7 +322,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/network-linux/" rel="tag">#network/linux</a>
+            <a href="/tags/Redis/" rel="tag">#Redis</a>
           
         </div>
       
@@ -337,16 +331,16 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/10/14/STL-iterator/" rel="next" title="C++ STL迭代器">
-                <i class="fa fa-chevron-left"></i> C++ STL迭代器
+              <a href="/2016/12/30/Effective-STL-3/" rel="next" title="更好地使用STL关联容器">
+                <i class="fa fa-chevron-left"></i> 更好地使用STL关联容器
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2016/10/21/STL-functor/" rel="prev" title="C++ STL仿函数">
-                C++ STL仿函数 <i class="fa fa-chevron-right"></i>
+              <a href="/2017/01/11/Redis-sentinel/" rel="prev" title="Redis Sentinel原理及实践">
+                Redis Sentinel原理及实践 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -373,8 +367,8 @@
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/10/18/DataCenterBridging/"
-           data-title="Data Center Bridging" data-url="http://blog.dujiong.net/2016/10/18/DataCenterBridging/">
+      <div class="ds-thread" data-thread-key="2017/01/05/Redis-transaction/"
+           data-title="Redis事务" data-url="http://blog.dujiong.net/2017/01/05/Redis-transaction/">
       </div>
     
   </div>
@@ -488,7 +482,7 @@
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PFC"><span class="nav-number">2.</span> <span class="nav-text">PFC</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ETS"><span class="nav-number">3.</span> <span class="nav-text">ETS</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#SP算法"><span class="nav-number">3.1.</span> <span class="nav-text">SP算法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#WRR算法"><span class="nav-number">3.2.</span> <span class="nav-text">WRR算法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DCBX"><span class="nav-number">4.</span> <span class="nav-text">DCBX</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ECN"><span class="nav-number">5.</span> <span class="nav-text">ECN</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">6.</span> <span class="nav-text">总结</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Redis事务处理流程"><span class="nav-number">1.</span> <span class="nav-text">Redis事务处理流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#乐观锁WATCH"><span class="nav-number">2.</span> <span class="nav-text">乐观锁WATCH</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#利用WATCH实现原子自增"><span class="nav-number">2.1.</span> <span class="nav-text">利用WATCH实现原子自增</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#事务的ACID性质"><span class="nav-number">3.</span> <span class="nav-text">事务的ACID性质</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">

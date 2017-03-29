@@ -4,12 +4,12 @@
 
     
   <url>
-    <loc>http://blog.dujiong.net/2017/01/05/Redis-sentinel/</loc>
-    <lastmod>2017-03-29T10:20:41.345Z</lastmod>
+    <loc>http://blog.dujiong.net/2017/01/11/Redis-sentinel/</loc>
+    <lastmod>2017-03-29T13:53:03.368Z</lastmod>
     <data>
         <display>
         <title>Redis Sentinel原理及实践</title>
-        <pubTime>2017-01-05T07:21:58.000Z</pubTime>
+        <pubTime>2017-01-11T07:21:58.000Z</pubTime>
         
         <tag>Redis</tag>
          
@@ -21,12 +21,29 @@
 
     
   <url>
-    <loc>http://blog.dujiong.net/2017/01/11/Redis-Cluster/</loc>
-    <lastmod>2017-03-29T07:29:02.859Z</lastmod>
+    <loc>http://blog.dujiong.net/2017/01/15/Redis-Cluster/</loc>
+    <lastmod>2017-03-29T13:53:02.476Z</lastmod>
     <data>
         <display>
         <title>搭建Redis集群</title>
-        <pubTime>2017-01-11T07:08:05.000Z</pubTime>
+        <pubTime>2017-01-15T07:08:05.000Z</pubTime>
+        
+        <tag>Redis</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://blog.dujiong.net/2017/01/05/Redis-transaction/</loc>
+    <lastmod>2017-03-29T13:53:01.348Z</lastmod>
+    <data>
+        <display>
+        <title>Redis事务</title>
+        <pubTime>2017-01-05T12:25:52.000Z</pubTime>
         
         <tag>Redis</tag>
          
