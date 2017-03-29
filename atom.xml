@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2017-03-27T13:19:07.602Z</updated>
+  <updated>2017-03-29T07:29:02.859Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -17,10 +17,10 @@
   
   <entry>
     <title>搭建Redis集群</title>
-    <link href="http://blog.dujiong.net/2017/01/05/Redis-Cluster/"/>
-    <id>http://blog.dujiong.net/2017/01/05/Redis-Cluster/</id>
-    <published>2017-01-05T07:08:05.000Z</published>
-    <updated>2017-03-27T13:19:07.602Z</updated>
+    <link href="http://blog.dujiong.net/2017/01/11/Redis-Cluster/"/>
+    <id>http://blog.dujiong.net/2017/01/11/Redis-Cluster/</id>
+    <published>2017-01-11T07:08:05.000Z</published>
+    <updated>2017-03-29T07:29:02.859Z</updated>
     
     <content type="html">&lt;p&gt;Redis集群是Redis提供的分布式数据库方案，集群通过分片来进行数据共享，并提供复制和故障转移功能。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h3 id=&quot;Redis集群概述&quot;&gt;&lt;a href=&quot;#Redis集群概述&quot; class=&quot;headerlink&quot; title=&quot;Redis集群概述&quot;&gt;&lt;/a&gt;Redis集群概述&lt;/h3&gt;&lt;p&gt;Redis集群使用数据分片而非一致性哈希来实现，一个Redis集群包含16384个哈希槽（slot），数据库中的每个键都属于这16384个哈希槽中的其中一个，集群中的每个节点可以处理0个或最多16384个槽，当数据库中的16384个槽都有节点在处理时，集群处于上线状态；而如果数据库中有任何一个槽没有得到处理，那么集群处于下线状态。&lt;br&gt;集群中的每个节点负责处理一部分哈希槽，比如，现在有三个独立的节点127.0.0.1:7000,127.0.0.1:7001,127.0.0.1:7002，其中各节点处理的哈希槽关系：节点7000负责处理0到5000号哈希槽，节点7001负责处理5001到10000号哈希槽，节点7002负责处理10001到16384号哈希槽。&lt;br&gt;从而，当向集群中添加或删除节点时，集群只需在对应节点的哈希槽做移动即可。不会造成节点阻塞、集群下线。&lt;br&gt;当然，为了使得集群在一部分节点下线的情况下仍然可以正常运作，Redis集群对节点提供了主从复制功能，集群中的每个节点都有1到N个复制节点，形成主-从模型。&lt;/p&gt;
@@ -71,6 +71,62 @@ redis-server redis.conf
     <summary type="html">
     
       &lt;p&gt;Redis集群是Redis提供的分布式数据库方案，集群通过分片来进行数据共享，并提供复制和故障转移功能。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="Redis" scheme="http://blog.dujiong.net/tags/Redis/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Redis Sentinel原理及实践</title>
+    <link href="http://blog.dujiong.net/2017/01/05/Redis-sentinel/"/>
+    <id>http://blog.dujiong.net/2017/01/05/Redis-sentinel/</id>
+    <published>2017-01-05T07:21:58.000Z</published>
+    <updated>2017-03-29T10:20:41.345Z</updated>
+    
+    <content type="html">&lt;p&gt;Sentinel（哨兵）是Redis的高可用性解决方案：由一个或多个Sentinel实例组成的Sentinel系统可以监视任意多个主服务器，以及这些主服务器属下的多个从服务器，并在被监视的主服务器进入下线状态时，自动将下线主服务器属下的某个从服务器升级为新的主服务器。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&quot;Redis-Sentinel系统结构&quot;&gt;&lt;a href=&quot;#Redis-Sentinel系统结构&quot; class=&quot;headerlink&quot; title=&quot;Redis Sentinel系统结构&quot;&gt;&lt;/a&gt;Redis Sentinel系统结构&lt;/h3&gt;&lt;p&gt;下图展示了一个Sentinel系统监视服务器的例子。当前系统包括主服务器server1，从服务器server2、server3、server4和Sentinel监听系统。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/Q5Keiy2.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;假设某时刻server1进入下线状态，那么从服务器对主服务器的复制操作将中止，并且Sentinel系统会察觉到server1已下线，并在server1的下线时长超过用户设定的上限时，Sentinel系统会执行故障转移操作：&lt;br&gt;（1）首先，Sentinel会挑选一个从服务器，将其升级为新的主服务器，这里涉及到选举算法；&lt;br&gt;（2）然后Sentienl向server1所有的从服务器发送新的复制指令，让它们成为新的主服务器的从服务器；&lt;br&gt;（3）Sentinel还会继续监视已下线的server1，并在它重新上线时，将它设置为新的服务器的从服务器。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/l2q4BV4.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h3 id=&quot;Sentinel与主从Redis通信细节&quot;&gt;&lt;a href=&quot;#Sentinel与主从Redis通信细节&quot; class=&quot;headerlink&quot; title=&quot;Sentinel与主从Redis通信细节&quot;&gt;&lt;/a&gt;Sentinel与主从Redis通信细节&lt;/h3&gt;&lt;h4 id=&quot;获取主服务器信息&quot;&gt;&lt;a href=&quot;#获取主服务器信息&quot; class=&quot;headerlink&quot; title=&quot;获取主服务器信息&quot;&gt;&lt;/a&gt;获取主服务器信息&lt;/h4&gt;&lt;p&gt;Sentinel默认会以每十秒一次的频率，通过命令连接向被监视的主服务器发送INFO命令，并通过分析INFO命令的回复来获取主服务器的当前信息。&lt;br&gt;通过分析主服务器返回的INFO命令回复，Sentinel可以获取以下两方面的信息：&lt;br&gt;（1）主服务器本身的信息，包括服务器运行ID，服务器角色等；&lt;br&gt;（2）主服务器属下的所有从服务器信息。包括从服务器的IP地址、端口号等，根据这些信息，Sentinel无须用户提供从服务器的地址信息，就可以自动发现从服务器。   &lt;/p&gt;
+&lt;h4 id=&quot;获取从服务器信息&quot;&gt;&lt;a href=&quot;#获取从服务器信息&quot; class=&quot;headerlink&quot; title=&quot;获取从服务器信息&quot;&gt;&lt;/a&gt;获取从服务器信息&lt;/h4&gt;&lt;p&gt;当Sentinel发现主服务器有新的从服务器出现时，Sentinel除了会为这个新的从服务器创建相应的实例结构之外，Sentinel还会创建连接到从服务器的命令连接和订阅连接。&lt;br&gt;在创建命令连接之后，Sentinel在默认情况下，会以每十秒一次的频率通过命令向从服务器发送INFO命令。并收到服务器信息的回复，根据这些信息，对从服务器的实例结构进行更新。   &lt;/p&gt;
+&lt;h4 id=&quot;与所有主从服务器通信&quot;&gt;&lt;a href=&quot;#与所有主从服务器通信&quot; class=&quot;headerlink&quot; title=&quot;与所有主从服务器通信&quot;&gt;&lt;/a&gt;与所有主从服务器通信&lt;/h4&gt;&lt;p&gt;默认情况下，Sentinel会以每两秒一次的频率，通过命令连接向所有被监视的主服务器和从服务器发送命令。信息格式为：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;PUBLISH __sentinel__:hello &amp;lt;s_ip&amp;gt;,&amp;lt;s_port&amp;gt;,&amp;lt;s_runid&amp;gt;,&amp;lt;s_epoch&amp;gt;,&amp;lt;m_name&amp;gt;,&amp;lt;m_ip&amp;gt;,&amp;lt;m_port&amp;gt;,&amp;lt;m_epoch&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;其中，以&lt;code&gt;s_&lt;/code&gt;开头的参数是Sentinel本身的信息。而m_开头的参数则是主服务器的信息。&lt;br&gt;另外，当Sentinel与一个主服务器或者从服务器建立起订阅连接之后，Sentinel就会通过订阅连接，向服务器发送命令： &lt;code&gt;SUBSCRIBE __sentinel__:hello&lt;/code&gt;，Sentinel会在其与服务器之间的连接断开前一直订阅该频道。&lt;br&gt;因此，每个与Sentinel连接的服务器，Sentinel既通过命令连接向服务器的 &lt;code&gt;__sentinel__:hello&lt;/code&gt;频道发送信息，又通过订阅连接从服务器的&lt;code&gt;__sentinel__:hello&lt;/code&gt;频道接收信息。&lt;br&gt;比如，有sentinel1、sentinel2、sentinel3三个sentinel在监视同一个服务器，当sentinel&lt;br&gt;1向服务器的&lt;code&gt;__sentinel__:hello&lt;/code&gt;频道发送一条信息时，所有订阅了该频道的sentine（包括自己）都会收到这条信息。这些信息用于更新其他Sentinel对发送信息Sentinel的认知，也会被用于更新其他Sentinel对监视服务器的认知。&lt;br&gt;此&lt;/p&gt;
+&lt;h3 id=&quot;选举领头Sentinel&quot;&gt;&lt;a href=&quot;#选举领头Sentinel&quot; class=&quot;headerlink&quot; title=&quot;选举领头Sentinel&quot;&gt;&lt;/a&gt;选举领头Sentinel&lt;/h3&gt;&lt;p&gt;默认情况下，Sentinel会以每秒一次的频率向所有与它创建了命令连接的实例发送PING命令，并通过实例返回的PING命令回复来判断实例是否在线。&lt;br&gt;当Sentinel将一个主服务器判断为主观下线之后，为了确认这个主服务器是否真的下线，它会向同样监视这一主服务器的其他Sentinel进行询问。当从其他Sentinel那里接收到足够数量的已下线判断之后，Sentinel就会将从服务器判定为客观下线，并对主服务器进行故障转移操作。&lt;br&gt;当一个主服务器被判断为客观下线时，监视这个下线服务器的各个Sentinel会进行协商，选举出一个领头Sentinel，并由领头Sentinel对下线主服务器执行故障转移操作（详细的选举算法这里不详述）。&lt;br&gt;在选举出领头Sentinel之后，领头Sentinel将对已下线的主服务器执行文章开头所述的故障转移操作。&lt;/p&gt;
+&lt;h3 id=&quot;Sentinel实践&quot;&gt;&lt;a href=&quot;#Sentinel实践&quot; class=&quot;headerlink&quot; title=&quot;Sentinel实践&quot;&gt;&lt;/a&gt;Sentinel实践&lt;/h3&gt;&lt;p&gt;以下实验均是基于ubuntu 14.04 x86-64bits平台，Redis通过apt-get install redis-server简易安装，版本2.8.x，主从服务器都位于本机。&lt;/p&gt;
+&lt;h4 id=&quot;实验架构和目录结构&quot;&gt;&lt;a href=&quot;#实验架构和目录结构&quot; class=&quot;headerlink&quot; title=&quot;实验架构和目录结构&quot;&gt;&lt;/a&gt;实验架构和目录结构&lt;/h4&gt;&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/lXobqNP.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/6dgbBnr.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h4 id=&quot;搭建Reis主从结构&quot;&gt;&lt;a href=&quot;#搭建Reis主从结构&quot; class=&quot;headerlink&quot; title=&quot;搭建Reis主从结构&quot;&gt;&lt;/a&gt;搭建Reis主从结构&lt;/h4&gt;&lt;p&gt;首先配置master对应的配置redis.conf，重点需要关注的地方有：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;pidfile /var/run/redis.pid
+port 7003
+tcp-keepalive 60
+logfile /var/log/redis/redis-server.log
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;其余很多选项保持默认即可。然后&lt;code&gt;redis-server master/redis.conf&lt;/code&gt;启动master。&lt;br&gt;然后搭建slave，slave的配置文件和master基本一致，只需要修改相应的pidfile、端口(8003)、日志文件名，并配上master的地址&lt;code&gt;slaveof 127.0.0.1:7003&lt;/code&gt;&lt;/p&gt;
+&lt;h4 id=&quot;Sentinel配置&quot;&gt;&lt;a href=&quot;#Sentinel配置&quot; class=&quot;headerlink&quot; title=&quot;Sentinel配置&quot;&gt;&lt;/a&gt;Sentinel配置&lt;/h4&gt;&lt;p&gt;接下来配置三个哨兵。以sentinel1.conf为例&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;port 26371
+
+daemonize yes
+logfile &amp;quot;./sentinel1.log&amp;quot;
+dir &amp;quot;/home/dujiong/redis-data/sentinel&amp;quot;
+
+sentinel monitor Master 127.0.0.1 7003 1
+sentinel down-after-milliseconds Master 1500
+sentinel failover-timeout Master 10000
+
+sentinel config-epoch Master 15
+
+sentinel known-slave Master 127.0.0.1 8003
+sentinel known-sentinel Master 127.0.0.1 26372 0aca3a57038e2907c8a07be2b3c0d15171e44da5
+sentinel known-sentinel Master 127.0.0.1 26373 e7625d74a5a4b142c495baa8ca522517bd08c65b
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;其余两个哨兵在此基础上修改相应的参数即可。&lt;br&gt;配置好环境后，使用ps命令查看进程运行情况。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/QbnRZN8.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h4 id=&quot;查看Sentinel监控的主从服务器&quot;&gt;&lt;a href=&quot;#查看Sentinel监控的主从服务器&quot; class=&quot;headerlink&quot; title=&quot;查看Sentinel监控的主从服务器&quot;&gt;&lt;/a&gt;查看Sentinel监控的主从服务器&lt;/h4&gt;&lt;p&gt;在Sentinel中查看当前的主从服务器状态如下：&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/EqCwUhI.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/UtcunJV.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/O2zmFTF.png&quot; alt=&quot;&quot;&gt;  、&lt;/p&gt;
+&lt;h4 id=&quot;故障转移&quot;&gt;&lt;a href=&quot;#故障转移&quot; class=&quot;headerlink&quot; title=&quot;故障转移&quot;&gt;&lt;/a&gt;故障转移&lt;/h4&gt;&lt;p&gt;接下来，使用&lt;code&gt;redis-cli -p 7003 shutdown&lt;/code&gt;关闭master，按照前面的理论，Sentinel将会进行故障转移操作，选择slave作为主服务器。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/tAqniY8.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;最后，再次启动master服务器（127.0.0.1:7003），Sentinel将它设置为新的服务器的从服务器。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/rNhhyy6.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h3 id=&quot;总结&quot;&gt;&lt;a href=&quot;#总结&quot; class=&quot;headerlink&quot; title=&quot;总结&quot;&gt;&lt;/a&gt;总结&lt;/h3&gt;&lt;p&gt;Sentinel是一个运行在特殊模式下的Redis服务器，用以提供Redis的高可用解决方案。在3.0之后的Redis版本中，Redis Cluster重用了Sentinel的代码逻辑，不需要单独启动一个Sentinel集群，Cluster本身就能自动进行Master选举和Failover切换。   &lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;Sentinel（哨兵）是Redis的高可用性解决方案：由一个或多个Sentinel实例组成的Sentinel系统可以监视任意多个主服务器，以及这些主服务器属下的多个从服务器，并在被监视的主服务器进入下线状态时，自动将下线主服务器属下的某个从服务器升级为新的主服务器。&lt;br&gt;
     
     </summary>
     
@@ -2093,165 +2149,6 @@ iterator erase(iterator position){
     
     
       <category term="数据结构与算法" scheme="http://blog.dujiong.net/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>C++ STL仿函数</title>
-    <link href="http://blog.dujiong.net/2016/10/21/STL-functor/"/>
-    <id>http://blog.dujiong.net/2016/10/21/STL-functor/</id>
-    <published>2016-10-21T12:10:17.000Z</published>
-    <updated>2016-10-18T12:10:54.242Z</updated>
-    
-    <content type="html">&lt;p&gt;仿函数，又称为函数对象，即一种具有函数特质的对象，指的是那些可以被传入其他函数或是从其他函数返回的函数。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;h3 id=&quot;函数指针与函数对象&quot;&gt;&lt;a href=&quot;#函数指针与函数对象&quot; class=&quot;headerlink&quot; title=&quot;函数指针与函数对象&quot;&gt;&lt;/a&gt;函数指针与函数对象&lt;/h3&gt;&lt;p&gt;我们知道，STL所提供的各种算法，往往有两个版本，其中一个版本表现出最常用（或最直观）的某种运算，第二个版本则表现出最泛化的演算流程，允许用户“以template参数来指定所要采取的策略”。以accumulate()为例，其第一版本是将指定范围内的所有元素相加，第二版本则允许你指定某种“操作”，取代第一版本的“相加”行为。所以，要将某种“操作”当做算法的参数，首先想到的办法就是先将该“操作”设计为一个函数，再将函数指针当做算法的一个参数；或者将该“操作”设计为一个仿函数（语言层面而言是个class），再以该仿函数产生一个对象，并以此对象作为算法的一个参数。      下面通过一个实际的例子说明这两种方法。   &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;#include &amp;lt;iostream&amp;gt;
-
-using namespace std;
-
-int add_func(int a, int b){
-    return a+b;
-}
-
-class AddClass{
-public:
-       int operator()(int a, int b) { return a+b; }
-};
-
-typedef int (*AddFunction)(int a, int b);
-
-int main()
-{
-    {
-        AddClass addClass;
-        int sum = addClass(1,2);
-        cout &amp;lt;&amp;lt; &amp;quot;addClass: &amp;quot; &amp;lt;&amp;lt; sum &amp;lt;&amp;lt; endl;
-    }
-
-    {
-        AddFunction addFunction = &amp;amp;add_func;
-        int sum = addFunction(1,2);
-        cout &amp;lt;&amp;lt; &amp;quot;addFunction: &amp;quot; &amp;lt;&amp;lt; sum &amp;lt;&amp;lt; endl;
-    }
-    return 0;
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;可以看出，函数对象实际上就是一个重载了operator()操作符的类，这就是函数对象与普通类的差别。另外，函数对象和函数指针在定义的方式不一样，但是调用的方式是一样的。那既然已经有了函数指针这个东西，为什么还要发明函数对象呢？其实很简单，函数对象可以将附加数据保存在成员变量中，从而实现携带附加数据，而函数指针就不行了。考虑下面一个应用场景，我们需要使用std::for_ecah将一个std::vector中的每一个值加上某个值然后输出，如果使用普通函数，则其声明应该为&lt;code&gt;void add_num(int value, int num);&lt;/code&gt;，其中value为容器中的元素，num为要加上的数。但是由于std::for_each函数的第三个参数要求传入接受一个参数的函数或函数对象，所以将add_num函数传入std::for_each是错误的，然而函数对象可以携带附加数据解决这个问题。   &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;#include &amp;lt;iostream&amp;gt;
-#include &amp;lt;vector&amp;gt;
-#include &amp;lt;algorithm&amp;gt;
-
-using namespace std;
-
-class Add
-{
-    public:
-        void operator()(int value){
-            cout &amp;lt;&amp;lt; value + num_ &amp;lt;&amp;lt; endl;
-        }
-    private:
-        int num_;
-}；
-
-int main()
-{
-    vector&amp;lt;int&amp;gt; ivec;
-    ivec.push_back(1);
-    ivec.push_back(2);
-    ivec.push_back(3);
-
-    Add add(2);
-    std::for_each(ivec.begin(), ivec.end(), add);
-    return 0;
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;仿函数的型别&quot;&gt;&lt;a href=&quot;#仿函数的型别&quot; class=&quot;headerlink&quot; title=&quot;仿函数的型别&quot;&gt;&lt;/a&gt;仿函数的型别&lt;/h3&gt;&lt;p&gt;仿函数的相应型别主要用来表现函数参数型别和传回值型别。为了方便起见，&lt;stl\_function.h&gt;定义了两个classes，分别代表一元仿函数和二元仿函数（STL不支持三元仿函数），其中没有任何data members或member functions，唯有一些型别定义，任何仿函数，只要依个人需求选择继承其中一个class，便自动拥有了那些相应型别，也就自动拥有了配接能力。&lt;br&gt;unary_function和binary_function分别用来呈现一元和二元函数的参数型别和返回值型别。用户可以继承它们，从而定义自己的仿函数。   &lt;/stl\_function.h&gt;&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;template &amp;lt;class T&amp;gt;
-struct negate : public unary_function&amp;lt;T,T&amp;gt; {
-    T operator() (const T&amp;amp; x) const { return -x; }
-}
-
-template &amp;lt;class T&amp;gt;
-struct plus : public binary_function&amp;lt;T,T,T&amp;gt; {
-    T operator() (const T&amp;amp; x, const T&amp;amp; y) const { return x + y; }
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;STL仿函数的分类，若以操作数的个数划分，可分为一元和二元仿函数，若以功能划分，可分为算术运算、关系运算和逻辑运算三大类。     &lt;/p&gt;
-&lt;h3 id=&quot;lambda&quot;&gt;&lt;a href=&quot;#lambda&quot; class=&quot;headerlink&quot; title=&quot;lambda&quot;&gt;&lt;/a&gt;lambda&lt;/h3&gt;&lt;p&gt;lambda是C++11中引入的新特性，使程序员能定义匿名对象，而不必定义独立的函数和函数对象，这样使代码更容易编写和理解，又能防止别人的访问(调用)。简而言之，一个lambda函数是一个可以内联在代码中的函数，且通常也会传递给另外的函数（类似于仿函数）。&lt;br&gt;下面用lambda来重写上面的for_each例子。  &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;#include &amp;lt;iostream&amp;gt;
-#include &amp;lt;vector&amp;gt;
-#include &amp;lt;algorithm&amp;gt;
-
-using namespace std;    
-
-int main()
-{
-    vector&amp;lt;int&amp;gt; ivec;
-    ivec.push_back(1);
-    ivec.push_back(2);
-    ivec.push_back(3);
-
-    std::for_each(ivec.begin(), ivec.end(),
-                  [](int x) { cout &amp;lt;&amp;lt; x + x &amp;lt;&amp;lt; endl; });
-    return 0;
-}  
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;lambda表达式&lt;code&gt;[] (int x) { cout &amp;lt;&amp;lt; x + 2 &amp;lt;&amp;lt; endl; }&lt;/code&gt;会让编译器产生一个类似前面例子中Add的未命名函数对象类。相比于函数对象类，lambda表达式具有如下优点：（1）简洁，不需要自己去实现函数对象类；（2）不会为临时的使用而引入新的名字，所以不会导致名字污染；（3）函数对象类名不如它的实际代码表达能力强，把代码放在更靠近它的地方将提高代码的清晰度。    &lt;/p&gt;
-&lt;h3 id=&quot;std-function&quot;&gt;&lt;a href=&quot;#std-function&quot; class=&quot;headerlink&quot; title=&quot;std::function&quot;&gt;&lt;/a&gt;std::function&lt;/h3&gt;&lt;p&gt;lambda产生的闭包类型可以转换成std::function。std::function对象是对C++中现有的可调用实体的一种类型安全的包裹。  &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;#include &amp;lt;iostream&amp;gt;
-#include &amp;lt;functional&amp;gt;
-#include &amp;lt;algorithm?
-#include &amp;lt;vector&amp;gt;
-
-using namespace std;
-
-int main()
-{
-    vector&amp;lt;int&amp;gt; ivec;
-    ivec.push_back(1);
-    ivec.push_back(2);
-    ivec.push_back(3);
-
-    std::function&amp;lt;void(int)&amp;gt; func = [](int val) { std::cout &amp;lt;&amp;lt; val+2 &amp;lt;&amp;lt; endl; }
-    std::for_each(ivec.begin(), ivec.end(), func);
-
-    return 0;
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;std::function是个类模板，可以对函数（普通函数、成员函数）、lambda表达式、std::bind的绑定表达式、函数对象等进行封装。std::function的实例可以对这些封装的目标进行存储、复制和调用等操作。  &lt;/p&gt;
-&lt;h3 id=&quot;std-bind&quot;&gt;&lt;a href=&quot;#std-bind&quot; class=&quot;headerlink&quot; title=&quot;std::bind&quot;&gt;&lt;/a&gt;std::bind&lt;/h3&gt;&lt;p&gt;函数模板std::bind能对普通函数、成员函数、静态成员函数、公共成员变量、公共静态成员变量等进行包装，调用std::bind的包装相当与将函数名和参数绑定在函数内部。std::bind函数模板返回的函数对象的类型是不确定的，但是可以存储在std::function内。std::bind绑定的参数是通过传值的方式传递的，如果需要通过引用传递则参数先需要用std::ref、std::cref进行引用，然后在传递给std::bind 将std::bind函数模板的返回值保存在std::function后，调用时需要传递的参数个数由std::bind中的占位符（std::placeholders::1、std::placeholders::2、std::placeholders::_3等）个数决定，即有几个占位符调用时就需要几个参数。     &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;#include &amp;lt;iostream&amp;gt;
-#include &amp;lt;functional&amp;gt;
-
-using namespace std;
-
-int testFunc(int a, char c, float f){
-    cout &amp;lt;&amp;lt; a &amp;lt;&amp;lt; endl;
-    cout &amp;lt;&amp;lt; c &amp;lt;&amp;lt; endl;
-    cout &amp;lt;&amp;lt; f &amp;lt;&amp;lt; endl;
-
-    return a;
-}
-
-int main()
-{
-    auto bindFunc1 = std::bind(testFunc, std::placeholders::_1, &amp;apos;A&amp;apos;, 100.1);
-    bindFunc1(10);
-
-    auto bindFunc2 = std::bind(testFunc, std::placeholders::_1, std::placeholders::_1, 100.1);
-    bindFunc2(&amp;apos;B&amp;apos;, 10);
-
-    auto bindFunc3 = bind(TestFunc, std::placeholders::_2, std::placeholders::_3, std::placeholders::_1);
-    bindFunc3(100.1, 30, &amp;apos;C&amp;apos;);
-
-    return 0;
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;总结&quot;&gt;&lt;a href=&quot;#总结&quot; class=&quot;headerlink&quot; title=&quot;总结&quot;&gt;&lt;/a&gt;总结&lt;/h3&gt;&lt;p&gt;本文从STL functor开始，研究了那些可以被传入其他函数或是从其他函数返回的函数，包括函数指针、函数对象、lambda、function和bind。&lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;仿函数，又称为函数对象，即一种具有函数特质的对象，指的是那些可以被传入其他函数或是从其他函数返回的函数。&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
     
   </entry>
   

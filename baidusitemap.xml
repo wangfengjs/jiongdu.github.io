@@ -4,6 +4,40 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2017/01/05/Redis-sentinel/</loc>
+    <lastmod>2017-03-29T10:20:41.345Z</lastmod>
+    <data>
+        <display>
+        <title>Redis Sentinel原理及实践</title>
+        <pubTime>2017-01-05T07:21:58.000Z</pubTime>
+        
+        <tag>Redis</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://blog.dujiong.net/2017/01/11/Redis-Cluster/</loc>
+    <lastmod>2017-03-29T07:29:02.859Z</lastmod>
+    <data>
+        <display>
+        <title>搭建Redis集群</title>
+        <pubTime>2017-01-11T07:08:05.000Z</pubTime>
+        
+        <tag>Redis</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2016/11/25/Redis-replicate/</loc>
     <lastmod>2017-03-28T07:14:36.056Z</lastmod>
     <data>
@@ -27,23 +61,6 @@
         <display>
         <title>Redis之数据库的实现</title>
         <pubTime>2016-11-17T11:46:03.000Z</pubTime>
-        
-        <tag>Redis</tag>
-         
-         
-           
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
-    <loc>http://blog.dujiong.net/2017/01/05/Redis-Cluster/</loc>
-    <lastmod>2017-03-27T13:19:07.602Z</lastmod>
-    <data>
-        <display>
-        <title>搭建Redis集群</title>
-        <pubTime>2017-01-05T07:08:05.000Z</pubTime>
         
         <tag>Redis</tag>
          

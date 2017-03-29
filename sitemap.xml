@@ -2,6 +2,20 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://blog.dujiong.net/2017/01/05/Redis-sentinel/</loc>
+    
+    <lastmod>2017-03-29T10:20:41.345Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://blog.dujiong.net/2017/01/11/Redis-Cluster/</loc>
+    
+    <lastmod>2017-03-29T07:29:02.859Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://blog.dujiong.net/2016/11/25/Redis-replicate/</loc>
     
     <lastmod>2017-03-28T07:14:36.056Z</lastmod>
@@ -12,13 +26,6 @@
     <loc>http://blog.dujiong.net/2016/11/17/Redis-db/</loc>
     
     <lastmod>2017-03-28T07:14:34.678Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://blog.dujiong.net/2017/01/05/Redis-Cluster/</loc>
-    
-    <lastmod>2017-03-27T13:19:07.602Z</lastmod>
     
   </url>
   
