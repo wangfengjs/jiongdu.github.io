@@ -41,7 +41,7 @@
 <link href="/css/main.css?v=0.5.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="C++," />
+  <meta name="keywords" content="数据结构与算法," />
 
 
 
@@ -59,19 +59,19 @@
 
 
 
-<meta name="description" content="值语义和对象语义值语义(value sematics)指的是对象的拷贝与原对象无关，拷贝之后就与原对象脱离关系。C++的内置类型都是值语义，如bool/int/double等，标准库里的pair&amp;lt;&amp;gt;,vector&amp;lt;&amp;gt;,map&amp;lt;&amp;gt;，string等类型也都是值语义。Java语言的primitive types(原生数据类型)也是值语义。与值语义(object sem">
+<meta name="description" content="分配排序，是指不需要进行两两之间的比较，而根据记录自己的关键码的分配来进行排序的一类方法，因此，在进行分配排序时，我们通常需要知道记录序列的一些具体情况，比如关键码的分布。分配排序主要包括桶排序和基数排序。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="浅谈C++值语义和对象语义">
-<meta property="og:url" content="http://blog.dujiong.net/2016/05/15/cplusplus-sematics/index.html">
+<meta property="og:title" content="分配排序（桶排序和基数排序）总结">
+<meta property="og:url" content="http://blog.dujiong.net/2017/01/20/Distribute-Sort/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="值语义和对象语义值语义(value sematics)指的是对象的拷贝与原对象无关，拷贝之后就与原对象脱离关系。C++的内置类型都是值语义，如bool/int/double等，标准库里的pair&amp;lt;&amp;gt;,vector&amp;lt;&amp;gt;,map&amp;lt;&amp;gt;，string等类型也都是值语义。Java语言的primitive types(原生数据类型)也是值语义。与值语义(object sem">
-<meta property="og:image" content="http://i.imgur.com/xN0fihh.png">
-<meta property="og:image" content="http://i.imgur.com/ptaBium.png">
-<meta property="og:updated_time" content="2016-08-02T06:05:27.187Z">
+<meta property="og:description" content="分配排序，是指不需要进行两两之间的比较，而根据记录自己的关键码的分配来进行排序的一类方法，因此，在进行分配排序时，我们通常需要知道记录序列的一些具体情况，比如关键码的分布。分配排序主要包括桶排序和基数排序。">
+<meta property="og:image" content="http://i.imgur.com/SVkuDWp.png">
+<meta property="og:image" content="http://i.imgur.com/yGcdDMb.png">
+<meta property="og:updated_time" content="2017-04-24T13:12:47.202Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="浅谈C++值语义和对象语义">
-<meta name="twitter:description" content="值语义和对象语义值语义(value sematics)指的是对象的拷贝与原对象无关，拷贝之后就与原对象脱离关系。C++的内置类型都是值语义，如bool/int/double等，标准库里的pair&amp;lt;&amp;gt;,vector&amp;lt;&amp;gt;,map&amp;lt;&amp;gt;，string等类型也都是值语义。Java语言的primitive types(原生数据类型)也是值语义。与值语义(object sem">
-<meta name="twitter:image" content="http://i.imgur.com/xN0fihh.png">
+<meta name="twitter:title" content="分配排序（桶排序和基数排序）总结">
+<meta name="twitter:description" content="分配排序，是指不需要进行两两之间的比较，而根据记录自己的关键码的分配来进行排序的一类方法，因此，在进行分配排序时，我们通常需要知道记录序列的一些具体情况，比如关键码的分布。分配排序主要包括桶排序和基数排序。">
+<meta name="twitter:image" content="http://i.imgur.com/SVkuDWp.png">
 
 
 
@@ -89,7 +89,7 @@
   };
 </script>
 
-  <title> 浅谈C++值语义和对象语义 | 一期一会 </title>
+  <title> 分配排序（桶排序和基数排序）总结 | 一期一会 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -249,7 +249,7 @@
             
             
               
-                浅谈C++值语义和对象语义
+                分配排序（桶排序和基数排序）总结
               
             
           </h1>
@@ -261,8 +261,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-05-15T19:29:20+08:00" content="2016-05-15">
-              2016-05-15
+            <time itemprop="dateCreated" datetime="2017-01-20T19:51:47+08:00" content="2017-01-20">
+              2017-01-20
             </time>
           </span>
 
@@ -272,8 +272,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/05/15/cplusplus-sematics/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/05/15/cplusplus-sematics/" itemprop="commentsCount"></span>
+                <a href="/2017/01/20/Distribute-Sort/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/01/20/Distribute-Sort/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -295,116 +295,28 @@
       
 
       
-        <h3 id="值语义和对象语义"><a href="#值语义和对象语义" class="headerlink" title="值语义和对象语义"></a>值语义和对象语义</h3><p>值语义(value sematics)指的是对象的拷贝与原对象无关，拷贝之后就与原对象脱离关系。C++的内置类型都是值语义，如bool/int/double等，标准库里的pair&lt;&gt;,vector&lt;&gt;,map&lt;&gt;，string等类型也都是值语义。Java语言的primitive types(原生数据类型)也是值语义。<br>与值语义(object sematics)对应的是”对象语义”，或者也叫做”引用语义”。对象语义指的是面向对象意义下的对象，对象是禁止拷贝的或拷贝后与原来的对象存在关联。比如，拷贝一个Employee对象是没有意义的，一个雇员不会变成两个雇员。同样，muduo库中的TcpConnection，显然也是不可复制的，因为牵涉到系统的资源。Java里面的class对象都是对象语义/引用语义。<br><a id="more"></a><br>下面举Java和C++几个简单的例子看值语义和对象语义:</p>
-<h4 id="Java"><a href="#Java" class="headerlink" title="Java"></a>Java</h4><pre><code>int a = 8;
-int b = a;
-</code></pre><p>这里的a，b都是int， 属于Java中原生数据类型，他们的特点是复制后二者再无关联。它们表现出来是两个value。<br>与他们形成对比的是用户自定义的class，如下:</p>
-<pre><code>Student a1 = new Student(&quot;dujiong&quot;, 23);
-Student a2 = a1;
-a2.setAge(25);    
-System.out.println(a1.getAge());
-</code></pre><p>代码输出为25，因为第二行语句，导致a和b指向的是同一个对象，修改a2也会影响a1，所以表现的行为是一种reference。</p>
-<h4 id="C"><a href="#C" class="headerlink" title="C++"></a>C++</h4><p>如前所述，C++的内置类型、标准库容器如vector&lt;&gt;，map&lt;&gt;等都是值语义，C++要求凡是可以放入容器的元素都必须具备值语义，即必须具备拷贝的能力，放入标准容器的元素和之前的元素没有任何的关联。<br>而C++的普通类呢?</p>
-<pre><code>class Book
-{
-    private:
-        string isbn_;
-        double price_;
-        int amount_;
-};
-</code></pre><p>如果以下面的代码:</p>
-<pre><code>Book a1;
-Book a2 = a1;
-</code></pre><p>那么a1和a2复制后将没有任何关联，他们的表现属于值语义。</p>
-<h3 id="值语义与C-语言"><a href="#值语义与C-语言" class="headerlink" title="值语义与C++语言"></a>值语义与C++语言</h3><p>C++的class本质上是值语义的。C++的设计初衷是让用户定义的类型(class)能像内置类型一样工作，具有同等的地位。为此，C++做了妥协:<br>(1) class的layout与C struct一样，没有额外的开销，定义一个”只包含一个int成员的class”的对象开销和一个int一样。<br>(2) class可以在stack上创建，也可以在heap上创建。。<br>(3) class的data member默认都是uninitialized。<br>(4) class的数组是一个个class对象挨着，没有额外的indirection。<br>(5) 编译器为class默认生成copy constructor和assignment operator。其他语言没有copy constructor，也不允许重载assignment operator。C++的对象默认是可以拷贝的。<br>(6) 当class类型传入函数时，默认是make a copy(除非参数声明为reference)。<br>(7) 当函数返回一个class type时，只能通过make a copy(C++不得不定义RVO来解决性能问题)。<br>(8) 当class type为成员时，数据成员时嵌入的。<br>C++这样的设计带来了性能上的好处。比如在C++里定义复数类(complex<double>class)和其数组(array)、向量(vector)，它们的layout分别是:</double></p>
-<p>   <img src="http://i.imgur.com/xN0fihh.png" alt=""></p>
-<p>而如果在Java中定义同样的结构，就不一样。</p>
-<p><img src="http://i.imgur.com/ptaBium.png" alt=""></p>
-<p>Java中每个object都有header。对比Java，C++的对象模型更紧凑。</p>
-<h3 id="值语义与生命期"><a href="#值语义与生命期" class="headerlink" title="值语义与生命期"></a>值语义与生命期</h3><p>值语义的一个巨大好处是生命期管理很简单，就像你不需要操心基本数据类型的生命期一样。值语义的对象要么是栈上对象，要么作为其他对象的成员(一个成员函数使用自己的数据成员对象)。而，对象语义由于不能拷贝，只能通过指针或引用来使用它。而一旦使用指针或引用来操作对象，那么就要担心所指的对象是否已被释放，而这也是C++ bug的主要来源。此外，C++只能通过指针或引用来获得多态，所以，在C++中进行继承和多态的面向对象编程中，资源管理成为了一大难题。            </p>
-<h4 id="模型1"><a href="#模型1" class="headerlink" title="模型1"></a>模型1</h4><p>模型1: a Parent has a Child, a Child knows his/her Parent<br>Java中很好些，不用担心内存泄露，也不用担心空悬指针。    </p>
-<pre><code>public class Parent{
-    private Child myChild;    
+        <p>分配排序，是指不需要进行两两之间的比较，而根据记录自己的关键码的分配来进行排序的一类方法，因此，在进行分配排序时，我们通常需要知道记录序列的一些具体情况，比如关键码的分布。分配排序主要包括桶排序和基数排序。<br><a id="more"></a></p>
+<h3 id="桶排序"><a href="#桶排序" class="headerlink" title="桶排序"></a>桶排序</h3><p>首先来介绍桶排序。如果我们知道序列中的记录都位于一个比较小的区间范围之内，那我们可以把相同值的记录分配到同一个桶里面，然后依次收集这些桶就能得到一个有序的序列。<br>例如，下图中，我们知道待排序数组的记录值在0~9的范围之内，因此，我们可以设定10个桶，然后就把这些记录值分配到各个桶里面。<br><img src="http://i.imgur.com/SVkuDWp.png" alt=""><br>此外，我们还维护了前若干桶的一个累加值，并且，在进行排序的时候，我们从数组记录值的最右边开始遍历，这样来保持排序的稳定性。<br><img src="http://i.imgur.com/yGcdDMb.png" alt=""></p>
+<h4 id="桶排序的实现"><a href="#桶排序的实现" class="headerlink" title="桶排序的实现"></a>桶排序的实现</h4><p>在弄清楚了原理之后，桶排序的实现就很简单了。</p>
+<pre><code> void BucketSort(vector&lt;int&gt;&amp; nums, int max){
+     int n=nums.size();
+     vector&lt;int&gt; temp(begin(nums), end(nums));
+     vector&lt;int&gt; count(max);
+     for(int i=0;i&lt;max;i++){
+         count[i]=0;
+     }
+     for(int i=0;i&lt;n;i++){
+         count[nums[i]]++;
+     }
+     for(int i=0;i&lt;max;i++){
+         count[i]=count[i-1]+count[i];
+     }
+     for(int i=n-1;i&gt;=0;i--){    
+         nums[--count[temp[i]]]=temp[i];
+     }
 }
-public class Child{
-    private Parent myParent;    
-}
-</code></pre><p>只要正确初始化myChild和myParent即可。<br>而在C++里就要为资源管理费一番脑筋:Parent 和 Child 都代表的是真人，肯定是不能拷贝的，因此具有对象语义。Parent 是直接持有 Child 吗？抑或 Parent 和 Child 通过指针互指？Child 的生命期由 Parent 控制吗？<br>直接但是易错的写法:</p>
-<pre><code>class Child;
-class Parent : boost::noncopyable
-{
-    private:
-        Child* myChild;
-};
-
-class Child : boodt::noncopyable
-{
-    private:
-        Parent* myParent;
-};
-</code></pre><p>那么，直接使用指针作为成员，那么如何确保指针的有效性？如何防止出现空悬指针？Child 和 Parent 由谁负责释放？在释放某个 Parent 对象的时候，如何确保程序中没有指向它的指针？在释放某个 Child 对象的时候，如何确保程序中没有指向它的指针？<br>这一系列问题都是C++面向对象编程令人头疼的问题。现在可以使用boost智能指针解决(C++11引入,用栈上对象管理堆上对象的生命期），借助于智能指针把对象语义转换为值语义，从而解决对象生命期问题：让Parent持有Child的智能指针，同时让Child持有Parent的智能指针，这样始终引用对方的时候就不用担心出现空悬指针。当然，其中一个智能应该是weak reference，否则会出现循环引用，导致内存泄露。<br>所以，如果Parent拥有Child，Child的生命期由其Parent控制，Child的生命期小于Parent，那么代码：     </p>
-<pre><code>class Parent;
-class Child : boost::noncopyable
-{
-    public:
-        explicit Child(Parent* myParent) : myParent_(myParent)
-        { }
-    private:
-        Parent* myParent_;
-};
-class Parent : boost::noncopyable
-{
-    public:
-        Parent() : myChild(new Child(this))
-        { }
-    private:
-        boost::scoped_ptr&lt;Child&gt; myChild;
-}; 
-</code></pre><h4 id="模型2"><a href="#模型2" class="headerlink" title="模型2"></a>模型2</h4><p>模型2: a Child has parents:mom and dad; a Parent has one or more Child; a Parent knows his/her spouser<br>Java描述还是很简单，垃圾收集会搞定对象生命期。</p>
-<pre><code>public class Parent{
-    private Parent mySpouser;
-    private ArrayList&lt;Child&gt; myChildren;    
-}
-public class Child{
-    private Parent myMom;
-    private Parent myDad;
-}
-</code></pre><p>而如果用C++实现，还是需要借助于智能指针将裸指针转化为值语义。</p>
-<pre><code>class Parent;
-typedef boost::shared_ptr&lt;Parent&gt; ParentPtr;
-
-class Child : boost::noncopyable
-{
-    public:
-        explicit Child(const ParentPtr&amp; myMom, const ParentPtr&amp; myDad)
-        : myMom_(myMom), myDad_(myDad)
-        { }
-    private:
-        boost::weak_ptr&lt;Parent&gt; myMom_;
-        boost::weak_ptr&lt;Parent&gt; myDad_;
-};
-
-typedef boost::shared_ptr&lt;Child&gt; ChildPtr;
-
-class Parent :　boost::noncopyable
-{
-    public:
-        Parent(){}
-        void setSpouser(const ParentPtr&amp; spouser)
-        {
-            mySpouser_ = spouser;
-        }
-        void addChild(const ChildPtr&amp; child)
-        {
-            myChildren_.push_back(child);    
-        }
-    private:
-        boost::weak_ptr&lt;Parent&gt; mySpouser_;
-        std::vector&lt;ChildPtr&gt; myChildren_;
-}
-</code></pre><p>可以看出，如果不使用智能指针，使用C++面向对象编程，有效的资源管理将会很困难。</p>
-<h3 id="待续"><a href="#待续" class="headerlink" title="待续"></a>待续</h3><p>对于智能指针，这里只是有一些简单的介绍，后面还将深入研究。</p>
-<p>参考: <a href="http://www.cnblogs.com/Solstice/archive/2011/08/16/2141515.html" target="_blank" rel="external">http://www.cnblogs.com/Solstice/archive/2011/08/16/2141515.html</a></p>
+</code></pre><h4 id="桶排序性能分析"><a href="#桶排序性能分析" class="headerlink" title="桶排序性能分析"></a>桶排序性能分析</h4><p>由前面的分析可知，桶排序使用的场景是：待排序的数组长度为n，所有数组记录值位于[0,m)上，且m相对于n很小。<br>因为排序过程需要遍历原数组和count数组，所以总的时间复杂度为O（n+m）。空间代价为O（n+m），包括临时数组和计数器。桶排序是稳定的。   </p>
+<h3 id="静态基数排序"><a href="#静态基数排序" class="headerlink" title="静态基数排序"></a>静态基数排序</h3><p>我们已经知道，桶排序只适合m很小的情况，那如果出现m很大，甚至大于n的情况，应该怎么办呢？不难想象，我们可以把这些记录的关键码认为地拆成几个部分，然后再运用几次桶排序，从而完成整个排序过程，这就是基数排序的思想，基数排序又可以分配静态基数排序和链式基数排序。</p>
 
       
     </div>
@@ -419,7 +331,7 @@ class Parent :　boost::noncopyable
       
         <div class="post-tags">
           
-            <a href="/tags/C/" rel="tag">#C++</a>
+            <a href="/tags/数据结构与算法/" rel="tag">#数据结构与算法</a>
           
         </div>
       
@@ -428,17 +340,13 @@ class Parent :　boost::noncopyable
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/05/06/muduo-4/" rel="next" title="muduo源码阅读之Channel与Poller">
-                <i class="fa fa-chevron-left"></i> muduo源码阅读之Channel与Poller
+              <a href="/2017/01/15/Redis-Cluster/" rel="next" title="搭建Redis集群">
+                <i class="fa fa-chevron-left"></i> 搭建Redis集群
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/05/28/concurrent-server-conclusion/" rel="prev" title="常见并发网络服务程序设计方案">
-                常见并发网络服务程序设计方案 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -464,8 +372,8 @@ class Parent :　boost::noncopyable
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/05/15/cplusplus-sematics/"
-           data-title="浅谈C++值语义和对象语义" data-url="http://blog.dujiong.net/2016/05/15/cplusplus-sematics/">
+      <div class="ds-thread" data-thread-key="2017/01/20/Distribute-Sort/"
+           data-title="分配排序（桶排序和基数排序）总结" data-url="http://blog.dujiong.net/2017/01/20/Distribute-Sort/">
       </div>
     
   </div>
@@ -579,7 +487,7 @@ class Parent :　boost::noncopyable
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#值语义和对象语义"><span class="nav-number">1.</span> <span class="nav-text">值语义和对象语义</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Java"><span class="nav-number">1.1.</span> <span class="nav-text">Java</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#C"><span class="nav-number">1.2.</span> <span class="nav-text">C++</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#值语义与C-语言"><span class="nav-number">2.</span> <span class="nav-text">值语义与C++语言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#值语义与生命期"><span class="nav-number">3.</span> <span class="nav-text">值语义与生命期</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#模型1"><span class="nav-number">3.1.</span> <span class="nav-text">模型1</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#模型2"><span class="nav-number">3.2.</span> <span class="nav-text">模型2</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#待续"><span class="nav-number">4.</span> <span class="nav-text">待续</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#桶排序"><span class="nav-number">1.</span> <span class="nav-text">桶排序</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#桶排序的实现"><span class="nav-number">1.1.</span> <span class="nav-text">桶排序的实现</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#桶排序性能分析"><span class="nav-number">1.2.</span> <span class="nav-text">桶排序性能分析</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#静态基数排序"><span class="nav-number">2.</span> <span class="nav-text">静态基数排序</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">
