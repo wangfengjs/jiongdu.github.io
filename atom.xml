@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2017-04-24T13:52:37.772Z</updated>
+  <updated>2017-05-04T10:40:08.752Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -14,6 +14,61 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>CentOS配置双网卡（Mellanox和传统以太网卡）</title>
+    <link href="http://blog.dujiong.net/2017/02/17/config-two-network-interfaces/"/>
+    <id>http://blog.dujiong.net/2017/02/17/config-two-network-interfaces/</id>
+    <published>2017-02-17T09:57:25.000Z</published>
+    <updated>2017-05-04T10:40:08.752Z</updated>
+    
+    <content type="html">&lt;p&gt;刚给服务器装上了操作系统，期待已久的Mellanox网卡终于到了，关于该网卡这里就不做过多的介绍了，可以参考&lt;a href=&quot;http://www.mellanox.com/&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;Mellanox官网&lt;/a&gt;，下面记录在服务器上Mellanox网卡和传统以太网的配置。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&quot;安插Mellanox网卡并安装相应驱动&quot;&gt;&lt;a href=&quot;#安插Mellanox网卡并安装相应驱动&quot; class=&quot;headerlink&quot; title=&quot;安插Mellanox网卡并安装相应驱动&quot;&gt;&lt;/a&gt;安插Mellanox网卡并安装相应驱动&lt;/h3&gt;&lt;p&gt;首先，在服务器背板安插Mellanox网卡，然后执行&lt;code&gt;ifconfig&lt;/code&gt;查看是否多了一张新的网卡。初始状态下&lt;code&gt;ifconfig&lt;/code&gt;看到的Mellanox网卡的名字是ib0，这说明该网卡的默认链路层协议时InfiniBand协议，而不是Ethernet协议。由于我们后续需要使用NVMe over RoCEv2，所以需要将Mellanox的链路层协议改为Ethernet。因此，需要先下载并安装相应的驱动。&lt;br&gt;在官网上确定好操作系统对应的驱动版本号（比如CentOS7.2对应的版本是MLNX_OFED-3.4-2.0.0.0-rhel7.2-x86_64）后，下载并安装驱动。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;wget http://www.mellanox.com/downloads/ofed/MLNX_OFED-3.4-2.0.0.0/MLNX_OFED_LINUX-3.4-2.0.0.0-rhel7.2-x86_64.tgz
+tar -xvf MLNX_OFED_LINUX-3.4-2.0.0.0-rhel7.2-x86_64.tgz
+cd MLNX_OFED_LINUX-3.4-2.0.0.0-rhel7.2-x86_64/
+./mlnxofedinstall  (--add-kernel-support)       ###kernel 4.8.15可能需要添加特定的选项
+/etc/init.d/openibd restart
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;修改Mellanox网卡配置&quot;&gt;&lt;a href=&quot;#修改Mellanox网卡配置&quot; class=&quot;headerlink&quot; title=&quot;修改Mellanox网卡配置&quot;&gt;&lt;/a&gt;修改Mellanox网卡配置&lt;/h3&gt;&lt;p&gt;如前文所述，Mellanox网卡的默认链路层协议是Infiniband协议，不是Ethernet协议。所以，接下来修改网卡的链路层协议。&lt;br&gt;在修改之前，可以先通过&lt;code&gt;lspci | grep Mellanox&lt;/code&gt;查看网卡信息，确定是否为InfiniBand协议。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;mst start
+ibv_devinfo | grep vendor_part_id    ##得到vendor_part_id(我这里是4115)
+mlxconfig -d /dev/mst/mt4115_pciconf0 q  ##再次查询网卡信息
+mlxconfig -d /dev/mst/mt4115_pciconf0 set LINK_TYPE_P1=2  ##修改为Ethernet协议
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;修改并重新启动后，可以看到网卡的名称发生了变化（这里是enp133s0）。最后，使用&lt;code&gt;lspci | grep Mellanox&lt;/code&gt;确认修改。&lt;/p&gt;
+&lt;h3 id=&quot;CentOS双网卡配置&quot;&gt;&lt;a href=&quot;#CentOS双网卡配置&quot; class=&quot;headerlink&quot; title=&quot;CentOS双网卡配置&quot;&gt;&lt;/a&gt;CentOS双网卡配置&lt;/h3&gt;&lt;p&gt;现在服务器的网卡连接情况是一张Mellanox网卡通过专用网线连接到EdgeCore 100G白牌交换机上，另外一张传统以太网卡连接到以太网换机。    （192.168.1.1）。接下来配置对双网卡配置双IP，一个192.168.1.x，可通过以太网交换机连接外网，另一个192.168.5.x，连接到100G白牌交换机。   &lt;/p&gt;
+&lt;p&gt;以太网卡在服务器上对应的名称为eno1。修改其配置文件。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;vim /etc/sysconfig/network-scripts/ifcfg-eth0
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;修改和添加以下内容：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;BOOTPROTO=static
+HWADDR=6c:92:bf:42:27:2e    #mac address
+IPADDR=192.168.1.152
+NETMASK=255.255.255.0
+GATEWAY=192.168.1.1
+ONBOOT=yes
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;修改后的配置文件如下图所示。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/WqcbomA.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;通过&lt;code&gt;service network restart&lt;/code&gt;重启网络后，就成功的将该以太网卡设置IP设置成了静态IP（192.168.1.152）。&lt;/p&gt;
+&lt;p&gt;Mellanox网卡的配置和以太网卡一样。所以，这里只列举出修改后的配置文件（/etc/sysconfig/network-scripts/ifcfg-enp133s0）&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/jcLC6h9.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;配置好后的服务器网络接口情况如下图所示。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/rNo8Xe3.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h3 id=&quot;配置路由表&quot;&gt;&lt;a href=&quot;#配置路由表&quot; class=&quot;headerlink&quot; title=&quot;配置路由表&quot;&gt;&lt;/a&gt;配置路由表&lt;/h3&gt;&lt;p&gt;目前系统默认网关是192.168.1.1，所以需要增加两个路由表，实现双网关正常访问。&lt;br&gt;    vim /etc/iproute2/rt_tables&lt;br&gt;增加两行内容：&lt;br&gt;    252 net2&lt;br&gt;    251 net3&lt;br&gt;在/etc/rc.local添加静态路由规则。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;ip route flush table net2
+ip route add default via 192.168.1.1 dev eno1 src 192.168.1.152 table net2
+ip rule add from 192.168.1.152 table net2
+
+ip route flush table net3
+ip route add default via 192.168.5.1 dev enp133s0 src 192.168.5.86 table net3
+ip rule add from 192.168.5.86 table net3
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这时，双网卡双IP应该就配置好了，&lt;code&gt;service network restart&lt;/code&gt;重启网络就可以实现不同网卡对应不同网络访问。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;刚给服务器装上了操作系统，期待已久的Mellanox网卡终于到了，关于该网卡这里就不做过多的介绍了，可以参考&lt;a href=&quot;http://www.mellanox.com/&quot;&gt;Mellanox官网&lt;/a&gt;，下面记录在服务器上Mellanox网卡和传统以太网的配置。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="network/linux" scheme="http://blog.dujiong.net/tags/network-linux/"/>
+    
+  </entry>
   
   <entry>
     <title>分配排序（桶排序和基数排序）总结</title>
@@ -1942,172 +1997,6 @@ deque(InputIterator first, InputIterator last)
     <summary type="html">
     
       &lt;p&gt;C++标准模板库序列式容器中，使用最少的估计就是deque了。但是，了解下deque这种双向开口的连续线性空间容器的底层设计与实现仍是很有帮助的。此外，stack和queue这两种适配器容器（容器底层是调用其他容器）底层实现默认就是使用deque。&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>C++ STL之list</title>
-    <link href="http://blog.dujiong.net/2016/10/28/STL-list/"/>
-    <id>http://blog.dujiong.net/2016/10/28/STL-list/</id>
-    <published>2016-10-28T11:33:14.000Z</published>
-    <updated>2016-10-31T03:26:00.692Z</updated>
-    
-    <content type="html">&lt;p&gt;上一篇文章总结了vector的结构和实现原理，今天来看看STL中另一个重要的容器：list。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;br&gt;相比于vector的连续线性空间，list显得复杂得多，它的好处是每次插入或删除一个元素，就配置或释放一个元素空间。因此，list对于空间的运用有绝对的精准，一点都不浪费。    &lt;/p&gt;
-&lt;h3 id=&quot;list的节点&quot;&gt;&lt;a href=&quot;#list的节点&quot; class=&quot;headerlink&quot; title=&quot;list的节点&quot;&gt;&lt;/a&gt;list的节点&lt;/h3&gt;&lt;p&gt;我们知道，list本身和list的节点是不同的结构，需分开设计。以下是STL list的节点结构：    &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;template &amp;lt;class T&amp;gt;
-struct __list_node {
-    typedef void* void_pointer;
-    void_pointer prev;
-    void_pointer next;
-    T data;    
-};
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;可以看出，STL list是一个双向链表，有两个指针，分别指向前向节点和后向节点。  &lt;/p&gt;
-&lt;h3 id=&quot;list的迭代器&quot;&gt;&lt;a href=&quot;#list的迭代器&quot; class=&quot;headerlink&quot; title=&quot;list的迭代器&quot;&gt;&lt;/a&gt;list的迭代器&lt;/h3&gt;&lt;p&gt;list不能够像vector一样以普通指针作为迭代器，因为其节点不保证在存储空间连续存在。并且，由于list提供的是一个双向链表，迭都代器必须具备前移、后移的能力，所以list提供的是Bidirectional Iterators.&lt;br&gt;list有一个重要的性质：插入操作和结合操作都不会造成原有的list迭代器失效。这在vector是不成立的，因为vector的插入操作可能造成记忆体重新配置，导致原有的迭代器全部失效。甚至list的元素删除操作，也只有“指向被删除元素”的那个迭代器失效，其他迭代器不受任何影响。   &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;template&amp;lt;class T, class Ref, class Ptr&amp;gt;
-struct __list_iterator {
-    typedef __list_iterator&amp;lt;T, &amp;amp;T, T*&amp;gt; iterator;
-    typedef __list_iterator&amp;lt;T, Ref, Ptr&amp;gt; self;
-
-    typedef __list_node&amp;lt;T&amp;gt;* link_type;
-    link_type node;                        //list的节点:node 
-
-    //迭代器的构造函数
-    __list_iterator(link_type x) : node(x) {}
-      __list_iterator() {}
-      __list_iterator(const iterator&amp;amp; x) : node(x.node) {}    
-
-    reference operator*() const { return (*node).data; }
-    pointer operator-&amp;gt;() const { return &amp;amp;(operator*()); }
-
-    self&amp;amp; operator++() {                    //先加1，再返回，类似++i
-        node = (link_type)((*node).next);
-        return *this;
-    }
-    self operator++(int) {                    //类似于i++
-        self tmp = *this;
-        ++*this;
-        return tmp;
-    }
-    ...
-};
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;以上是list的迭代器的设计，只实现了迭代器的++，–，取值，成员调用四个基本操作，没有像vector迭代器那样的+n操作，主要是因为地址不连续。       &lt;/p&gt;
-&lt;h3 id=&quot;list的结构&quot;&gt;&lt;a href=&quot;#list的结构&quot; class=&quot;headerlink&quot; title=&quot;list的结构&quot;&gt;&lt;/a&gt;list的结构&lt;/h3&gt;&lt;p&gt;list不仅是一个双向链表，而且还是一个环状双向链表。所以，只需要一个指针，便可以完整表现整个链表：   &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;template &amp;lt;class T, class Alloc = alloc&amp;gt;
-class list {
-protected:
-    typedef __list_node&amp;lt;T&amp;gt; list_node;
-public:
-    typedef list_node* link_type;
-protected:
-    link_type node;        
-};
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;如下图所示，如果让指针node指向刻意置于尾端的一个空白节点，node便能符合STL对于“前闭后开”区间的要求，成为last迭代器。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/rClntKM.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
-&lt;h4 id=&quot;list的构造与内存管理&quot;&gt;&lt;a href=&quot;#list的构造与内存管理&quot; class=&quot;headerlink&quot; title=&quot;list的构造与内存管理&quot;&gt;&lt;/a&gt;list的构造与内存管理&lt;/h4&gt;&lt;p&gt;list提供了多种constructors，主要包括四种：默认构造函数、使用n个值来初始化list、将另一个list的部分数据来初始化以及复制构造函数。&lt;br&gt;以下是默认构造函数，就是创建一个节点，然后前后指向自己。    &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;list() { empty_initialize(); }
-void empty_initialize() {
-    node = get_node();
-    node-&amp;gt;next = node;
-    node-&amp;gt;prev = node;
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;list缺省使用alloc作为空间配置器，并据此另外定义了一个list_node_allocator，方便以节点大小为配置单位。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;typedef simple_alloc&amp;lt;list_node, Alloc&amp;gt; list_node_allocator;
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;于是，list_node_allocator(n)表示配置n个节点空间，list提供四个函数分别用来配置、释放、构造和销毁一个节点。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;link_type get_node() { return list_node_allocator::allocate(); }
-void put_node(link_type p) { list_node_allocator::deallocate(p); }
-
-link_type create_node(const T&amp;amp; x) {    //配置并构造节点
-    link_type p = get_node;
-    construct(&amp;amp;p-&amp;gt;data, x);
-    return p;
-}  
-void destroy_node(link_type p){        //析构并释放节点
-    destroy(&amp;amp;p-&amp;gt;data);
-    put_node(p);
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;另外，当我们以push_back()将新元素插入于list尾端时，此函数内部调用insert():&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;void push_back(const T&amp;amp; x) { insert(end(), x); }
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;insert()是一个重载函数，有多种形式，其中最简单的一种如下，符合以上所需： 首先配置并构造一个节点，然后进行适当的指针操作，将新节点插入进去：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;iterator insert(iterator position, const T&amp;amp; x){
-    link_type tmp = create_node(x);
-    tmp-&amp;gt;next = position.node;
-    tmp-&amp;gt;prev = position.node-&amp;gt;prev;
-    (link_type(position.node-&amp;gt;prev))-&amp;gt;next = tmp;
-    position.node-&amp;gt;prev = tmp;
-    return tmp;
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&quot;list的析构&quot;&gt;&lt;a href=&quot;#list的析构&quot; class=&quot;headerlink&quot; title=&quot;list的析构&quot;&gt;&lt;/a&gt;list的析构&lt;/h4&gt;&lt;pre&gt;&lt;code&gt;~list() {
-    clear();
-    put_node(node);
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;clear()清空链表所有数据，即只剩下node节点，然后put_node将最后的node节点回收。&lt;/p&gt;
-&lt;h3 id=&quot;list常用操作函数&quot;&gt;&lt;a href=&quot;#list常用操作函数&quot; class=&quot;headerlink&quot; title=&quot;list常用操作函数&quot;&gt;&lt;/a&gt;list常用操作函数&lt;/h3&gt;&lt;h4 id=&quot;在链表头尾插入节点&quot;&gt;&lt;a href=&quot;#在链表头尾插入节点&quot; class=&quot;headerlink&quot; title=&quot;在链表头尾插入节点&quot;&gt;&lt;/a&gt;在链表头尾插入节点&lt;/h4&gt;&lt;pre&gt;&lt;code&gt;void push_front(const T&amp;amp; x) { insert(begin(), x); }
-void push_back(const T&amp;amp; x) { insert(end(), x); }
-&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&quot;erase&quot;&gt;&lt;a href=&quot;#erase&quot; class=&quot;headerlink&quot; title=&quot;erase&quot;&gt;&lt;/a&gt;erase&lt;/h4&gt;&lt;pre&gt;&lt;code&gt;iterator erase(iterator position){
-    link_type next_node = link_type(position.node-&amp;gt;next);
-    link_type prev_node = link_type(position.node-&amp;gt;prev);
-    prev_node-&amp;gt;next = next_node;
-    next_node-&amp;gt;prev = prev_node;
-    destroy_node(position.node);
-    return iterator(next_node);
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;修改前后节点的指针指向，然后销毁position处的节点。&lt;/p&gt;
-&lt;h4 id=&quot;remove&quot;&gt;&lt;a href=&quot;#remove&quot; class=&quot;headerlink&quot; title=&quot;remove&quot;&gt;&lt;/a&gt;remove&lt;/h4&gt;&lt;p&gt;将数值为value的所有元素移除：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;template &amp;lt;class T, class Alloc&amp;gt;
-void list&amp;lt;T, Alloc&amp;gt;::remove(const T&amp;amp; value){
-    iterator first = begin();
-    iterator last = end();
-    while(first != last){
-        iterator next = first;
-        ++next;
-        if(*first == value) erase(first);
-        first = next;
-    }
-}    
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这里的remove是真的移除了元素，而不像vector那样。&lt;/p&gt;
-&lt;h4 id=&quot;transfer&quot;&gt;&lt;a href=&quot;#transfer&quot; class=&quot;headerlink&quot; title=&quot;transfer&quot;&gt;&lt;/a&gt;transfer&lt;/h4&gt;&lt;p&gt;list内部提供一个迁移操作transfer：将某连续范围的元素迁移到某个特定位置之前。技术上很简单，节点间的指针移动。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;void transfer(iterator position, iterator first, iterator last) {
-      if (position != last) {
-        (*(link_type((*last.node).prev))).next = position.node;    　　　　// (1)
-        (*(link_type((*first.node).prev))).next = last.node;           // (2)
-        (*(link_type((*position.node).prev))).next = first.node;         // (3)
-        link_type tmp = link_type((*position.node).prev);               // (4)
-        (*position.node).prev = (*last.node).prev;                       // (5)
-        (*last.node).prev = (*first.node).prev;                        // (6)
-        (*first.node).prev = tmp;                                       // (7)
-      }
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;示意图如下所示。&lt;br&gt;    &lt;img src=&quot;http://i.imgur.com/nq2Qm5c.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;transfer并非公开接口。list公开提供的是接合操作splice：将某连续范围的元素从一个list移动到另一个（或同一个）list的某个定点。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;//将x链表的所有元素插入到当前list的position处
-void splice(iterator position, list&amp;amp; x) {
-    if(!x.empty()){
-        transfer(position, x.begin(), x.end());
-    }
-}
-//将i处节点插到position之前，i和position可能来自同一个链表
-void splice(iterator position, list&amp;amp;, iterator i) {
-    iterator j = i;
-    ++j;
-    if(position == i || position == j) return;
-    transfer(position, i, j);
-}
-//将[first, last)内的所有元素结合与position所指位置之前,position不能位于[first,last）之内
-void splice(iterator position, list&amp;amp; iterator first, iterator last) {
-    if(first!=last) {
-        transfer(position, first, last);
-    }
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&quot;merge-reverse-sort&quot;&gt;&lt;a href=&quot;#merge-reverse-sort&quot; class=&quot;headerlink&quot; title=&quot;merge(), reverse(), sort()&quot;&gt;&lt;/a&gt;merge(), reverse(), sort()&lt;/h4&gt;&lt;p&gt;基于transfer操作，list提供了三个很有用的函数：&lt;br&gt;merge()：合并两个链表，要求两个链表必须有序，合并之后的链表也是有序的。merge之后，传入的list被清空。&lt;br&gt;reverse()：将链表数据反转。&lt;br&gt;sort()：由于list的迭代器为Bidirectional iterator，而STL的sort算法必须接受RamdonAccessIterator，所以list不能使用STL的sort算法。于是，基于quick sort，list实现了自身的sort。&lt;br&gt;三个函数的具体源码这里就不再详细列出。&lt;/p&gt;
-&lt;h3 id=&quot;总结&quot;&gt;&lt;a href=&quot;#总结&quot; class=&quot;headerlink&quot; title=&quot;总结&quot;&gt;&lt;/a&gt;总结&lt;/h3&gt;&lt;p&gt;list是一种很常用的数据结构，我们不仅要熟练使用它，还要弄清其中的设计与实现。&lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;上一篇文章总结了vector的结构和实现原理，今天来看看STL中另一个重要的容器：list。&lt;br&gt;
     
     </summary>
     

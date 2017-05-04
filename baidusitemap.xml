@@ -3,6 +3,23 @@
 
 
     
+  <url>
+    <loc>http://blog.dujiong.net/2017/02/17/config-two-network-interfaces/</loc>
+    <lastmod>2017-05-04T10:40:08.752Z</lastmod>
+    <data>
+        <display>
+        <title>CentOS配置双网卡（Mellanox和传统以太网卡）</title>
+        <pubTime>2017-02-17T09:57:25.000Z</pubTime>
+        
+        <tag>network/linux</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
     
   <url>
     <loc>http://blog.dujiong.net/2017/01/20/Distribute-Sort/</loc>
