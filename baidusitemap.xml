@@ -4,12 +4,46 @@
 
     
   <url>
-    <loc>http://blog.dujiong.net/2017/02/17/config-two-network-interfaces/</loc>
-    <lastmod>2017-05-04T10:40:08.752Z</lastmod>
+    <loc>http://blog.dujiong.net/2017/02/13/NVMe/</loc>
+    <lastmod>2017-05-05T09:09:23.170Z</lastmod>
+    <data>
+        <display>
+        <title>NVMe技术浅析</title>
+        <pubTime>2017-02-13T07:06:23.000Z</pubTime>
+        
+        <tag>NVMe over RDMA</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://blog.dujiong.net/2017/02/17/RDMA/</loc>
+    <lastmod>2017-05-05T09:08:03.702Z</lastmod>
+    <data>
+        <display>
+        <title>RDMA技术浅析</title>
+        <pubTime>2017-02-17T02:22:39.000Z</pubTime>
+        
+        <tag>NVMe over RDMA</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://blog.dujiong.net/2017/02/27/config-two-network-interfaces/</loc>
+    <lastmod>2017-05-05T06:08:09.727Z</lastmod>
     <data>
         <display>
         <title>CentOS配置双网卡（Mellanox和传统以太网卡）</title>
-        <pubTime>2017-02-17T09:57:25.000Z</pubTime>
+        <pubTime>2017-02-27T09:57:25.000Z</pubTime>
         
         <tag>network/linux</tag>
          

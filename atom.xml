@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2017-05-04T10:40:08.752Z</updated>
+  <updated>2017-05-05T06:08:09.727Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -17,10 +17,10 @@
   
   <entry>
     <title>CentOS配置双网卡（Mellanox和传统以太网卡）</title>
-    <link href="http://blog.dujiong.net/2017/02/17/config-two-network-interfaces/"/>
-    <id>http://blog.dujiong.net/2017/02/17/config-two-network-interfaces/</id>
-    <published>2017-02-17T09:57:25.000Z</published>
-    <updated>2017-05-04T10:40:08.752Z</updated>
+    <link href="http://blog.dujiong.net/2017/02/27/config-two-network-interfaces/"/>
+    <id>http://blog.dujiong.net/2017/02/27/config-two-network-interfaces/</id>
+    <published>2017-02-27T09:57:25.000Z</published>
+    <updated>2017-05-05T06:08:09.727Z</updated>
     
     <content type="html">&lt;p&gt;刚给服务器装上了操作系统，期待已久的Mellanox网卡终于到了，关于该网卡这里就不做过多的介绍了，可以参考&lt;a href=&quot;http://www.mellanox.com/&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;Mellanox官网&lt;/a&gt;，下面记录在服务器上Mellanox网卡和传统以太网的配置。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h3 id=&quot;安插Mellanox网卡并安装相应驱动&quot;&gt;&lt;a href=&quot;#安插Mellanox网卡并安装相应驱动&quot; class=&quot;headerlink&quot; title=&quot;安插Mellanox网卡并安装相应驱动&quot;&gt;&lt;/a&gt;安插Mellanox网卡并安装相应驱动&lt;/h3&gt;&lt;p&gt;首先，在服务器背板安插Mellanox网卡，然后执行&lt;code&gt;ifconfig&lt;/code&gt;查看是否多了一张新的网卡。初始状态下&lt;code&gt;ifconfig&lt;/code&gt;看到的Mellanox网卡的名字是ib0，这说明该网卡的默认链路层协议时InfiniBand协议，而不是Ethernet协议。由于我们后续需要使用NVMe over RoCEv2，所以需要将Mellanox的链路层协议改为Ethernet。因此，需要先下载并安装相应的驱动。&lt;br&gt;在官网上确定好操作系统对应的驱动版本号（比如CentOS7.2对应的版本是MLNX_OFED-3.4-2.0.0.0-rhel7.2-x86_64）后，下载并安装驱动。&lt;/p&gt;
@@ -67,6 +67,52 @@ ip rule add from 192.168.5.86 table net3
     
     
       <category term="network/linux" scheme="http://blog.dujiong.net/tags/network-linux/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>RDMA技术浅析</title>
+    <link href="http://blog.dujiong.net/2017/02/17/RDMA/"/>
+    <id>http://blog.dujiong.net/2017/02/17/RDMA/</id>
+    <published>2017-02-17T02:22:39.000Z</published>
+    <updated>2017-05-05T09:08:03.702Z</updated>
+    
+    <content type="html">&lt;p&gt;RDMA，即Remote DMA，最直观的解释就是将发生在本机的直接内存访问扩展到主机与主机之间。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&quot;DMA&quot;&gt;&lt;a href=&quot;#DMA&quot; class=&quot;headerlink&quot; title=&quot;DMA&quot;&gt;&lt;/a&gt;DMA&lt;/h3&gt;&lt;p&gt;首先，对DMA技术做简单的复习和总结。&lt;br&gt;在最初的PC体系结构中，CPU是系统中唯一的总线主控器，也就是说，为了提取和存储RAM存储单元的值，CPU是唯一可以驱动地址/数据总线的硬件设备。而随着更多诸如PCI的现代总线体系结构的出现，如果提供合适的电路，每一个外围设备都可以充当总线主控器。因此，现在所有的PC都包含一个辅助的DMA电路，它可以用来控制在RAM和IO设备之间数据的传送。DMA一旦被CPU激活，就可以自行传送数据；在数据传输完成之后，DMA发出一个中断请求，再由CPU接管。当CPU和DMA同时访问同一内存单元时，所产生的的冲突由一个名为内存仲裁器的硬件电路解决。&lt;br&gt;由于DMA的设置时间比较长，所以使用DMA最多的是磁盘驱动器和其他需要一次传送大量字节的设备，而在传送数量很少的数据时直接使用CPU效率更高。   &lt;/p&gt;
+&lt;h3 id=&quot;RDMA&quot;&gt;&lt;a href=&quot;#RDMA&quot; class=&quot;headerlink&quot; title=&quot;RDMA&quot;&gt;&lt;/a&gt;RDMA&lt;/h3&gt;&lt;p&gt;传统的TCP/IP技术在数据包处理过程中，要经过操作系统及其他软件层，需要占用大量的服务器资源和内存总线带宽，数据在系统内存、处理器缓存和网络控制器缓存之间来回进行复制移动，给服务器的CPU和内存造成了沉重负担。尤其是网络带宽、处理器速度与内存带宽三者的严重”不匹配性”，更加剧了网络延迟效应。&lt;br&gt;RDMA是一种新的内存访问技术，RDMA让计算机可以直接存取其他计算机的内存，而不需要经过处理器耗时的处理。RDMA将数据从一个系统快速移动到远程系统存储器中，而不对操作系统造成任何影响。&lt;br&gt;RDMA技术的原理及其与TCP/IP架构的对比如下图所示。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/G5E7u7t.png&quot; alt=&quot;&quot;&gt;  &lt;/p&gt;
+&lt;p&gt;因此，RDMA可以简单理解为利用相关的硬件和网络技术，服务器1的网卡可以直接读写服务器2的内存，最终达到高带宽、低延迟和低资源利用率的效果。如下图所示，应用程序不需要参与数据传输过程，只需要指定内存读写地址，开启传输并等待传输完成即可。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/cFfY963.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;在实现上，RDMA实际上是一种智能网卡与软件架构充分优化的远端内存直接高速访问技术，通过在网卡上将RDMA协议固化于硬件，以及支持零复制网络技术和内核内存旁路技术这两种途径来达到其高性能的远程直接数据存取的目标。&lt;br&gt;（1）零复制：零复制网络技术使网卡可以直接与应用内存相互传输数据，从而消除了在应用内存与内核之间复制数据的需要。因此，传输延迟会显著减小。&lt;br&gt;（2）内核旁路：内核协议栈旁路技术使应用程序无需执行内核内存调用就可向网卡发送命令。在不需要任何内核内存参与的条件下，RDMA请求从用户空间发送到本地网卡并通过网络发送给远程网卡，这就减少了在处理网络传输流时内核内存空间与用户空间之间环境切换的次数。&lt;/p&gt;
+&lt;p&gt;在具体的远程内存读写中，RDMA操作用于读写操作的远程虚拟内存地址包含在RDMA消息中传送，远程应用程序要做的只是在其本地网卡中注册相应的内存缓冲区。远程节点的CPU除在连接建立、注册调用等之外，在整个RDMA数据传输过程中并不提供服务，因此没有带来任何负载。&lt;/p&gt;
+&lt;h3 id=&quot;RDMA的不同实现&quot;&gt;&lt;a href=&quot;#RDMA的不同实现&quot; class=&quot;headerlink&quot; title=&quot;RDMA的不同实现&quot;&gt;&lt;/a&gt;RDMA的不同实现&lt;/h3&gt;&lt;p&gt;如下图所示，RDMA的实现方式主要分为InfiniBand和Ethernet两种传输网络。而在以太网上，又可以根据与以太网融合的协议栈的差异分为iWARP和RoCE（包括RoCEv1和RoCEv2）。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/EgvDMTD.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;其中，InfiniBand是最早实现RDMA的网络协议，被广泛应用到高性能计算中。但是InfiniBand和传统TCP/IP网络的差别非常大，需要专用的硬件设备，承担昂贵的价格。鉴于此，这里不对InfiniBand做过多的讨论。&lt;br&gt;在基于以太网的版本中，下面重点选择RoCEv2来讨论。&lt;br&gt;可以看出，RoCEv2的协议栈包括IB传输层、TCP/UDP、IP和Ethernet，其中，后面三层都使用了TCP/IP中相应层次的封包格式。RoCEv2的封包格式如下图所示。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/0KMeGlN.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;其中，UDP包头中，目的端口号为4791即代表是RoCEv2帧。IB BTH即InfiniBand Base Transport Header，定义了IB传输层的相应头部字段。IB Payload即为消息负载。ICRC和FCS分别对应冗余检测和帧校验。&lt;br&gt;IB BTH格式和字段定义如下图。其中，Opcode用于表明该包的type或IB payload中更高层的协议类型。S是Solicited Event的缩写，表明回应者产生应该产生一个事件。M是MigReq的缩写，一般用于迁移状态。Pad表明有多少额外字节被填充到IB payload中。TVer即Transport Header Version，表明该包的版本号。Partition Key用来表征与本packet关联的逻辑内存分区。rsvd是reserved的缩写，该字段是保留的。Destination QP表明目的端Queue Pair序号。A是Acknowledge Request，表示该packet的应答可由响应者调度。PSN是Packet Sequence Number，用来检测丢失或重复的数据包。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/uPjVonk.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;最后，顺带说下RDMA网卡的出包。如前文所述，RDMA是一种智能网卡与软件架构充分优化的远端内存直接高速访问技术，通过将RDMA技术固化于网卡上实现，即，在RoCEv2协议栈中，IB BTH、UDP、IP以及Ethernet Layer全是固化在网卡上的。用户空间的Application通过OFA Stack（亦或其他组织编写的RDMA stack）提供的verbs编程接口（比如WRITE、READ、SEND等）形成IB payload，接下来便直接进入硬件，由RDMA网卡实现负载的层层封装。&lt;/p&gt;
+&lt;h3 id=&quot;附&quot;&gt;&lt;a href=&quot;#附&quot; class=&quot;headerlink&quot; title=&quot;附&quot;&gt;&lt;/a&gt;附&lt;/h3&gt;&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/vwXu2Zm.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;RDMA，即Remote DMA，最直观的解释就是将发生在本机的直接内存访问扩展到主机与主机之间。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="NVMe over RDMA" scheme="http://blog.dujiong.net/tags/NVMe-over-RDMA/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>NVMe技术浅析</title>
+    <link href="http://blog.dujiong.net/2017/02/13/NVMe/"/>
+    <id>http://blog.dujiong.net/2017/02/13/NVMe/</id>
+    <published>2017-02-13T07:06:23.000Z</published>
+    <updated>2017-05-05T09:09:23.170Z</updated>
+    
+    <content type="html"></content>
+    
+    <summary type="html">
+    
+    </summary>
+    
+    
+      <category term="NVMe over RDMA" scheme="http://blog.dujiong.net/tags/NVMe-over-RDMA/"/>
     
   </entry>
   
@@ -1714,294 +1760,6 @@ void updateCachedTime(void){
     
     
       <category term="Redis" scheme="http://blog.dujiong.net/tags/Redis/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Redis之事件驱动</title>
-    <link href="http://blog.dujiong.net/2016/11/05/Redis-event/"/>
-    <id>http://blog.dujiong.net/2016/11/05/Redis-event/</id>
-    <published>2016-11-05T04:03:53.000Z</published>
-    <updated>2016-11-15T05:52:30.834Z</updated>
-    
-    <content type="html">&lt;p&gt;事件处理是Redis的核心机制之一，通过在文件、网络和时间等类型的事件上进行多路复用，为Redis的高性能提供保证。事件驱动在Redis源码中主要涉及ae.h/ae.c，Ae_evport/epoll/kqueue/select.c等文件。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;h3 id=&quot;Redis事件驱动相关数据结构&quot;&gt;&lt;a href=&quot;#Redis事件驱动相关数据结构&quot; class=&quot;headerlink&quot; title=&quot;Redis事件驱动相关数据结构&quot;&gt;&lt;/a&gt;Redis事件驱动相关数据结构&lt;/h3&gt;&lt;p&gt;Redis事件驱动内部包含四个主要的数据结构(定义在ae.h中)，分别是：文件事件结构体、时间事件结构体、就绪事件结构体和循环结构体。&lt;/p&gt;
-&lt;h4 id=&quot;文件事件&quot;&gt;&lt;a href=&quot;#文件事件&quot; class=&quot;headerlink&quot; title=&quot;文件事件&quot;&gt;&lt;/a&gt;文件事件&lt;/h4&gt;&lt;p&gt;文件事件定义在ae.h/aeFileEvent结构体中。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;typedef struct aeFileEvent {
-    int mask;            //状态
-
-    aeFileProc* rfileProc;        
-    aeFileProc* wfileProc;
-    void* clientData;    //多路复用库的私有数据
-} aeFileEvent;
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;其中，rfileProc和wfileProc为aeFileProc类型函数指针，分别对应于读、写事件处理函数。其声明为：    &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;typedef void aeFileProc(struct aeEventLoop *eventLoop, int fd, void *clientData, int mask);
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;clientData保存执行命令时所需要的数据，每次处理事件时，它会作为参数被传入事件处理器。&lt;/p&gt;
-&lt;h4 id=&quot;就绪事件&quot;&gt;&lt;a href=&quot;#就绪事件&quot; class=&quot;headerlink&quot; title=&quot;就绪事件&quot;&gt;&lt;/a&gt;就绪事件&lt;/h4&gt;&lt;p&gt;就绪事件定义在ae.h/aeFiredEvent结构体中。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;typedef struct aeFiredEvent {
-    int fd;                //就绪文件描述符
-
-    int mask;            //事件类型掩码
-} aeFiredEvent;
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;就绪事件结构体将在IO多路复用（aeApiPoll函数）返回时设置。&lt;/p&gt;
-&lt;h4 id=&quot;时间事件&quot;&gt;&lt;a href=&quot;#时间事件&quot; class=&quot;headerlink&quot; title=&quot;时间事件&quot;&gt;&lt;/a&gt;时间事件&lt;/h4&gt;&lt;p&gt;时间事件定义在ae.h/aeTimeEvent结构体中。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;typedef struct aeTimeEvent {
-    long long id;        //时间事件的唯一标识
-
-    long when_sec;
-    long when_ms;
-
-    aeTimeProc* timeProc;
-    aeEventFinalizerProc* finalizerProc;     
-    void* clientData;
-    struct aeTimeEvent* next;        //指向下个时间事件结构，形成链表
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;其中，id为时间事件的全局唯一标识号，其值按从小到大的顺序递增，新事件的id号比旧事件的id大。when为毫秒级的UNIX时间戳，记录时间事件的到达时间。next为指向下个时间事件结构的指针，Redis服务器将所有时间事件都放在一个无序（到达时间）链表中，每当时间事件执行器运行时，就遍历链表，查找所有已到达的时间事件，并调用相应的事件处理器。注意，Redis的时间事件链表是按id排序的链表，对于到达时间，它是无序的。&lt;br&gt;timeProc和finalizerProc分别为时间事件处理器和事件释放函数的函数指针。其声明为：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;typedef int aeTimeProc(struct aeEventLoop *eventLoop, long long id, void *clientData);
-typedef void aeEventFinalizerProc(struct aeEventLoop *eventLoop, void *clientData);
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;此外，Redis的时间事件可以分为以下两类：&lt;br&gt;（1）定时事件：让一段程序在指定的时间之后执行一次；&lt;br&gt;（2）周期性事件：让一段程序每隔指定的时间就执行一次。&lt;br&gt;一个时间事件是定时事件还是周期性事件取决于时间事件处理器的返回值(ae.c/processTimeEvents/retval = te-&amp;gt;timeProc(eventLoop, id, te-&amp;gt;clientData))：&lt;br&gt;（1）如果事件处理器返回返回ae.h/AE_NOMORE,那么这个事件为定时事件，该事件在到达一次之后就会被删除。&lt;br&gt;（2）如果事件处理器返回一个非AE_NOMORE的整数值，那么这个事件为周期性事件，此时，服务器会对时间事件的when属性进行更新，让该事件在一段时间之后再次到达，并以这种方式更新、运行。   &lt;/p&gt;
-&lt;h4 id=&quot;事件循环结构体&quot;&gt;&lt;a href=&quot;#事件循环结构体&quot; class=&quot;headerlink&quot; title=&quot;事件循环结构体&quot;&gt;&lt;/a&gt;事件循环结构体&lt;/h4&gt;&lt;p&gt;在事件驱动的实现中，需要有一个事件循环结构来监控调度所有的事件。在Redis中的事件驱动库中，事件循环结构结构定义在ae.h/aeEventLoop中。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;typedef struct aeEventLoop {
-    int maxfd;                    //注册的最大的文件描述符
-    int setsize;                //监听的文件描述符的最大个数
-
-    long long timeEventNextId;    //生成时间事件id
-    time_t lastTime;            //最后一次执行时间事件的时间
-
-    aeFileEvent* events;        //注册的文件事件
-    aeFilEvent* fired;            //就绪的文件事件
-    aeTimeEvent* timeEventHead;    //时间事件
-    int stop;
-    void* apindata;                //多路复用库的私有数据
-    aeBeforeSleepProc* beforesleep;
-} aeEventLoop;
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;其中，events是aeFileEvent结构的数组，每个aeFileEvent结构表示一个注册的文件事件。setsize表示能处理的文件描述符的最大个数。beforesleep函数指针表示在监控事件触发之前，需要调用的函数。apindata表示底层多路复用的私有数据，比如对于select来说，该结构保存了读写描述符数组；对于epoll来说，该结构中保存了epoll描述符和epoll_event数组。       &lt;/p&gt;
-&lt;h3 id=&quot;Redis事件的调度与执行&quot;&gt;&lt;a href=&quot;#Redis事件的调度与执行&quot; class=&quot;headerlink&quot; title=&quot;Redis事件的调度与执行&quot;&gt;&lt;/a&gt;Redis事件的调度与执行&lt;/h3&gt;&lt;p&gt;Redis的事件处理主循环在aeMain函数中进行：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;void aeMain(aeEventLoop* eventLoop){
-    eventLoop-&amp;gt;stop = 0;
-    while(!eventLoop-&amp;gt;stop){
-        if(eventLoop-&amp;gt;beforesleep != NULL){
-            eventLoop-&amp;gt;beforesleep(eventLoop);
-        }
-        aeProessEvents(eventLoop, AE_ALL_EVENTS);
-    }
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;该事件循环的流程图如下：&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/5bUY0j1.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;aeProcessEvents函数进行具体的事件处理，定义在ae.c文件下，其关键代码如下：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;int aeProcessEvents(aeEventLoop* eventLoop, int flags) {
-    ...
-    if(eventLoop-&amp;gt;maxfd!=-1 || ((flags &amp;amp; AE_TIME_EVENTS) &amp;amp;&amp;amp; !(flags &amp;amp; AE_DONT_WAIT))) {
-        shortest = aeSearchNearestTimer(eventLoop);  //获取最近的时间事件
-        if(shortest){
-            aeGetTime(&amp;amp;now_sec, &amp;amp;now_ms);
-            //计算最近的时间事件距离到达还有多少毫秒
-            tvp-&amp;gt;tv_usec = ((shortest-&amp;gt;when_ms+1000) - now_ms)*1000;
-            tvp-&amp;gt;tv_sec --;
-            ...
-        }else{        //没有时间事件，根据AE_DONT_WAIT来设置是否阻塞，以及阻塞的事件长度
-            if(flags &amp;amp; AE_DONT_WAIT) {        
-                tv.tv_sec = tv.tv_usec = 0;
-                tvp = &amp;amp;tv;
-            }else{
-                tvp = NULL;
-            }
-        }
-        numevents = aeApiPoll(eventLoop, tvp);            //select,epoll...
-        for(j=0; j&amp;lt;numevents;j++){
-            aeFileEvent *fe = &amp;amp;eventLoop-&amp;gt;events[eventLoop-&amp;gt;fired[j].fd];
-            int mask = eventLoop-&amp;gt;fired[j].mask;
-            int fd = eventLoop-&amp;gt;fired[j].fd;
-            int rfired = 0;
-            if(fe-&amp;gt;mask &amp;amp; mask &amp;amp; AE_READABLE){
-                rfired = 1;
-                fe-&amp;gt;rfileProc(eventLoop, fd, fe-&amp;gt;clientData, mask);        //处理读事件
-            }
-        ...
-        }
-    }
-    if(flags &amp;amp; AE_TIME_EVENTS)
-        processed += processTimeEvents(eventLoop);        //处理时间事件
-    return processed;
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;可以看出，aeApiPoll函数的最大阻塞时间(tvp结构)由到达时间最接近当前时间的时间事件(shortest)决定，这样既可以避免服务器对时间事件进行频繁的轮询（忙等待），也可以确保aeApiPoll函数不会阻塞过长时间。&lt;br&gt;因为文件事件是随机出现的，如果等待并处理完一次文件事件之后，仍未有任何时间事件到来，那么服务器将再次等待并处理文件事件。随着文件事件的不断执行，时间逐渐向时间事件所设置的到达时间逼近，并最终来到到达时间，这时服务器就可以开始处理到达的时间事件了。&lt;br&gt;对文件事件和时间事件的处理都是同步、有序、原子地执行的，服务器不会中途中断事件处理，也不会对事件进行抢占，因此，不管是文件事件的处理器，还是时间事件的处理器，它们都会尽可能地减少程序的阻塞时间，并在需要时让出执行权，从而降低造成事件饥饿的可能性。比如说，在命令回复处理器将一个命令回复写入到客户端套接字，如果写入的字节数超过了一个预设常量的话，命令回复处理器就会主动用break跳出写入循环，将余下的数据留到下次再写，另外，时间事件也会将非常耗时的持久化操作放到子线程或子进程中执行。&lt;br&gt;此外，由于时间事件放在文件事件之后执行，并且事件之间不会出现抢占，所以时间事件的实际处理时间，通常会比时间事件设定的到达时间稍晚一些。   &lt;/p&gt;
-&lt;h3 id=&quot;Redis-IO复用函数选择&quot;&gt;&lt;a href=&quot;#Redis-IO复用函数选择&quot; class=&quot;headerlink&quot; title=&quot;Redis IO复用函数选择&quot;&gt;&lt;/a&gt;Redis IO复用函数选择&lt;/h3&gt;&lt;p&gt;最后提到的一点是，Redis提供了在多个IO库之间选择最佳的策略。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;#ifdef HAVE_EVPORT
-#include &amp;quot;ae_evport.c&amp;quot;
-#else
-    #ifdef HAVE_EPOLL
-    #include &amp;quot;ae_epoll.c&amp;quot;
-    #else
-        #ifdef HAVE_KQUEUE
-        #include &amp;quot;ae_kqueue.c&amp;quot;
-        #else
-        #include &amp;quot;ae_select.c&amp;quot;
-        #endif
-    #endif
-#endif
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这样，在编译时，Redis可以根据平台自上而下选择最快的IO多路复用函数。&lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;事件处理是Redis的核心机制之一，通过在文件、网络和时间等类型的事件上进行多路复用，为Redis的高性能提供保证。事件驱动在Redis源码中主要涉及ae.h/ae.c，Ae_evport/epoll/kqueue/select.c等文件。&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="Redis" scheme="http://blog.dujiong.net/tags/Redis/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>C++ STL之deque</title>
-    <link href="http://blog.dujiong.net/2016/10/31/STL-deque/"/>
-    <id>http://blog.dujiong.net/2016/10/31/STL-deque/</id>
-    <published>2016-10-31T09:49:42.000Z</published>
-    <updated>2016-10-31T11:48:49.896Z</updated>
-    
-    <content type="html">&lt;p&gt;C++标准模板库序列式容器中，使用最少的估计就是deque了。但是，了解下deque这种双向开口的连续线性空间容器的底层设计与实现仍是很有帮助的。此外，stack和queue这两种适配器容器（容器底层是调用其他容器）底层实现默认就是使用deque。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;h3 id=&quot;与vector比较&quot;&gt;&lt;a href=&quot;#与vector比较&quot; class=&quot;headerlink&quot; title=&quot;与vector比较&quot;&gt;&lt;/a&gt;与vector比较&lt;/h3&gt;&lt;p&gt;deque和vector的最大差异，一是deque允许常熟时间内对起头端进行元素的插入或移除操作，二在于deque没有所谓容量观念，因为它是动态地以分段连续空间组合而成，随时可以增加一段新的空间并链接起来。即，像vector那样“因旧空间不足而重新配置一块更大空间，然后复制元素，再释放旧空间”这样的事情在deque是不会发生的。也因此，deque没有必要提供所谓的空间保留功能。&lt;br&gt;更具体的，array无法增长，vector虽可增长，却只能向尾端增长，而且所谓增长是个假象，事实上是（1）另觅更大空间；（2）将原数据复制过去；（3）释放原空间 三部曲。&lt;br&gt;deque是由一段一段的定量连续空间构成。一旦有必要在deque的前端或尾端增加新空间，便配置一段定量连续空间，串接在整个deque的头端或尾端。deque的最大任务，便是在这些分段的定量连续空间上，维护其整体连续的假象，并提供随机存取的接口。这样避开了“重新配置、复制、释放”的轮回，代价则是复杂的迭代器架构。    &lt;/p&gt;
-&lt;h3 id=&quot;deque的中控器和迭代器&quot;&gt;&lt;a href=&quot;#deque的中控器和迭代器&quot; class=&quot;headerlink&quot; title=&quot;deque的中控器和迭代器&quot;&gt;&lt;/a&gt;deque的中控器和迭代器&lt;/h3&gt;&lt;p&gt;deque底层实现一个中控器，即一个指针数组，其中的每一个元素都是指针，指向另一段连续线性空间，称为缓冲区。缓冲区才是deque的存储空间主体。&lt;br&gt;迭代器由以下四个部分组成：&lt;br&gt;（1）cur：指向缓冲区当前元素。&lt;br&gt;（2）first：指向缓冲区的第一个位置。&lt;br&gt;（3）last：指向末节点，即最后一个元素的下一个位置。&lt;br&gt;（4）node：指向主控器相应的索引位置。&lt;br&gt;中控器、缓冲区、迭代器之间的关系如下图所示。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/SsE0h85.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;以下是中控器和迭代器的相关源代码。     &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;template &amp;lt;class T, class Alloc = alloc, size_t BufSiz = 0&amp;gt;
-class deque {
-public:
-    typedef T value_type;
-    typedef value_type* pointer;        
-    ...
-protected:
-    typedef pointer* map_pointer;        //指针的指针
-    map_pointer map;        //map是指针数组，中控器
-    size_type map_size;        //map内可容纳多少指针
-};
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;可以看出，中控器map其实是一个T**，即是指向指针的指针，T为元素型别。      &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;template &amp;lt;class T, class Ref, class Ptr, size_t BufSiz&amp;gt;
-struct __deque_iterator {
-    typedef __deque_iterator&amp;lt;T, T&amp;amp;, T*, BufSiz&amp;gt; iterator;
-    typedef __deque_iterator&amp;lt;T, const T&amp;amp;, const T*, BufSiz&amp;gt; const_iterator;
-    static size_t buffer_size() { return __deque_buf_size(BufSiz, sizeof(T)); }
-    typedef random_access_iterator_tag iterator_category;    //RandomAccess Iterator
-    typedef T value_type; 
-    typedef Ptr pointer;
-    typedef Ref reference;
-    typedef size_t size_type;
-    typedef ptrdiff_t difference_type;
-    typedef T** map_pointer;                //指向主控器的指针
-
-    T* cur;
-    T* first;
-    T* last;
-    map_pointer node;
-};
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;迭代器的四个主要组成：cur、first、last、node的定义。&lt;br&gt;接下来是构造函数和迭代器的重载运算因子。          &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;__deque_iterator(T* x, map_pointer y)    //用T类型数据和指向中控器的指针初始化一个迭代器
-    : cur(x), first(*y), last(*y+buffer_size()), node(y) {}
-__deque_iterator() : cur(0), first(0), last(0), node(0) {}    //创建一个空的迭代器
-__deque_iterator(const iterator&amp;amp; x) : cur(x.cur), first(x.first), last(x.last), node(x.node) {}    //复制构造函数
-
-reference operator*() const { return *cur; }
-pointer operator-&amp;gt;() const { return &amp;amp;(operator*()); }
-difference_type operator-(const self&amp;amp; x) const {
-    return difference_type(buffer_size())*(node-x.node-1)+(cur-first)+(x.last-x.cur);
-}
-...
-self&amp;amp; operator+=(difference_type n){
-    difference_type offset=n+(cur-first);
-    if(offset&amp;gt;=0 &amp;amp;&amp;amp; offset&amp;lt;difference_type(buffer_size())){    //目标在同一个缓冲区内
-        cur+=n;
-    }else{            //目标位置不在同一个缓冲区内
-        difference_type node_offset = offset&amp;gt;0 ? offset/difference_type(buffer_size()) : -difference_type((-offset-1) / buffer_size())-1;
-        set_node(node + node_offset);
-        cur = first+(offset-node_offset*difference_type(buffer_size()));
-    }
-    return *this;
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;在进行+=n运算时，要判断+n之后的索引是否还在当前缓冲区内，如果在，cur简单+n即可，如果不在，则要计算正确的缓存节点和正确的元素位置。其他+n，-=n，-运算都可以通过+=运算得出。&lt;/p&gt;
-&lt;h3 id=&quot;deque的结构&quot;&gt;&lt;a href=&quot;#deque的结构&quot; class=&quot;headerlink&quot; title=&quot;deque的结构&quot;&gt;&lt;/a&gt;deque的结构&lt;/h3&gt;&lt;p&gt;deque除了维护一个指向map的指针外，还维护start、finish两个迭代器，分别指向第一缓冲区的第一个元素和最后缓冲区的最后一个元素（的下一个位置）。    &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;template &amp;lt;class T, class Alloc = alloc, size_t BufSiz = 0&amp;gt;
-class deque {
-public:
-    typedef T value_type;
-    typedef value_type* pointer;
-    typedef size_t size_type;
-    typedef __deque_iterator&amp;lt;T, T&amp;amp;, T*, BufSiz&amp;gt; iterator;
-    typedef simple_alloc&amp;lt;value_type, Alloc&amp;gt; data_allocator;
-    typedef simple_alloc&amp;lt;pointer, Alloc&amp;gt; map_allocator;
-    ...
-protected:
-    typedef pointer* map_pointer;
-    iterator start;
-    iterator finish;
-    map_pointer map;
-    size_type map_size;        //map容纳指针的个数    
-    ...
-};
-&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&quot;默认构造函数&quot;&gt;&lt;a href=&quot;#默认构造函数&quot; class=&quot;headerlink&quot; title=&quot;默认构造函数&quot;&gt;&lt;/a&gt;默认构造函数&lt;/h4&gt;&lt;pre&gt;&lt;code&gt;deque()
-    : start(), finish(), map(0), map_size(0) {
-    create_map_nodes(0);
-} 
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;默认构造函数先初始化两个迭代器为空迭代器，然后设置map和map_size，接着调用create_map_and_nodes(size_type num_elements)来初始化一块内存。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;template&amp;lt;class T, class Alloc, size_t BufSize&amp;gt;
-void deque&amp;lt;T, Alloc, BufSize&amp;gt;::create_map_and_nodes(size_type num_elements) {
-    size_type num_nodes = num_elements/buffer_size() + 1;    //    需要节点数
-    map_size = max(initial_map_size(), num_nodes+2);    //一个map管理的节点数，最少8个，最多是“所需节点加2”
-    map = map_allocator::allocate(map_size);
-
-    map_pointer nstart = map+(map_size-num_nodes)/2;
-    map_pointer nfinish = nstart+num_nodes-1;
-    map_pointer cur;
-
-    __STL_TRY {
-        for(cur=nstart; cur&amp;lt;=nfinish; ++cur){
-            *cur = allocate_node();
-        }
-    }catch(...){
-        ...
-    }
-    //为deque内的两个迭代器设定正确的内容
-    start.set_node(nstart);
-    finish.set_node(nfinish);
-    start.cur = start.first;
-    finish.cur = finish.first + num_elements%buffer_size();
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&quot;由n个value初始化的构造函数&quot;&gt;&lt;a href=&quot;#由n个value初始化的构造函数&quot; class=&quot;headerlink&quot; title=&quot;由n个value初始化的构造函数&quot;&gt;&lt;/a&gt;由n个value初始化的构造函数&lt;/h4&gt;&lt;pre&gt;&lt;code&gt;deque(size_type n, const value_type&amp;amp; value)
-    : start(), finish(), map(0), map_size(0) {
-    fill_initialize(n, value);
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;该构造函数调用fill_initialize函数来初始化deque，fill_initialize函数负责产生并安排好deque的结构，并将元素的初值设定妥当。     &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;template &amp;lt;class T, class Alloc, size_t BufSize&amp;gt;
-void deque&amp;lt;T, Alloc, BufSize&amp;gt;::fill_initialize(
-    size_type n, const value_type&amp;amp; value) {
-    create_map_and_nodes(n);
-    map_pointer cur;
-    __STL_TRY {
-        //为每个节点的缓冲区设定初值
-        for(cur=start.node; cur&amp;lt;finish.node;++cur){
-            uninitialized_fill(*cur, *cur + buffer_size(), value);
-        }
-        uninitialized_fill(finish.first, finish.cur, value);    //最后一个节点单独对待
-    }
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&quot;两个迭代器初始化的构造函数&quot;&gt;&lt;a href=&quot;#两个迭代器初始化的构造函数&quot; class=&quot;headerlink&quot; title=&quot;两个迭代器初始化的构造函数&quot;&gt;&lt;/a&gt;两个迭代器初始化的构造函数&lt;/h4&gt;&lt;pre&gt;&lt;code&gt;template &amp;lt;class InputIterator&amp;gt;
-deque(InputIterator first, InputIterator last)
-    : start(), finish(), map(0), map_size(0) {
-    range_initialize(first, last, iterator_category(first));
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;该构造函数调用range_initialize来用迭代器范围内的元素初始化deque.range_initialize，根据迭代器类型，调用对应的版本。&lt;/p&gt;
-&lt;h4 id=&quot;析构函数&quot;&gt;&lt;a href=&quot;#析构函数&quot; class=&quot;headerlink&quot; title=&quot;析构函数&quot;&gt;&lt;/a&gt;析构函数&lt;/h4&gt;&lt;p&gt;deque的析构函数先是调用destroy析构缓冲区内的数据，然后调用destroy_map_and_nodes函数析构缓冲区和中控器内存。    &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;~deque() {
-    destroy(start, finish);
-    destroy_map_and_nodes();
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;deque的一些常用操作&quot;&gt;&lt;a href=&quot;#deque的一些常用操作&quot; class=&quot;headerlink&quot; title=&quot;deque的一些常用操作&quot;&gt;&lt;/a&gt;deque的一些常用操作&lt;/h3&gt;&lt;p&gt;deque所提供的元素操作很多，如pop_back、pop_front、clear、erase、insert等，这里不再一一列举，在理解时，只需把握“deque是多个连续缓冲区组合在一起的分段线性空间”即可。&lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;C++标准模板库序列式容器中，使用最少的估计就是deque了。但是，了解下deque这种双向开口的连续线性空间容器的底层设计与实现仍是很有帮助的。此外，stack和queue这两种适配器容器（容器底层是调用其他容器）底层实现默认就是使用deque。&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="C++" scheme="http://blog.dujiong.net/tags/C/"/>
     
   </entry>
   
