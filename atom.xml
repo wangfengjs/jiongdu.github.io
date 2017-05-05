@@ -103,9 +103,9 @@ ip rule add from 192.168.5.86 table net3
     <link href="http://blog.dujiong.net/2017/02/13/NVMe/"/>
     <id>http://blog.dujiong.net/2017/02/13/NVMe/</id>
     <published>2017-02-13T07:06:23.000Z</published>
-    <updated>2017-05-05T11:51:31.305Z</updated>
+    <updated>2017-05-05T11:55:45.486Z</updated>
     
-    <content type="html">&lt;p&gt;海量数据的迸发和传统存储技术所面临的性能瓶颈，促进了新型存储技术和系统架构的高速发展。&lt;/p&gt;
+    <content type="html">&lt;p&gt;海量数据的迸发和传统存储技术所面临的性能瓶颈，促进了新型存储技术和系统架构的高速发展。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h3 id=&quot;存储的那些词儿&quot;&gt;&lt;a href=&quot;#存储的那些词儿&quot; class=&quot;headerlink&quot; title=&quot;存储的那些词儿&quot;&gt;&lt;/a&gt;存储的那些词儿&lt;/h3&gt;&lt;p&gt;本文简单介绍下在存储领域出现频率最高的几个词语:SATA、PCIe、AHCI和NVMe（Non-Volatile Memory Express，非易失性存储器标准）。&lt;/p&gt;
 &lt;h4 id=&quot;SATA和PCIe&quot;&gt;&lt;a href=&quot;#SATA和PCIe&quot; class=&quot;headerlink&quot; title=&quot;SATA和PCIe&quot;&gt;&lt;/a&gt;SATA和PCIe&lt;/h4&gt;&lt;p&gt;SATA和PCIe大家应该比较熟悉，这两个都是总线标准。&lt;br&gt;SATA由IDE/ATA标准发展而来，主要用途是把存储设备连接到主板。SATA的发展主要经历了以下版本：&lt;br&gt;SATA revision 1.0 (1.5 Gbit/s, 150 MB/s)&lt;br&gt;SATA revision 2.0 (3 Gbit/s, 300 MB/s)&lt;br&gt;SATA revision 3.0 (6 Gbit/s, 600 MB/s)&lt;br&gt;SATA revision 3.1&lt;br&gt;SATA revision 3.2 (16 Gbit/s, 1969 MB/s)&lt;br&gt;SATA在发展过程中，考虑了向下兼容的问题，比如主板上SATA-3的接口，可以连接SATA-2的硬盘。但同时，向下兼容也造成了其发展缓慢。&lt;br&gt;出于向下兼容的考虑，SATA可以工作在两种模式：传统模式和AHCI模式。传统模式是为了兼容以前的 IDE/ATA。AHCI模式则比较新，支持SATA独有的功能，如热插拔、原生命令队列（NCQ）等。      &lt;/p&gt;
 &lt;p&gt;PCIe是另一种总线标准，由AGP、PCI、PCI-x发展而来，而这些总线的发展，主要的动力是显卡的发展。AGP就是Accelerated Graphics Port（加速图像端口）的缩写。由于显卡需要很大的带宽和速度，PCI总线标准就不断升级来满足要求。当然，除了显卡外，PCI总线还用于其他的扩展卡，如网卡（包括有线网卡、无线网卡、3G/4G卡等）。  &lt;/p&gt;
@@ -124,8 +124,7 @@ ip rule add from 192.168.5.86 table net3
     
     <summary type="html">
     
-      &lt;p&gt;海量数据的迸发和传统存储技术所面临的性能瓶颈，促进了新型存储技术和系统架构的高速发展。&lt;/p&gt;
-&lt;h3 id=&quot;存储的那些词儿&quot;&gt;&lt;a href=&quot;#存储的那些词儿&quot; class=&quot;headerlink&quot; title=&quot;存储的那些词儿&quot;&gt;&lt;/a&gt;存储的那些词儿&lt;/h3&gt;&lt;p
+      &lt;p&gt;海量数据的迸发和传统存储技术所面临的性能瓶颈，促进了新型存储技术和系统架构的高速发展。&lt;br&gt;
     
     </summary>
     
