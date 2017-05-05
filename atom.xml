@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.dujiong.net/"/>
-  <updated>2017-05-05T06:08:09.727Z</updated>
+  <updated>2017-05-05T12:17:19.164Z</updated>
   <id>http://blog.dujiong.net/</id>
   
   <author>
@@ -16,11 +16,29 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>NVMe over RDMA浅析</title>
+    <link href="http://blog.dujiong.net/2017/03/27/NVMe-over-RDMA/"/>
+    <id>http://blog.dujiong.net/2017/03/27/NVMe-over-RDMA/</id>
+    <published>2017-03-27T12:49:59.000Z</published>
+    <updated>2017-05-05T12:17:19.164Z</updated>
+    
+    <content type="html"></content>
+    
+    <summary type="html">
+    
+    </summary>
+    
+    
+      <category term="NVMe over RDMA" scheme="http://blog.dujiong.net/tags/NVMe-over-RDMA/"/>
+    
+  </entry>
+  
+  <entry>
     <title>CentOS配置双网卡（Mellanox和传统以太网卡）</title>
-    <link href="http://blog.dujiong.net/2017/02/27/config-two-network-interfaces/"/>
-    <id>http://blog.dujiong.net/2017/02/27/config-two-network-interfaces/</id>
-    <published>2017-02-27T09:57:25.000Z</published>
-    <updated>2017-05-05T06:08:09.727Z</updated>
+    <link href="http://blog.dujiong.net/2017/03/20/config-two-network-interfaces/"/>
+    <id>http://blog.dujiong.net/2017/03/20/config-two-network-interfaces/</id>
+    <published>2017-03-20T09:57:25.000Z</published>
+    <updated>2017-05-05T12:16:33.795Z</updated>
     
     <content type="html">&lt;p&gt;刚给服务器装上了操作系统，期待已久的Mellanox网卡终于到了，关于该网卡这里就不做过多的介绍了，可以参考&lt;a href=&quot;http://www.mellanox.com/&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;Mellanox官网&lt;/a&gt;，下面记录在服务器上Mellanox网卡和传统以太网的配置。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h3 id=&quot;安插Mellanox网卡并安装相应驱动&quot;&gt;&lt;a href=&quot;#安插Mellanox网卡并安装相应驱动&quot; class=&quot;headerlink&quot; title=&quot;安插Mellanox网卡并安装相应驱动&quot;&gt;&lt;/a&gt;安插Mellanox网卡并安装相应驱动&lt;/h3&gt;&lt;p&gt;首先，在服务器背板安插Mellanox网卡，然后执行&lt;code&gt;ifconfig&lt;/code&gt;查看是否多了一张新的网卡。初始状态下&lt;code&gt;ifconfig&lt;/code&gt;看到的Mellanox网卡的名字是ib0，这说明该网卡的默认链路层协议时InfiniBand协议，而不是Ethernet协议。由于我们后续需要使用NVMe over RoCEv2，所以需要将Mellanox的链路层协议改为Ethernet。因此，需要先下载并安装相应的驱动。&lt;br&gt;在官网上确定好操作系统对应的驱动版本号（比如CentOS7.2对应的版本是MLNX_OFED-3.4-2.0.0.0-rhel7.2-x86_64）后，下载并安装驱动。&lt;/p&gt;
@@ -68,14 +86,16 @@ ip rule add from 192.168.5.86 table net3
     
       <category term="network/linux" scheme="http://blog.dujiong.net/tags/network-linux/"/>
     
+      <category term="NVMe over RDMA" scheme="http://blog.dujiong.net/tags/NVMe-over-RDMA/"/>
+    
   </entry>
   
   <entry>
     <title>RDMA技术浅析</title>
-    <link href="http://blog.dujiong.net/2017/02/17/RDMA/"/>
-    <id>http://blog.dujiong.net/2017/02/17/RDMA/</id>
-    <published>2017-02-17T02:22:39.000Z</published>
-    <updated>2017-05-05T09:08:03.702Z</updated>
+    <link href="http://blog.dujiong.net/2017/02/27/RDMA/"/>
+    <id>http://blog.dujiong.net/2017/02/27/RDMA/</id>
+    <published>2017-02-27T02:22:39.000Z</published>
+    <updated>2017-05-05T12:11:21.883Z</updated>
     
     <content type="html">&lt;p&gt;RDMA，即Remote DMA，最直观的解释就是将发生在本机的直接内存访问扩展到主机与主机之间。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h3 id=&quot;DMA&quot;&gt;&lt;a href=&quot;#DMA&quot; class=&quot;headerlink&quot; title=&quot;DMA&quot;&gt;&lt;/a&gt;DMA&lt;/h3&gt;&lt;p&gt;首先，对DMA技术做简单的复习和总结。&lt;br&gt;在最初的PC体系结构中，CPU是系统中唯一的总线主控器，也就是说，为了提取和存储RAM存储单元的值，CPU是唯一可以驱动地址/数据总线的硬件设备。而随着更多诸如PCI的现代总线体系结构的出现，如果提供合适的电路，每一个外围设备都可以充当总线主控器。因此，现在所有的PC都包含一个辅助的DMA电路，它可以用来控制在RAM和IO设备之间数据的传送。DMA一旦被CPU激活，就可以自行传送数据；在数据传输完成之后，DMA发出一个中断请求，再由CPU接管。当CPU和DMA同时访问同一内存单元时，所产生的的冲突由一个名为内存仲裁器的硬件电路解决。&lt;br&gt;由于DMA的设置时间比较长，所以使用DMA最多的是磁盘驱动器和其他需要一次传送大量字节的设备，而在传送数量很少的数据时直接使用CPU效率更高。   &lt;/p&gt;
@@ -99,26 +119,37 @@ ip rule add from 192.168.5.86 table net3
   </entry>
   
   <entry>
+    <title>NVMe技术浅析</title>
+    <link href="http://blog.dujiong.net/2017/02/17/NVMe/"/>
+    <id>http://blog.dujiong.net/2017/02/17/NVMe/</id>
+    <published>2017-02-17T12:09:40.000Z</published>
+    <updated>2017-05-05T12:14:15.342Z</updated>
+    
+    <content type="html"></content>
+    
+    <summary type="html">
+    
+    </summary>
+    
+    
+      <category term="NVMe over RDMA" scheme="http://blog.dujiong.net/tags/NVMe-over-RDMA/"/>
+    
+  </entry>
+  
+  <entry>
     <title>存储的那些词儿</title>
-    <link href="http://blog.dujiong.net/2017/02/13/NVMe/"/>
-    <id>http://blog.dujiong.net/2017/02/13/NVMe/</id>
+    <link href="http://blog.dujiong.net/2017/02/13/storage/"/>
+    <id>http://blog.dujiong.net/2017/02/13/storage/</id>
     <published>2017-02-13T07:06:23.000Z</published>
-    <updated>2017-05-05T11:55:45.486Z</updated>
+    <updated>2017-05-05T12:08:17.680Z</updated>
     
     <content type="html">&lt;p&gt;海量数据的迸发和传统存储技术所面临的性能瓶颈，促进了新型存储技术和系统架构的高速发展。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h3 id=&quot;存储的那些词儿&quot;&gt;&lt;a href=&quot;#存储的那些词儿&quot; class=&quot;headerlink&quot; title=&quot;存储的那些词儿&quot;&gt;&lt;/a&gt;存储的那些词儿&lt;/h3&gt;&lt;p&gt;本文简单介绍下在存储领域出现频率最高的几个词语:SATA、PCIe、AHCI和NVMe（Non-Volatile Memory Express，非易失性存储器标准）。&lt;/p&gt;
 &lt;h4 id=&quot;SATA和PCIe&quot;&gt;&lt;a href=&quot;#SATA和PCIe&quot; class=&quot;headerlink&quot; title=&quot;SATA和PCIe&quot;&gt;&lt;/a&gt;SATA和PCIe&lt;/h4&gt;&lt;p&gt;SATA和PCIe大家应该比较熟悉，这两个都是总线标准。&lt;br&gt;SATA由IDE/ATA标准发展而来，主要用途是把存储设备连接到主板。SATA的发展主要经历了以下版本：&lt;br&gt;SATA revision 1.0 (1.5 Gbit/s, 150 MB/s)&lt;br&gt;SATA revision 2.0 (3 Gbit/s, 300 MB/s)&lt;br&gt;SATA revision 3.0 (6 Gbit/s, 600 MB/s)&lt;br&gt;SATA revision 3.1&lt;br&gt;SATA revision 3.2 (16 Gbit/s, 1969 MB/s)&lt;br&gt;SATA在发展过程中，考虑了向下兼容的问题，比如主板上SATA-3的接口，可以连接SATA-2的硬盘。但同时，向下兼容也造成了其发展缓慢。&lt;br&gt;出于向下兼容的考虑，SATA可以工作在两种模式：传统模式和AHCI模式。传统模式是为了兼容以前的 IDE/ATA。AHCI模式则比较新，支持SATA独有的功能，如热插拔、原生命令队列（NCQ）等。      &lt;/p&gt;
 &lt;p&gt;PCIe是另一种总线标准，由AGP、PCI、PCI-x发展而来，而这些总线的发展，主要的动力是显卡的发展。AGP就是Accelerated Graphics Port（加速图像端口）的缩写。由于显卡需要很大的带宽和速度，PCI总线标准就不断升级来满足要求。当然，除了显卡外，PCI总线还用于其他的扩展卡，如网卡（包括有线网卡、无线网卡、3G/4G卡等）。  &lt;/p&gt;
 &lt;h4 id=&quot;AHCI和NVMe&quot;&gt;&lt;a href=&quot;#AHCI和NVMe&quot; class=&quot;headerlink&quot; title=&quot;AHCI和NVMe&quot;&gt;&lt;/a&gt;AHCI和NVMe&lt;/h4&gt;&lt;p&gt;AHCI和NVMe是逻辑（或者说软件、驱动程序）上的标准。&lt;br&gt;从上面 SATA的不同版本可以看到，提速是一个主要任务（当然也有其他的改进）。但进入SSD时代后，SATA的改版速度（由于要考虑向下兼容），已经跟不上传输速度的要求了。这时候，业界就考虑采用PCIe来连接存贮设备。但在驱动程序层面，仍然采用AHCI。这是因为AHCI已经非常成熟，广泛被各种操作系统（如Windows、Linux）所采用。&lt;br&gt;AHCI是为了发挥SATA的潜能而设计的，当时算是“高大上”了。但当时仍然是机械硬盘统治市场，因此AHCI的设计是基于机械硬盘的特性（旋转式磁性盘片）。虽然AHCI也可以用于SSD，但却不能发挥极致。因为SSD更像内存，而不像“盘片”。譬如说，机械硬盘，如果磁头错过了一个扇区，那就得等盘片转一圈回来才能访问。SSD就不存在这个问题。因此，业界重新设计一个新的NVMe协议，希望发挥 SSD的潜能。下面是AHCI和NVMe的对比：&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/4uOqsG8.png&quot; alt=&quot;&quot;&gt;   &lt;/p&gt;
-&lt;h4 id=&quot;物理接口&quot;&gt;&lt;a href=&quot;#物理接口&quot; class=&quot;headerlink&quot; title=&quot;物理接口&quot;&gt;&lt;/a&gt;物理接口&lt;/h4&gt;&lt;p&gt;说完了总线和协议，下面说说物理接口。无论采用什么总线和协议，主板总得连接到存储设备上。这里所说的物理接口，指是是物理尺寸和形状，电气特征不作讨论。接口分为主机端和设备端，种类繁多，这里挑几个常见的。      &lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;SATA接口。采用这种接口的，只能使用SATA总线，不能使用PCIe总线。大部分2.5”SSD就是这种接口。     &lt;/li&gt;
-&lt;li&gt;M.2接口。采用这种接口的SSD，可以使用SATA或者PCIe总线（取决于主板和SSD）。如果采用PCIe总线，又分为AHCI和NVMe两种协议。  &lt;/li&gt;
-&lt;li&gt;SATA Express接口。SATA Express使用的是PCIe总线，向下兼容SATA总线。&lt;h4 id=&quot;总结&quot;&gt;&lt;a href=&quot;#总结&quot; class=&quot;headerlink&quot; title=&quot;总结&quot;&gt;&lt;/a&gt;总结&lt;/h4&gt;不同存储总线标准/协议之间的组合如下图所示。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/J22ZZLp.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;可以看出，AHCI和NVMe是驱动程序层面的。NVMe只适用于SSD（SSD和主板也要支持NVMe才行）。AHCI则适用于机械硬盘和SSD。&lt;br&gt;在主板芯片层面，有AHCI控制器和PCIe控制器。有趣的是AHCI驱动程序“居然”可以使用PCIe控制器（中间那条橙色的线）。这个其实是个过渡方案，目的是在利用PCIe高带宽的同时，保持对上层软件的兼容性。&lt;br&gt;绿色那个框是主板上的物理接口。注意即使是同样的物理接口，也可以选择不同的总线和协议（如果主机和设备支持的话）。&lt;br&gt;右下角的PCIe SSD设备则可以有两种不同的控制器（最下面的两个框）：AHCI和NVMe。因此，同样是PCIe的SSD，也可以有不同的传输效能。&lt;br&gt;说了这么多，相信大家已经晕了。下面按传输效率做个排序。    &lt;/li&gt;
-&lt;li&gt;PCIe NVMe&lt;br&gt;这个是最高大上的。在笔记本市场，根据效能，可以再细分为两个等级：&lt;br&gt;（1）M.2尺寸的NVMe（如三星 950 PRO）。可以有四条PCIe通道，速度最快。但由于电路板面积限制，容量和发热都是个问题。&lt;br&gt;（2）2.5″尺寸的NVMe（如东芝XG3），采用SATA Express接口，可以有两条PCIe通道，传输速率较低。此外，由于2.5″体积较大，容量和发热比 M.2 要好。    &lt;/li&gt;
-&lt;li&gt;PCIe AHCI&lt;br&gt;效能比1稍低，是由于AHCI协议的滞后性决定的。笔记本上只有M.2外形，没有2.5″外形。   &lt;/li&gt;
-&lt;li&gt;SATA AHCI&lt;br&gt;效能最低，但兼容性最好，根据外形可分为两类。这两类的传输效能是一样的，无分高低。&lt;br&gt;（1）M.2外形的设备，如三星850EVO的M.2盘。&lt;br&gt;（2）2.5″外形的设备，如目前广泛使用的机械硬盘，固态硬盘等。&lt;/li&gt;
-&lt;/ol&gt;
+&lt;h4 id=&quot;物理接口&quot;&gt;&lt;a href=&quot;#物理接口&quot; class=&quot;headerlink&quot; title=&quot;物理接口&quot;&gt;&lt;/a&gt;物理接口&lt;/h4&gt;&lt;p&gt;说完了总线和协议，下面说说物理接口。无论采用什么总线和协议，主板总得连接到存储设备上。这里所说的物理接口，指是是物理尺寸和形状，电气特征不作讨论。接口分为主机端和设备端，种类繁多，这里挑几个常见的。&lt;br&gt;1.SATA接口。采用这种接口的，只能使用SATA总线，不能使用PCIe总线。大部分2.5”SSD就是这种接口。&lt;br&gt;2.M.2接口。采用这种接口的SSD，可以使用SATA或者PCIe总线（取决于主板和SSD）。如果采用PCIe总线，又分为AHCI和NVMe两种协议。&lt;br&gt;3.SATA Express接口。SATA Express使用的是PCIe总线，向下兼容SATA总线。&lt;/p&gt;
+&lt;h4 id=&quot;总结&quot;&gt;&lt;a href=&quot;#总结&quot; class=&quot;headerlink&quot; title=&quot;总结&quot;&gt;&lt;/a&gt;总结&lt;/h4&gt;&lt;p&gt;不同存储总线标准/协议之间的组合如下图所示。&lt;br&gt;&lt;img src=&quot;http://i.imgur.com/J22ZZLp.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;可以看出，AHCI和NVMe是驱动程序层面的。NVMe只适用于SSD（SSD和主板也要支持NVMe才行）。AHCI则适用于机械硬盘和SSD。&lt;br&gt;在主板芯片层面，有AHCI控制器和PCIe控制器。有趣的是AHCI驱动程序“居然”可以使用PCIe控制器（中间那条橙色的线）。这个其实是个过渡方案，目的是在利用PCIe高带宽的同时，保持对上层软件的兼容性。&lt;br&gt;绿色那个框是主板上的物理接口。注意即使是同样的物理接口，也可以选择不同的总线和协议（如果主机和设备支持的话）。&lt;br&gt;右下角的PCIe SSD设备则可以有两种不同的控制器（最下面的两个框）：AHCI和NVMe。因此，同样是PCIe的SSD，也可以有不同的传输效能。&lt;br&gt;说了这么多，相信大家已经晕了。下面按传输效率做个排序。&lt;br&gt;1.PCIe NVMe&lt;br&gt;这个是最高大上的。在笔记本市场，根据效能，可以再细分为两个等级：&lt;br&gt;（1）M.2尺寸的NVMe（如三星 950 PRO）。可以有四条PCIe通道，速度最快。但由于电路板面积限制，容量和发热都是个问题。&lt;br&gt;（2）2.5″尺寸的NVMe（如东芝XG3），采用SATA Express接口，可以有两条PCIe通道，传输速率较低。此外，由于2.5″体积较大，容量和发热比 M.2 要好。&lt;br&gt;2.PCIe AHCI&lt;br&gt;效能比1稍低，是由于AHCI协议的滞后性决定的。笔记本上只有M.2外形，没有2.5″外形。&lt;br&gt;3.SATA AHCI&lt;br&gt;效能最低，但兼容性最好，根据外形可分为两类。这两类的传输效能是一样的，无分高低。&lt;br&gt;（1）M.2外形的设备，如三星850EVO的M.2盘。&lt;br&gt;（2）2.5″外形的设备，如目前广泛使用的机械硬盘，固态硬盘等。&lt;/p&gt;
 &lt;h3 id=&quot;附&quot;&gt;&lt;a href=&quot;#附&quot; class=&quot;headerlink&quot; title=&quot;附&quot;&gt;&lt;/a&gt;附&lt;/h3&gt;&lt;p&gt;接下来将详细分析NVMe的设计及其带来的性能提升。   &lt;/p&gt;
 </content>
     
@@ -1481,297 +1512,6 @@ void expireGenericCommand(redisClient *c, long long basetime, int unit) {
     <summary type="html">
     
       &lt;p&gt;本文对Redis服务器的数据库实现进行说明，包括服务器保存数据库的方法，数据库保存键值对的方法，以及针对数据库的添加、删除、查看等操作的实现方法，最后，会对服务器保存键的过期时间的方法和服务器自动删除过期键的方法进行分析。&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="Redis" scheme="http://blog.dujiong.net/tags/Redis/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Redis之发布与订阅</title>
-    <link href="http://blog.dujiong.net/2016/11/13/Redis-pubsub/"/>
-    <id>http://blog.dujiong.net/2016/11/13/Redis-pubsub/</id>
-    <published>2016-11-13T10:13:33.000Z</published>
-    <updated>2016-11-23T12:03:19.622Z</updated>
-    
-    <content type="html">&lt;p&gt;本文分析下Redis的发布与订阅功能，该功能有点类似网络中的多播或者广播的感觉，即当一个客户端向某个频道发布消息时，频道的所有订阅者和与这个频道相匹配的模式的订阅者都会收到该消息。&lt;br&gt;Redis的发布与订阅功能分为频道的订阅和模式的订阅。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;   &lt;/p&gt;
-&lt;h3 id=&quot;相关的数据结构&quot;&gt;&lt;a href=&quot;#相关的数据结构&quot; class=&quot;headerlink&quot; title=&quot;相关的数据结构&quot;&gt;&lt;/a&gt;相关的数据结构&lt;/h3&gt;&lt;p&gt;首先看一下服务器和客户端与发布/订阅相关的属性。   &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;struct redisServer {
-    ...
-    dict* pubsub_channels;    //字典，键为频道，值为链表，记录所有订阅这个频道的客户端
-    list* pubsub_patterns;    //订阅模式列表，为pubsubPattern结构
-    ...
-}
-typedef struct redisClient {
-    ...
-    dict* pubsub_channels;    //该客户端感兴趣的频道列表
-    list* pubsub_patterns;    //该客户端感兴趣的模式
-    ...
-}redisClient;
-
-typedef struct pubsubPattern {
-    redisClient* client;            //订阅模式的客户端
-    robj* pattern;                    //被订阅的模式
-}pubsubPattern;
-&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;频道的订阅与退订&quot;&gt;&lt;a href=&quot;#频道的订阅与退订&quot; class=&quot;headerlink&quot; title=&quot;频道的订阅与退订&quot;&gt;&lt;/a&gt;频道的订阅与退订&lt;/h3&gt;&lt;p&gt;频道的订阅与退订在Redis中对应的命令分别为SUBSCRIBE和UNSUBSCRIBE。&lt;br&gt;首先学习SUBSCRIBE相关的源码。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;void subscribeCommand(redisClient* c){
-    int j;
-    for(j=1; j&amp;lt;c-&amp;gt;argc; j++){
-        pubsubSubscribeChannel(c, c-&amp;gt;argv[j]);    //第二个参数开始的都是要订阅的频道
-    }
-}
-
-int pubsubSubscribeChannel(redisClient* c, robj* channel){
-    dictEntry* de;
-    list* client=NULL;
-    int retval=0;
-    //将channels放入客户端c-&amp;gt;pubsub_channels的集合中
-    if(dictAdd(c-&amp;gt;pubsub_channels, channel, NULL) == DICT_OK){
-        retval=1;
-        incrRefCount(channel);        //与该channel关联的引用计数加1
-        //在server中查找这个频道的客户端链表是否存在
-        de = dictFind(server.pubsub_channels, channel);
-        if(de==NULL){    //不存在创建一个
-            clients = listCreate();
-            dictAdd(server.pubsub_channels, channel, clients);    //添加进字典
-            increRefCount(channel);
-        }else{
-            clients = dictGetVal(de);    //如果已经存在，则直接获取频道所对应的客户端链表
-        }
-
-        listaddNodeTail(clients, c);    //将客户端添加到链表的末尾
-    }
-    //回复客户端
-    addReply(c, shared.mbulkhdr[3]);
-    addReply(c, shared.subscribebulk);
-    addReply(c, channel);    
-    addReplyLongLong(c,dictSize(c-&amp;gt;pubsub_channels)+listLength(c-&amp;gt;pubsub_patterns));
-
-    return retval; 
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这样，客户端就订阅了频道。&lt;br&gt;UNSUBSCRIBE命令的行为和SUBSCRIBE的行为正好相反，当一个客户端退订某个或某些频道的时候，服务器将从pubsub_channels中解除客户端与被退订频道之间的关联。&lt;/p&gt;
-&lt;h3 id=&quot;模式的订阅与退订&quot;&gt;&lt;a href=&quot;#模式的订阅与退订&quot; class=&quot;headerlink&quot; title=&quot;模式的订阅与退订&quot;&gt;&lt;/a&gt;模式的订阅与退订&lt;/h3&gt;&lt;p&gt;如前文所述，服务器将所有模式的订阅关系都保存在服务器状态的pubsub_patterns属性里面。&lt;br&gt;模式的订阅与退订在Redis中对应的命令分别为PSUBSCRIBE和PUNSUBSCRIBE。&lt;br&gt;下面是PSUBSCRIBE相关的源代码。    &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;int pubsubSubscribePattern(redisClient* c, robj* pattern){
-    int retval=0;
-
-    //看客户端是否已经订阅了这个模式
-    if(listSearchKey(c-&amp;gt;pubsub_patterns, pattern)==NULL){    //没有
-        retval=1;
-        pubsubPattern* pat;
-        listAddNodeTail(c-&amp;gt;pubsub_patterns, pattern);
-        incrRefCount(pattern);
-
-        //创建并设置新的pubsubPattern结构
-        pat = zmalloc(sizeof(*pat));
-        pat-&amp;gt;pattern = getDecodedObject(pattern);
-        pat-&amp;gt;client = c;
-
-        listAddNodeTail(server.pubsub_patterns, pat);
-    }
-    //回复客户端
-    ...
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;同频道订阅操作类似，只是在数据结构上有些许差异。&lt;br&gt;模式的退订命令PUNSUBSCRIBE是PSUBSCRIBE命令的反操作：当一个客户端退订某个或某些模式的时候，服务器将在pubsub_patterns链表查找并删除那些pattern属性为被退订模式，并且client属性为执行退订命令的客户端的pubsubPattern结构。&lt;/p&gt;
-&lt;h3 id=&quot;发送消息&quot;&gt;&lt;a href=&quot;#发送消息&quot; class=&quot;headerlink&quot; title=&quot;发送消息&quot;&gt;&lt;/a&gt;发送消息&lt;/h3&gt;&lt;p&gt;当一个Redis客户端执行PUBLISH &lt;channel&gt; &lt;message&gt;命令将消息message发送给频道channel的时候，服务器需要执行以下两个动作：&lt;br&gt;（1）将消息message发送给channel频道的所有订阅者；&lt;br&gt;（2）如果有一个或多个模式pattern与频道channel相匹配，那么将消息message发送给pattern模式的订阅者。&lt;br&gt;下面是相关的源码。&lt;/message&gt;&lt;/channel&gt;&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;int pubsubPublishMessage(robj* channel, robj* message) {
-    int receives=0;
-    dictEntry* de;
-    listNode* ln;
-    listIter li;
-
-    de = dictFind(server.pubsub_channels, channel);    //查找channel
-    if(de){
-        list* list = dictGetVal(de);    //得到客户端链表
-        listNode* ln;
-        listIter* li;
-
-        listRewind(list, &amp;amp;li);
-        while(ln = listNext(&amp;amp;li)!=NULL){    //遍历客户端链表，将消息发送给他们
-            redisClient* c = ln-&amp;gt;value;
-            addReply(c,shared.mbulkhdr[3]);
-            addReply(c,shared.messagebulk);
-            addReplyBulk(c,channel);
-            addReplyBulk(c,message);
-            receives++;        //接收客户端计数
-        }
-    }
-
-    //将消息发送给与频道匹配的模式
-    if(listLength(server.pubsub_patterns)){
-        listRewind(server.pubsub_patterns,&amp;amp;li);
-        channel = getDecodedObject(channel);
-        while ((ln = listNext(&amp;amp;li)) != NULL) {
-            if (stringmatchlen((char*)pat-&amp;gt;pattern-&amp;gt;ptr,
-                            sdslen(pat-&amp;gt;pattern-&amp;gt;ptr),
-                            (char*)channel-&amp;gt;ptr,
-                            sdslen(channel-&amp;gt;ptr),0)){    //如果模式和channel匹配
-                //给所以订阅该模式的客户端发送消息
-                addReply(pat-&amp;gt;client,shared.mbulkhdr[4]);
-                addReply(pat-&amp;gt;client,shared.pmessagebulk);
-                addReplyBulk(pat-&amp;gt;client,pat-&amp;gt;pattern);
-                addReplyBulk(pat-&amp;gt;client,channel);
-                addReplyBulk(pat-&amp;gt;client,message);
-
-                receives++;        //接收客户端计数
-            }
-        }
-    }
-    return receives;
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&quot;查看订阅信息&quot;&gt;&lt;a href=&quot;#查看订阅信息&quot; class=&quot;headerlink&quot; title=&quot;查看订阅信息&quot;&gt;&lt;/a&gt;查看订阅信息&lt;/h3&gt;&lt;p&gt;此外，Redis还支持PUBSUB命令，客户端用以查看频道或者模式的相关信息，比如某个频道目前有多少订阅者、某个模式目前有多少订阅者等。&lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;本文分析下Redis的发布与订阅功能，该功能有点类似网络中的多播或者广播的感觉，即当一个客户端向某个频道发布消息时，频道的所有订阅者和与这个频道相匹配的模式的订阅者都会收到该消息。&lt;br&gt;Redis的发布与订阅功能分为频道的订阅和模式的订阅。&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="Redis" scheme="http://blog.dujiong.net/tags/Redis/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Redis之启动过程分析</title>
-    <link href="http://blog.dujiong.net/2016/11/10/Redis-start/"/>
-    <id>http://blog.dujiong.net/2016/11/10/Redis-start/</id>
-    <published>2016-11-10T01:49:28.000Z</published>
-    <updated>2016-11-23T08:24:56.583Z</updated>
-    
-    <content type="html">&lt;p&gt;Redis服务器是典型的一对多服务器程序：一个服务器可以与多个客户端建立网络连接，每个客户端可以向服务器发送命令，而服务器接收并处理客户端发送的命令请求，并向客户端返回命令回复。通过使用I/O多路复用技术实现的文件事件处理器，Redis服务器使用单进程单线程的方式来处理命令请求。&lt;br&gt;本文对Redis服务器的启动过程做简单分析。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;一个Redis服务器从启动到能够接受客户端的命令请求，需要经过一系列的初始化和设置过程，比如初始化服务器状态，接受用户指定的服务器配置，创建相应的数据结构和网络连接等。&lt;/p&gt;
-&lt;h3 id=&quot;初始化服务器状态结构&quot;&gt;&lt;a href=&quot;#初始化服务器状态结构&quot; class=&quot;headerlink&quot; title=&quot;初始化服务器状态结构&quot;&gt;&lt;/a&gt;初始化服务器状态结构&lt;/h3&gt;&lt;p&gt;初始化服务器的第一步是创建一个struct redisServer类型的实例变量作为服务器的状态，并为结构中的各个属性设置默认值，在Redis中，服务器所有属性都保存在struct redisServer类型全局变量server中。该部分工作由redis.c/initServerConfig函数完成。     &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;void initServerConfig()
-{
-    ...
-    getRandomHexChars(server.runid, REDIS_RUN_ID_SIZE);    //设置服务器的运行ID
-    server.configfile = NULL;
-    server.port = REDIS_SERVERPORT;
-    server.tcp_backlog = REDIS_TCP_BACKLOG;
-    ...
-    server.lruclock = getLRUclock();    //
-    server.commands = dictCreate(&amp;amp;commandTableDictType, NULL);
-    server.orig_command = dictCreate(&amp;amp;commandTableDictType, NULL);
-    populateCommandTable();
-    ...
-}   
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;其中，&lt;code&gt;server.lruclock = getLRUclock();&lt;/code&gt;用于保存服务器的LRU时钟，表示服务器最近一次使用时钟的时间。精度为秒。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;//mstime()返回Unix时间毫秒数
-//#define REDIS_LRU_BITS 24
-//#define REDIS_LRU_CLOCK_MAX ((1&amp;lt;&amp;lt;REDIS_LRU_BITS)-1)    //Max value of obj-&amp;gt;lru
-//#define REDIS_LRU_CLOCK_RESOLUTION 1000         //LRU clock resolution in ms
-unsigned int getLRUClock(void){
-    return (mstime()/REDIS_LRU_CLOCK_RESOLLUTION) &amp;amp; REDIS_LRU_CLOCK_MAX;
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;此外，每个Redis对象都会有一个LRU属性，保存了对象最后一次被命令访问的时间。    &lt;/p&gt;
-&lt;h3 id=&quot;载入配置选项&quot;&gt;&lt;a href=&quot;#载入配置选项&quot; class=&quot;headerlink&quot; title=&quot;载入配置选项&quot;&gt;&lt;/a&gt;载入配置选项&lt;/h3&gt;&lt;p&gt;在启动服务器时，用户可以通过给定配置参数（终端命令输入）或者指定配置文件（redis.conf）来修改服务器的默认配置。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;if(argc &amp;gt;= 2){
-    int j=1;
-    sds options = sdsempty();
-    char* configfile = NULL;
-    if(argv[j][0]!=&amp;apos;-&amp;apos; || argv[j][1] != &amp;apos;-&amp;apos;)       //配置文件
-        configfile = argv[j++];
-    while(j != argc){    //除了配置文件还有其余选项，由options保存,比如--port 6380会被分析为&amp;quot;port 6380\n&amp;quot;
-        if(argv[j][0]==&amp;apos;-&amp;apos; &amp;amp;&amp;amp; argv[j][1]==&amp;apos;-&amp;apos;){
-            if(sdslen(options)) options = sdscat(options, &amp;quot;\n&amp;quot;);
-            options = sdscat(options, argv[j]+2);
-            options = sdscat(options, &amp;quot; &amp;quot;);
-        }else{
-            options = sdscatrepr(options,argv[j],strlen(argv[j]));
-            options = sdscat(options, &amp;quot; &amp;quot;);
-        }
-        j++;
-    }    
-    if(configfile) server.configfile = getAbsolutePath(configfile);
-    resetServerSaveParams();
-    loadServerConfig(configfile, options);    //载入配置文件，还有options
-    sdsfree(options);
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;配置文件只能再第二个参数（第一个为程序名称），然后跟着配置文件后面可以是各个配置选项，都存储在option字符串中。最后调用函数&lt;code&gt;loadServerConfig(configfile, options);&lt;/code&gt;将文件读进内存，并给server赋值。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;void loadServerConfig(char* filename, char* options)
-{
-    sds config = sdsempty();
-    char buf[REDIS_CONFIGFILE_MAX+1];
-
-    if(filename){
-        FILE* fp;
-
-        if(filename[0]==&amp;apos;-&amp;apos; &amp;amp;&amp;amp; finename[1]==&amp;apos;\0&amp;apos;){
-            fp = stdin;
-        }else{
-            if((fp=fopen(filename,&amp;quot;r&amp;quot;))==NULL){
-                redisLog(REDIS_WARNING, &amp;quot;Fatal error, can&amp;apos;t open config file &amp;apos;%s&amp;apos;&amp;quot;, filename);
-                exit(1);
-            }
-        }
-        while(fgets(buf, REDIS_CONFIGFILE_MAX+1, fp)!=NULL)
-            config = sdscat(config, buf);
-        if(fp != stdin) fclose(fp);
-    }
-    if(options) {
-        config = sdscat(config, &amp;quot;\n&amp;quot;);
-        config = sdscat(config, options);
-    }
-    loadServerConfigFromString(config);
-    sdsfree(config);
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;将配置文件和options的配置存入config中，然后调用loadServerConfigFromString(config)根据配置选项名称给server结构体赋值。&lt;/p&gt;
-&lt;h3 id=&quot;初始化服务器数据结构&quot;&gt;&lt;a href=&quot;#初始化服务器数据结构&quot; class=&quot;headerlink&quot; title=&quot;初始化服务器数据结构&quot;&gt;&lt;/a&gt;初始化服务器数据结构&lt;/h3&gt;&lt;p&gt;在之前执行initServerConfig函数初始化server状态时，程序只创建了命令表一个数据结构，不过除了命令表之外，服务器状态还包含其他数据结构。比如：&lt;br&gt;(1) server.clients链表。该链表记录了所有与服务器相连的客户端的状态结构，链表的每一个节点都包含一个redisClient结构实例。&lt;br&gt;(2) server.db数组。该数组包含了服务器中的所有数组。&lt;br&gt;(3) 用于保存频道订阅信息的server.pubsub_channels字典，以及用于保存模式订阅信息的server.pubsub_patterns链表。&lt;br&gt;(4)…&lt;br&gt;当初始化服务器进行到这一步，服务器将调用initServer函数，为以上提到的数据结构分配内存，并在有需要时，为这些数据结构设置或关联初始化值。&lt;br&gt;因此，前面的initServerConfig函数中主要负责初始化一般属性，而initServer函数主要负责初始化数据结构。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;void initServer()
-{
-    int j;
-
-    server.current_client = NULL;
-    server.clients = listCreate();
-    server.clients_to_close = listCreate();
-    server.slaves = listCreate();
-    server.monitors = listCreate();
-
-    createSharedObjects();    //创建共享对象
-    server.el = aeCreateEventLoop(server.maxclients+REDIS_EVENTLOOP_FDSET_INCR);    //创建EventLoop实例
-    server.db = zmalloc(sizeof(redisDb)*server.dbnum);
-
-    if(server.port!=0 &amp;amp;&amp;amp; 
-            listenToPort(server.port, server.ipfd, &amp;amp;server.ipfd_count)==REDIS_ERR)
-        exit(1);
-    ...
-    if(acCreateTimeEvent(server.el, 1, serverCron, NULL, NULL) == AE_ERR){
-        redisPanic(&amp;quot;can&amp;apos;t create the serverCron time event.&amp;quot;);
-        exit(1);
-    }
-
-    for(j=0; j&amp;lt;server.ipfd_count; j++){
-        //为TCP连接关联连接处理器
-        if(aeCreateFileEvent(server.el, server.ipfd[j], AE_READABLE, acceptTcpHandler, NULL)==AE_ERR){
-            redisPanic(&amp;quot;...&amp;quot;);
-        }    
-    }    
-    //为本地套接字关联处理器
-    if(server.sofd&amp;gt;0 &amp;amp;&amp;amp; aeCreateFileEvent(server.el, server.sofd, AE_READABLE, acceptUnixHandler, NULL)==AE_ERR){
-        redisPanic(&amp;quot;...&amp;quot;);
-    }
-    //AOF文件
-    //初始化脚本系统
-    //初始化慢查询功能
-    //...
-}    
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;其中，listenToPort函数先判断用户是否提供监听地址，如果没有，则监听INADDR_ANY(0.0.0.0)地址，即所有地址，包括IPV4和IPV6，并设置为非阻塞。如果有设置监听地址，可以是一个地址队列，则只监听用户自己设置的ip地址队列。最后server.ipfd为监听套接字数组，server.ipfd_count为套接字数组个数。&lt;br&gt;然后创建了时间和文件描述符事件，主要是设置处理事件的回调函数。   &lt;/p&gt;
-&lt;h3 id=&quot;serverCron函数&quot;&gt;&lt;a href=&quot;#serverCron函数&quot; class=&quot;headerlink&quot; title=&quot;serverCron函数&quot;&gt;&lt;/a&gt;serverCron函数&lt;/h3&gt;&lt;p&gt;Redis服务器中的serverCron函数默认每隔100（1000/server.hz）毫秒执行一次（第一次是1ms执行，后面是100ms），该函数负责管理服务器的资源，并保持服务器自身的良好运转。&lt;br&gt;(1)更新服务器时间缓存&lt;br&gt;Redis服务器中有不少功能需要获取系统的当前时间，而每次获取系统的当前时间都需要执行一次时间调用，为了减少系统调用的执行次数，服务器状态中的unixtime属性和mstime属性被当作当前时间的缓存，serverCron函数更新该域，这样就可以从这里获取时间。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;//time_t unixtime;    //秒级精度的系统当前UNIX时间戳
-//long long mstime;    //毫秒级精度的系统当前UNIX时间戳
-void updateCachedTime(void){
-    server.unixtime = time(NULL);
-    server.mstime = mstime();
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;  服务器只会在打印日志、更新服务器的LRU时钟、决定是否执行初始化任务、计算服务器上线时间这类对时间精度要求不高的功能上“使用unixtime和mstime属性”。而对于为键设置过期时间、添加慢查询日志这种需要高精度时间的功能来说，服务器还是会再次执行系统调用，从而获得最准确的系统当前时间。&lt;br&gt;(2)更新LRU时钟；&lt;br&gt;(3)更新内存使用峰值&lt;br&gt;服务器状态中的stat_peak_memory属性记录了服务器的内存峰值大小。每次serverCron函数执行时，程序都会查看服务器当前使用的内存数量，并与stat_peak_memory保存的数值进行比较，如果当前使用的内存数量比stat_peak_memory属性记录的值要打，那么程序就将当前使用的内存数量记录到stat_peak_memory。&lt;br&gt;(4)处理SIGTERM信号&lt;br&gt;在启动服务器时，Redis会为服务器进程的SIGTERM信号关联处理器sigtermHandler函数，该信号处理器接到SIGTERM信号时，打开服务器状态的shutdown_asap标识。每次serverCron函数运行时，程序都会对服务器状态的shutdown_asap属性进行检查，以决定是否关闭服务器。&lt;br&gt;(5)管理客户端资源&lt;br&gt;serverCron函数每次执行都会调用clientsCron函数，clientsCron函数会对一定数量的客户端进行一下两个检查：&lt;br&gt;a. 如果客户端与服务器之间连接已经超时（很长时间没有互动），那么程序释放这个客户端，关闭连接。&lt;br&gt;b. 如果客户端在上一次执行命令请求之后，输入缓冲区的大小超过了一定的长度，那么程序会释放客户端当前的输入缓冲区，并重新创建一个默认大小的输入缓冲区，从而防止客户端的输入缓冲区耗费了过多的内存。&lt;br&gt;(6)管理数据库资源&lt;br&gt;serverCron函数每次执行都会调用databasesCron函数，该函数会对服务器中的一部分数据库进行检查，删除其中的过期键，并在有需要时，对字典进行收缩操作。&lt;br&gt;(7)调度aof或rdb读写子进程，复制同步，集群同步，sentinel定时器等；&lt;br&gt;总之，定时事件做的事情很多，可以说Redis充分利用了定时器，这样就少了很多线程。&lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;Redis服务器是典型的一对多服务器程序：一个服务器可以与多个客户端建立网络连接，每个客户端可以向服务器发送命令，而服务器接收并处理客户端发送的命令请求，并向客户端返回命令回复。通过使用I/O多路复用技术实现的文件事件处理器，Redis服务器使用单进程单线程的方式来处理命令请求。&lt;br&gt;本文对Redis服务器的启动过程做简单分析。&lt;br&gt;
     
     </summary>
     
