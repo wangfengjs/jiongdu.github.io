@@ -91,7 +91,7 @@
     <link href="http://blog.dujiong.net/2017/03/20/config-two-network-interfaces/"/>
     <id>http://blog.dujiong.net/2017/03/20/config-two-network-interfaces/</id>
     <published>2017-03-20T09:57:25.000Z</published>
-    <updated>2017-05-05T12:16:33.795Z</updated>
+    <updated>2017-05-09T04:52:29.314Z</updated>
     
     <content type="html">&lt;p&gt;刚给服务器装上了操作系统，期待已久的Mellanox网卡终于到了，关于该网卡这里就不做过多的介绍了，可以参考&lt;a href=&quot;http://www.mellanox.com/&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;Mellanox官网&lt;/a&gt;，下面记录在服务器上Mellanox网卡和传统以太网的配置。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h3 id=&quot;安插Mellanox网卡并安装相应驱动&quot;&gt;&lt;a href=&quot;#安插Mellanox网卡并安装相应驱动&quot; class=&quot;headerlink&quot; title=&quot;安插Mellanox网卡并安装相应驱动&quot;&gt;&lt;/a&gt;安插Mellanox网卡并安装相应驱动&lt;/h3&gt;&lt;p&gt;首先，在服务器背板安插Mellanox网卡，然后执行&lt;code&gt;ifconfig&lt;/code&gt;查看是否多了一张新的网卡。初始状态下&lt;code&gt;ifconfig&lt;/code&gt;看到的Mellanox网卡的名字是ib0，这说明该网卡的默认链路层协议时InfiniBand协议，而不是Ethernet协议。由于我们后续需要使用NVMe over RoCEv2，所以需要将Mellanox的链路层协议改为Ethernet。因此，需要先下载并安装相应的驱动。&lt;br&gt;在官网上确定好操作系统对应的驱动版本号（比如CentOS7.2对应的版本是MLNX_OFED-3.4-2.0.0.0-rhel7.2-x86_64）后，下载并安装驱动。&lt;/p&gt;
@@ -106,7 +106,7 @@ ibv_devinfo | grep vendor_part_id    ##得到vendor_part_id(我这里是4115)
 mlxconfig -d /dev/mst/mt4115_pciconf0 q  ##再次查询网卡信息
 mlxconfig -d /dev/mst/mt4115_pciconf0 set LINK_TYPE_P1=2  ##修改为Ethernet协议
 &lt;/code&gt;&lt;/pre&gt;&lt;p&gt;修改并重新启动后，可以看到网卡的名称发生了变化（这里是enp133s0）。最后，使用&lt;code&gt;lspci | grep Mellanox&lt;/code&gt;确认修改。&lt;/p&gt;
-&lt;h3 id=&quot;CentOS双网卡配置&quot;&gt;&lt;a href=&quot;#CentOS双网卡配置&quot; class=&quot;headerlink&quot; title=&quot;CentOS双网卡配置&quot;&gt;&lt;/a&gt;CentOS双网卡配置&lt;/h3&gt;&lt;p&gt;现在服务器的网卡连接情况是一张Mellanox网卡通过专用网线连接到EdgeCore 100G白牌交换机上，另外一张传统以太网卡连接到以太网换机。    （192.168.1.1）。接下来配置对双网卡配置双IP，一个192.168.1.x，可通过以太网交换机连接外网，另一个192.168.5.x，连接到100G白牌交换机。   &lt;/p&gt;
+&lt;h3 id=&quot;CentOS双网卡配置&quot;&gt;&lt;a href=&quot;#CentOS双网卡配置&quot; class=&quot;headerlink&quot; title=&quot;CentOS双网卡配置&quot;&gt;&lt;/a&gt;CentOS双网卡配置&lt;/h3&gt;&lt;p&gt;现在服务器的网卡连接情况是一张Mellanox网卡通过专用网线连接到EdgeCore 100G白牌交换机上，另外一张传统以太网卡连接到以太网交换机（192.168.1.1）。接下来双网卡配置双IP，一个192.168.1.x，可通过以太网交换机连接外网，另一个192.168.5.x，连接到100G白牌交换机。   &lt;/p&gt;
 &lt;p&gt;以太网卡在服务器上对应的名称为eno1。修改其配置文件。&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;vim /etc/sysconfig/network-scripts/ifcfg-eth0
 &lt;/code&gt;&lt;/pre&gt;&lt;p&gt;修改和添加以下内容：&lt;/p&gt;

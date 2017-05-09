@@ -68,7 +68,7 @@
 <meta property="og:image" content="http://i.imgur.com/WqcbomA.png">
 <meta property="og:image" content="http://i.imgur.com/jcLC6h9.png">
 <meta property="og:image" content="http://i.imgur.com/rNo8Xe3.png">
-<meta property="og:updated_time" content="2017-05-05T12:16:33.795Z">
+<meta property="og:updated_time" content="2017-05-09T04:52:29.314Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="CentOS配置双网卡（Mellanox和传统以太网卡）">
 <meta name="twitter:description" content="刚给服务器装上了操作系统，期待已久的Mellanox网卡终于到了，关于该网卡这里就不做过多的介绍了，可以参考Mellanox官网，下面记录在服务器上Mellanox网卡和传统以太网的配置。">
@@ -309,7 +309,7 @@ ibv_devinfo | grep vendor_part_id    ##得到vendor_part_id(我这里是4115)
 mlxconfig -d /dev/mst/mt4115_pciconf0 q  ##再次查询网卡信息
 mlxconfig -d /dev/mst/mt4115_pciconf0 set LINK_TYPE_P1=2  ##修改为Ethernet协议
 </code></pre><p>修改并重新启动后，可以看到网卡的名称发生了变化（这里是enp133s0）。最后，使用<code>lspci | grep Mellanox</code>确认修改。</p>
-<h3 id="CentOS双网卡配置"><a href="#CentOS双网卡配置" class="headerlink" title="CentOS双网卡配置"></a>CentOS双网卡配置</h3><p>现在服务器的网卡连接情况是一张Mellanox网卡通过专用网线连接到EdgeCore 100G白牌交换机上，另外一张传统以太网卡连接到以太网换机。    （192.168.1.1）。接下来配置对双网卡配置双IP，一个192.168.1.x，可通过以太网交换机连接外网，另一个192.168.5.x，连接到100G白牌交换机。   </p>
+<h3 id="CentOS双网卡配置"><a href="#CentOS双网卡配置" class="headerlink" title="CentOS双网卡配置"></a>CentOS双网卡配置</h3><p>现在服务器的网卡连接情况是一张Mellanox网卡通过专用网线连接到EdgeCore 100G白牌交换机上，另外一张传统以太网卡连接到以太网交换机（192.168.1.1）。接下来双网卡配置双IP，一个192.168.1.x，可通过以太网交换机连接外网，另一个192.168.5.x，连接到100G白牌交换机。   </p>
 <p>以太网卡在服务器上对应的名称为eno1。修改其配置文件。</p>
 <pre><code>vim /etc/sysconfig/network-scripts/ifcfg-eth0
 </code></pre><p>修改和添加以下内容：</p>

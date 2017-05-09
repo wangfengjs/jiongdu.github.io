@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://blog.dujiong.net/2017/03/20/config-two-network-interfaces/</loc>
+    
+    <lastmod>2017-05-09T04:52:29.314Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://blog.dujiong.net/2017/03/27/leveldb/</loc>
     
     <lastmod>2017-05-06T10:52:50.443Z</lastmod>
@@ -19,13 +26,6 @@
     <loc>http://blog.dujiong.net/2017/02/17/NVMe/</loc>
     
     <lastmod>2017-05-06T06:39:03.366Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://blog.dujiong.net/2017/03/20/config-two-network-interfaces/</loc>
-    
-    <lastmod>2017-05-05T12:16:33.795Z</lastmod>
     
   </url>
   
