@@ -41,7 +41,7 @@
 <link href="/css/main.css?v=0.5.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="muduo," />
+  <meta name="keywords" content="NVMe over RDMA," />
 
 
 
@@ -59,16 +59,19 @@
 
 
 
-<meta name="description" content="回调是指将一段可执行的代码作为变量传给另外一部分代码，以供同步或异步调用。在Reactor模式中，在事件到来时调用相应的处理函数就是一种异步回调的过程。回调函数的实现可以由各种各样的方式。">
+<meta name="description" content="NVMe SSD具有极高的I/O读写性能，不存在传统磁盘所具有的访问寻道、抖动问题。为了发挥NVMe SSD的性能，无论在软件还是在硬件上都需要采用多队列技术，通过多队列方式充分发挥NVMe SSD的性能。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="muduo源码阅读之muduo的回调函数机制">
-<meta property="og:url" content="http://blog.dujiong.net/2016/04/28/muduo-2/index.html">
+<meta property="og:title" content="NVMe驱动之I/O请求">
+<meta property="og:url" content="http://blog.dujiong.net/2017/04/27/NVMe-IO-Request/index.html">
 <meta property="og:site_name" content="一期一会">
-<meta property="og:description" content="回调是指将一段可执行的代码作为变量传给另外一部分代码，以供同步或异步调用。在Reactor模式中，在事件到来时调用相应的处理函数就是一种异步回调的过程。回调函数的实现可以由各种各样的方式。">
-<meta property="og:updated_time" content="2016-06-28T13:55:56.861Z">
+<meta property="og:description" content="NVMe SSD具有极高的I/O读写性能，不存在传统磁盘所具有的访问寻道、抖动问题。为了发挥NVMe SSD的性能，无论在软件还是在硬件上都需要采用多队列技术，通过多队列方式充分发挥NVMe SSD的性能。">
+<meta property="og:image" content="http://i.imgur.com/sIdEXDh.gif">
+<meta property="og:image" content="http://i.imgur.com/bsa3KFs.png">
+<meta property="og:updated_time" content="2017-05-23T14:19:13.054Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="muduo源码阅读之muduo的回调函数机制">
-<meta name="twitter:description" content="回调是指将一段可执行的代码作为变量传给另外一部分代码，以供同步或异步调用。在Reactor模式中，在事件到来时调用相应的处理函数就是一种异步回调的过程。回调函数的实现可以由各种各样的方式。">
+<meta name="twitter:title" content="NVMe驱动之I/O请求">
+<meta name="twitter:description" content="NVMe SSD具有极高的I/O读写性能，不存在传统磁盘所具有的访问寻道、抖动问题。为了发挥NVMe SSD的性能，无论在软件还是在硬件上都需要采用多队列技术，通过多队列方式充分发挥NVMe SSD的性能。">
+<meta name="twitter:image" content="http://i.imgur.com/sIdEXDh.gif">
 
 
 
@@ -86,7 +89,7 @@
   };
 </script>
 
-  <title> muduo源码阅读之muduo的回调函数机制 | 一期一会 </title>
+  <title> NVMe驱动之I/O请求 | 一期一会 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -246,7 +249,7 @@
             
             
               
-                muduo源码阅读之muduo的回调函数机制
+                NVMe驱动之I/O请求
               
             
           </h1>
@@ -258,8 +261,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-04-28T19:18:24+08:00" content="2016-04-28">
-              2016-04-28
+            <time itemprop="dateCreated" datetime="2017-04-27T20:31:41+08:00" content="2017-04-27">
+              2017-04-27
             </time>
           </span>
 
@@ -269,8 +272,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/04/28/muduo-2/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/04/28/muduo-2/" itemprop="commentsCount"></span>
+                <a href="/2017/04/27/NVMe-IO-Request/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/04/27/NVMe-IO-Request/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -292,128 +295,91 @@
       
 
       
-        <p>回调是指将一段可执行的代码作为变量传给另外一部分代码，以供同步或异步调用。在Reactor模式中，在事件到来时调用相应的处理函数就是一种异步回调的过程。回调函数的实现可以由各种各样的方式。<br><a id="more"></a></p>
-<h3 id="C语言的函数指针"><a href="#C语言的函数指针" class="headerlink" title="C语言的函数指针"></a>C语言的函数指针</h3><p>最熟悉的回调机制应该属于C语言的函数指针了。考虑一个简单的例子，实现对两个数的操作，这个操作可以是加减乘除等。<br>首先声明一个函数指针：           </p>
-<pre><code>typedef int (operFunc*)(int a, int b);
-</code></pre><p>这个类型的函数指针可以做为参数传给用于实现两个数操作的函数，这个函数仅仅是简单的调用传入的函数指针：                                                                                  </p>
-<pre><code>int operation(int a, int b, operFunc func)
-{
-    return func(a,b);
-}
-</code></pre><p>现在可以定义各种回调函数:</p>
-<pre><code>int add(int a, int b) 
-{
-    return a + b;
-}
-int minus(int a, int b) 
-{   
-    return a - b;
-}
-...
-</code></pre><p>这样，在调用operation()时可以根据传入回调函数的不同，实现不同的功能。</p>
-<pre><code>int main()
-{
-    int a = 4;
-    int b = 2;
-    std::cout &lt;&lt; operation(a,b,add) &lt;&lt; std::endl;
-    std::cout &lt;&lt; operation(a,b,minus);
+        <p>NVMe SSD具有极高的I/O读写性能，不存在传统磁盘所具有的访问寻道、抖动问题。为了发挥NVMe SSD的性能，无论在软件还是在硬件上都需要采用多队列技术，通过多队列方式充分发挥NVMe SSD的性能。<br><a id="more"></a><br>Linux的NVMe驱动采用一个Core独占一个Queue（包含一个Completion Queue和至少一个Submission Queue）的方式来充分发挥NVMe SSD的性能，这样可以避免一个队列被多个Core竞争访问（引起的锁竞争等问题），各CPU使用自己的Queue，互不影响。 </p>
+<p><img src="http://i.imgur.com/sIdEXDh.gif" alt="">   </p>
+<p>NVMe响应I/O的过程已经在<a href="http://blog.dujiong.net/2017/02/17/NVMe/">NVMe技术浅析</a>一文中详细描述，这里将结合部分源码做进一步说明。    </p>
+<h3 id="创建NVMe-Queue"><a href="#创建NVMe-Queue" class="headerlink" title="创建NVMe Queue"></a>创建NVMe Queue</h3><pre><code>/*
+ * pci.c
+ */
+static int nvme_setup_io_queues(struct nvme_dev* dev){
+    struct nvme_queue* adminq = dev-&gt;queues[0];
+    struct pci_dev* pdev = to_pci_dev(dev-&gt;dev);
+    int result, nr_io_queues, size;
+
+    nr_io_queues = num_online_cpus();
+    result = nvme_set_queue_count(&amp;dev-&gt;ctrl, &amp;nr_io_queues);
     ...
-}
-</code></pre><h3 id="传统C-的回调"><a href="#传统C-的回调" class="headerlink" title="传统C++的回调"></a>传统C++的回调</h3><p>在传统的C++程序中，事件回调是通过虚函数进行的。网络库往往会定义一个或几个抽象基类，其中声明一些(纯)虚函数，使用者需要继承这些基类，并覆写这些虚函数，以获得事件回调通知。由于C++的动态绑定只能通过指针和引用实现，使用者必须把派生类（myHandler）对象的指针或引用隐士转换为基类(Handler)的指针或引用。网络库调用积累的虚函数，通过动态绑定机制实际调用的是用户在派生类中覆写的虚函数。<br>下面通过一段代码示例看看虚函数如何实现回调。   </p>
-<pre><code>#include &lt;stdio.h&gt;
-class Handler    //interface
-{
-    public:
-        virtual void say(const char* text) = 0;
-};
 
-class MyHandler : public Handler
-{
-    public:
-        void say(const char* text)
-        {
-            printf(&quot;hello,%s&quot;,text);
-        }    
-};
-
-int main()
-{
-    Handler *handler;
-    MyHandler myHandler;
-    handler = dynamic_cast&lt;Hander*&gt;(myHandler);
-    handler.say(&quot;world&quot;);
-
-    return 0;
-}
-</code></pre><h3 id="muduo采用的事件回调"><a href="#muduo采用的事件回调" class="headerlink" title="muduo采用的事件回调"></a>muduo采用的事件回调</h3><p>muduo使用的是boost库的boost::function和boost::bind实现函数回调。现在，已经可以在c++11中使用它们。<br>boost::function类似于函数指针的封装，boost::function类型的变量可以保存一个可以调用的函数指针。可以指向任何函数，包括成员函数。所以boost::function与boost::bind结合起来使用可以实现一些函数指针无法完成的功能，比如，绑定特定变量到函数上，实现某些函数式编程语言的功能，甚至是真正的闭包。<br>以下的例子均使用c++11。</p>
-<pre><code>#include &lt;functional&gt;
-#include &lt;string&gt;
-#include &lt;iostream&gt;
-
-namespace
-{
-    void function(int number, float floation, std::string string)
-    {
-        std::cout &lt;&lt; &quot;Int: \&quot;&quot; &lt;&lt; number &lt;&lt; &quot;\&quot; Float: \&quot;&quot; &lt;&lt; floatation
-                  &lt;&lt; &quot;\&quot; String: \&quot;&quot; &lt;&lt; string &lt;&lt; &quot;\&quot;&quot; &lt;&lt; std::endl; 
+    result = queue_request_irq(adminq);
+    if(result){
+        admin-&gt;cq_vector = -1;
+        return result;
     }
+    return nvme_create_io_queues(dev);
 }
+</code></pre><p>驱动程序在创建队列之前首先通过内核函数num_online_cpus获取当前系统中运行的CPU数量m，然后通过nvme_set_queue_count得到SSD的队列数量限制n，选择二者较小值作为所创建的队列数。<br>此外，关于Queue还有一个重要的概念，那就是队列深度，简单来说就是这个Queue能够放多少个成员（比如NVMe Command）。在NVMe中，这个队列深度是由NVMe SSD决定的，存储在NVMe设备的BAR空间里。另外，NVMe驱动没有区分Namespace，也就是一个设备上的多个Namespace共享这些队列资源。<br>因此，它们之间的关系是：队列用来存放NVMe Command，NVMe Command是Host与SSD Controller交流的基本单元，应用的I/O请求也要转化成NVMe Command。</p>
+<h3 id="提交I-O请求"><a href="#提交I-O请求" class="headerlink" title="提交I/O请求"></a>提交I/O请求</h3><p>Block层下发的IO请求以BIO表示，我们需要通过DMA发送这些数据，Command使用dma_alloc_coherent分配DMA地址，但是BIO是存放在普通的内核线程空间的（线程的虚拟空间不能直接作为DMA地址），使用dma_alloc_coherent分配再将BIO中的数据拷贝显然不是有效的方法。这里linux提供了另一个函数dma_map_single，这个函数能够将虚拟空间地址（BIO数据存放地址）转换成DMA可用地址，并且多个IO请求的DMA地址可以通过scatterlist来表示。有了DMA地址就可以把BIO封装成NVMe Command发送出去。从BIO到NVMe Command有可能会经过拆分，放入等待队列等。我们知道，驱动会给每个CPU分配一个Queue，那么I/O请求到来时，该由哪个Queue来存放这个Command呢？你可能已经想到，应该由当前线程运行的CPU所属的Queue，这样才能保证Queue不被其他Core抢占，驱动使用get_cpu()获得当前处理I/O请求的CPU号来索引对应的Queue。 </p>
+<pre><code>/*
+ * pci.c
+ */
+static void __nvme_submit_cmd(struct nvme_queue* nvmeq, struct nvme_command* cmd){
+    u16 tail = nvmeq-&gt;sq_tail;
+    if(nvmeq-&gt;sq_cmds_io){
+        memcpy_toio(&amp;nvmeq-&gt;sq_cmds_io[tail], cmd, sizeof(*cmd));
+    }else{
+        memcpy(&amp;nvmeq-&gt;sq_cmds[tail], cmd, sizeof(*cmd));
+    }
 
-int main()
-{
-    //declare function pointer variables 
-    std::function&lt;void(std::string, float, int)&gt; shuffleFunction;
-    std::function&lt;void(void)&gt; voidFunction;
-    std::function&lt;void(float)&gt; reduceFunction;
-
-    //bind the method
-    shuffleFunction = std::bind(::function,_3,_2,_1);
-    voidFunction = std::bind(::function, 5,5.f, &quot;five&quot;);
-    reduceFunction = std::bind(::function, 13, _1, &quot;empty&quot;);
-
-    //call
-    shuffleFunction(&quot;String&quot;,0.f,0);
-    voidFunction();
-    reduceFunction(13.f);
-
+    if(++tail == nvmeq-&gt;q_depth)
+        tail = 0;
+    writel(tail, nvmeq-&gt;q_db);
+    nvmeq-&gt;sq_tail = tail;
 }
-</code></pre><p>传统的指向成员函数的回调函数用法如下例。    </p>
-<pre><code>class A
-{
-    public:
-        int add(int a, int b)
-        {
-            std::cout &lt;&lt; &quot;A::add()&quot; &lt;&lt; endl
-            return a + b;
+</code></pre><p>BIO封装成的Command会顺序存入Submission Queue中。对于Submission Queue来说，使用Tail表示最后操作的Command Index（nvmeq-&gt;sq_tail）。每存入一个Command，Host就会更新Queue对应的Doorbell寄存器中的Tail值。Doorbell定义在BAR空间，通过QID可以索引到。NVMe没有规定Command存入队列的执行顺序，Controller可以一次取出多个Command进行批量处理，所以一个队列中的Command执行顺序是不固定的（可能导致先提交的请求后处理）。</p>
+<h3 id="获得处理结果"><a href="#获得处理结果" class="headerlink" title="获得处理结果"></a>获得处理结果</h3><p>SSD Controller根据Doorbell的值，获取NVMe Command和对应数据，待处理完成后将结果存入Completion Queue中。Controller通过中断的方式通知Host，驱动为每一个Queue分配一个MSI/MSI-X中断。<br>驱动使用request_irq将中断注册到kernel，并且绑定中断处理函数nvme_irq。此中断处理函数调用__nvme_process_cq，先将Completion Command从Completion Queue中取出，然后把队列的head增加1，并调用上层的callback函数，完成IO处理。由于NVMe Command可以批量处理，这里使用while循环取出所有新的Completion Command。     </p>
+<pre><code>/*
+ * pci.c
+ */
+static void __nvme_process_cq(struct nvme_queue *nvmeq, unsigned int *tag){
+    u16 head, phase;
+
+    head = nvmeq-&gt;cq_head;
+    phase = nvmeq-&gt;cq_phase;
+
+    while(nvme_cqe_valid(nvmeq, head, phase)){
+        struct nvme_completion cqe = nvmeq-&gt;cqes[head];
+        struct request *req;
+
+        if(++head == nvmeq-&gt;q_depth){
+            head = 0;
+            phase = !phase;
         }
-}；
-typedef int (A::*operFunc)(int, int);
-int main(void)
-{
-    operFunc oper = &amp;A::add;
-    A ca;
-    int a = 2;
-    int b = 3;
-    int res = (ca.*oper)(a, b);
-    std::cout &lt;&lt; res &lt;&lt; std::endl;
+        ...
+        if (unlikely(nvmeq-&gt;qid == 0 &amp;&amp;
+            cqe.command_id &gt;= NVME_AQ_BLKMQ_DEPTH)) {
+                nvme_complete_async_event(&amp;nvmeq-&gt;dev-&gt;ctrl,
+                                        cqe.status, &amp;cqe.result);
+                continue;
+        }
+        req = blk_mq_tag_to_rq(*nvmeq-&gt;tags, cqe.command_id);
+        nvme_req(req)-&gt;result = cqe.result;
+        blk_mq_complete_request(req, le16_to_cpu(cqe.status) &gt;&gt; 1);    
+    }
+    if (head == nvmeq-&gt;cq_head &amp;&amp; phase == nvmeq-&gt;cq_phase)
+        return;
+
+    if (likely(nvmeq-&gt;cq_vector &gt;= 0))
+        writel(head, nvmeq-&gt;q_db + nvmeq-&gt;dev-&gt;db_stride);
+    nvmeq-&gt;cq_head = head;
+    nvmeq-&gt;cq_phase = phase;
+
+    nvmeq-&gt;cqe_seen = 1;
 }
-</code></pre><p>成员函数具有隐含的this指针，在调用成员函数时必须通过类的实例。所以成员函数指针变量不仅在定义时有特殊的语法，更重要的是在实际调用回调函数必须采用(a.*oper)(a,b)这样的形式。这样的语法比较复杂，由于与非成员函数的声明不同，无法传入同一个函数。所以，需要调用函数既能接收成员函数又能接收非成员函数。<br>这就是在muduo库中广泛应用的function和bind的机制，如下示例代码。</p>
-<pre><code>class A
-{
-    ...
-}；
-typedef std::function&lt;int(int,int)&gt; operFunc;
-int main()
-{
-    int a = 2;
-    int b = 4;
-    operFunc oper;
-    A ca;
-    oper = std::bind(&amp;A::add, &amp;ca, _1, _2);
-    std::out &lt;&lt; operation(a,b,oper) &lt;&lt; std::endl;
-    ...
-}
-</code></pre><p>muduo使用function和bind实现了闭包的功能，即，函数+引用环境，或者说是附有数据的行为，因为，在事件到来时调用回调函数处理，通常还需要知道其他的一些信息，比如在网络程序中，可能是连接当前的状态等。<br>在muduo中，一个回调函数通常是一个类的成员函数，所以这个回调函数同时也保存了某个类实例的信息，包括这个类的成员变量、成员函数等，在实际调用函数的时候就可以使用这些信息和状态，这样的处理当时让程序的编写显得非常清晰和方便。    </p>
+</code></pre><p>处理完Command后，往Completion Queue的Doorbell写入Head值，通知NVMe Controller操作完成。中断处理结束。</p>
+<h3 id="Head-Tail机制"><a href="#Head-Tail机制" class="headerlink" title="Head/Tail机制"></a>Head/Tail机制</h3><p>我们知道，SQ和CQ都是队列，队列的头尾很重要，头决定谁会最先被服务，尾决定新到来命令的位置，所以，我们需要记录SQ和CQ的头尾位置。  </p>
+<p><img src="http://i.imgur.com/bsa3KFs.png" alt=""></p>
+<p>对一个SQ来说，它的生产者是Host，因为它往SQ的Tail位置写入命令；消费者是SSD，它从SQ的Head取出指令执行。CQ则刚刚相反，生产者是SSD，消费者是Host。     </p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>本文简单介绍了NVMe I/O请求的处理过程，其核心是多队列，Submission Queue/Completion Queue、Doorbell寄存器和Head/Tail机制。</p>
 
       
     </div>
@@ -428,7 +394,7 @@ int main()
       
         <div class="post-tags">
           
-            <a href="/tags/muduo/" rel="tag">#muduo</a>
+            <a href="/tags/NVMe-over-RDMA/" rel="tag">#NVMe over RDMA</a>
           
         </div>
       
@@ -437,17 +403,13 @@ int main()
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/04/25/muduo-1/" rel="next" title="muduo源码阅读之Reactor模式和muduo">
-                <i class="fa fa-chevron-left"></i> muduo源码阅读之Reactor模式和muduo
+              <a href="/2017/04/21/trace-linux-network-stack/" rel="next" title="理解TCP/IP网络栈">
+                <i class="fa fa-chevron-left"></i> 理解TCP/IP网络栈
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/05/03/muduo-3/" rel="prev" title="muduo源码阅读之EventLoop类">
-                muduo源码阅读之EventLoop类 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -473,8 +435,8 @@ int main()
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/04/28/muduo-2/"
-           data-title="muduo源码阅读之muduo的回调函数机制" data-url="http://blog.dujiong.net/2016/04/28/muduo-2/">
+      <div class="ds-thread" data-thread-key="2017/04/27/NVMe-IO-Request/"
+           data-title="NVMe驱动之I/O请求" data-url="http://blog.dujiong.net/2017/04/27/NVMe-IO-Request/">
       </div>
     
   </div>
@@ -588,7 +550,7 @@ int main()
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#C语言的函数指针"><span class="nav-number">1.</span> <span class="nav-text">C语言的函数指针</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#传统C-的回调"><span class="nav-number">2.</span> <span class="nav-text">传统C++的回调</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#muduo采用的事件回调"><span class="nav-number">3.</span> <span class="nav-text">muduo采用的事件回调</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#创建NVMe-Queue"><span class="nav-number">1.</span> <span class="nav-text">创建NVMe Queue</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#提交I-O请求"><span class="nav-number">2.</span> <span class="nav-text">提交I/O请求</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#获得处理结果"><span class="nav-number">3.</span> <span class="nav-text">获得处理结果</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Head-Tail机制"><span class="nav-number">4.</span> <span class="nav-text">Head/Tail机制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator">
