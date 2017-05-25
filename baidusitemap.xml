@@ -4,6 +4,23 @@
 
     
   <url>
+    <loc>http://blog.dujiong.net/2017/05/05/Linux-Block-IO/</loc>
+    <lastmod>2017-05-25T13:51:15.035Z</lastmod>
+    <data>
+        <display>
+        <title>Linux块IO浅析</title>
+        <pubTime>2017-05-05T12:08:25.000Z</pubTime>
+        
+        <tag>network/linux</tag>
+         
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.dujiong.net/2017/04/27/NVMe-IO-Request/</loc>
     <lastmod>2017-05-23T14:19:13.054Z</lastmod>
     <data>

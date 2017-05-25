@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://blog.dujiong.net/2017/05/05/Linux-Block-IO/</loc>
+    
+    <lastmod>2017-05-25T13:51:15.035Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://blog.dujiong.net/2017/04/27/NVMe-IO-Request/</loc>
     
     <lastmod>2017-05-23T14:19:13.054Z</lastmod>
